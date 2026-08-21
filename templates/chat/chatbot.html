@@ -1,0 +1,1336 @@
+{% extends 'base.html' %}
+{% block title %}Assistant IA{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ════════════════════════════════════════════════════════════
+     CHATGPT INTERFACE REPLICA
+     Design fidèle à l'interface de ChatGPT
+     ════════════════════════════════════════════════════════════ */
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f8;
+    --bg-sidebar: #f9f9f9;
+    --bg-hover: #ececf1;
+    --bg-input: #ffffff;
+    --text-primary: #202123;
+    --text-secondary: #6e6e80;
+    --text-muted: #8e8ea0;
+    --border: #e5e5e5;
+    --border-light: #ececf1;
+    --accent: #10a37f;
+    --accent-hover: #0d8a6a;
+    --user-bg: #f7f7f8;
+    --bot-bg: #f7f7f8;
+    --shadow-sm: 0 0 15px rgba(0,0,0,0.1);
+    --shadow-md: 0 0 15px rgba(0,0,0,0.1);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+    --transition: all 0.2s ease;
+  }
+
+  main {
+    height: calc(100vh - 65px);
+    overflow: hidden;
+  }
+
+  .chatbot-page {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background: var(--bg-primary);
+  }
+
+  /* ─── Sidebar (style ChatGPT) ─────────────────────────────── */
+  .chatbot-sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    overflow-y: auto;
+  }
+
+  .sidebar-new-chat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+  }
+
+  .sidebar-new-chat:hover {
+    background: var(--bg-hover);
+  }
+
+  .sidebar-new-chat i {
+    font-size: 16px;
+  }
+
+  .chatbot-sidebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-chat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin: 2px 0;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+  }
+
+  .sidebar-chat-item:hover {
+    background: var(--bg-hover);
+  }
+
+  .sidebar-chat-item i {
+    font-size: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .sidebar-user-section {
+    margin-top: auto;
+    padding: 12px 8px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .sidebar-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #10a37f;
+  }
+
+  .sidebar-user-name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-user-role {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* ─── Main Area ───────────────────────────────────────────── */
+  .chatbot-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    position: relative;
+  }
+
+  /* ─── Messages Area ───────────────────────────────────────── */
+  .chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+  }
+
+  .chatbot-messages::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .chatbot-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chatbot-messages::-webkit-scrollbar-thumb {
+    background: #d9d9e3;
+    border-radius: 10px;
+  }
+
+  .chatbot-messages::-webkit-scrollbar-thumb:hover {
+    background: #c5c5d2;
+  }
+
+  /* ─── Message Rows (style ChatGPT) ────────────────────────── */
+  .msg-row {
+    display: flex;
+    gap: 16px;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+    width: 100%;
+  }
+
+  .msg-row.user {
+    background: var(--bg-primary);
+  }
+
+  .msg-row.bot {
+    background: var(--bg-secondary);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    margin-top: 4px;
+  }
+
+  .msg-avatar.bot {
+    background: #10a37f;
+    color: white;
+    font-size: 16px;
+  }
+
+  .msg-avatar.user {
+    background: #5436da;
+    color: white;
+    font-size: 14px;
+  }
+
+  .msg-content {
+    flex: 1;
+    max-width: 768px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .msg-bubble {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    word-wrap: break-word;
+  }
+
+  .msg-bubble p {
+    margin-bottom: 12px;
+  }
+
+  .msg-bubble p:last-child {
+    margin-bottom: 0;
+  }
+
+  .msg-bubble strong {
+    font-weight: 600;
+  }
+
+<<<<<<< HEAD
+  .msg-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+=======
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+  /* ─── Welcome Message (style ChatGPT) ─────────────────────── */
+  .welcome-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+    max-width: 768px;
+    margin: 0 auto;
+  }
+
+  .welcome-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #10a37f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 24px;
+  }
+
+  .welcome-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+
+  .welcome-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  /* ─── Example Cards (style ChatGPT) ───────────────────────── */
+  .examples-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+    max-width: 768px;
+    width: 100%;
+  }
+
+  .example-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+    width: 100%;
+  }
+
+  .example-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .example-icon {
+    font-size: 24px;
+  }
+
+  .example-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .example-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ─── Input Area (style ChatGPT) ──────────────────────────── */
+  .chatbot-input-area {
+    padding: 16px 24px 24px;
+    background: var(--bg-primary);
+  }
+
+  .chatbot-input-wrapper {
+    max-width: 768px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .chatbot-input-row {
+    display: flex;
+<<<<<<< HEAD
+    align-items: flex-end;
+    gap: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 8px 12px;
+=======
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 8px 8px 8px 16px;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chatbot-input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+  }
+
+  .chatbot-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    max-height: 200px;
+    min-height: 24px;
+<<<<<<< HEAD
+    padding: 8px 4px;
+=======
+    padding: 8px 0;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    font-family: inherit;
+  }
+
+  .chatbot-textarea::placeholder {
+    color: #8e8ea0;
+  }
+
+  /* ─── Boutons dans la barre (style ChatGPT) ───────────────── */
+  .input-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .btn-input-action {
+<<<<<<< HEAD
+    width: 36px;
+    height: 36px;
+=======
+    width: 40px;
+    height: 40px;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #6e6e80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+<<<<<<< HEAD
+=======
+    flex-shrink: 0;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+  }
+
+  .btn-input-action:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .btn-input-action.active {
+    color: var(--accent);
+  }
+
+  .btn-input-action.listening {
+    color: #ef4444;
+    background: #fee2e2;
+    animation: pulse 1.5s infinite;
+  }
+
+  .btn-input-action i {
+    font-size: 20px;
+<<<<<<< HEAD
+  }
+
+  .chatbot-send-btn {
+    width: 36px;
+    height: 36px;
+=======
+    line-height: 1;
+  }
+
+  .chatbot-send-btn {
+    width: 40px;
+    height: 40px;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    border-radius: 50%;
+    border: none;
+    background: #202123;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .chatbot-send-btn:hover:not(:disabled) {
+    background: #000000;
+    transform: scale(1.05);
+  }
+
+  .chatbot-send-btn:disabled {
+    background: #e5e5e5;
+    color: #8e8ea0;
+    cursor: not-allowed;
+  }
+
+<<<<<<< HEAD
+=======
+  .chatbot-send-btn i {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+  /* Tooltip */
+  .btn-input-action .tooltip {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #202123;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition);
+    z-index: 100;
+  }
+
+  .btn-input-action .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #202123;
+  }
+
+  .btn-input-action:hover .tooltip {
+    opacity: 1;
+  }
+
+  .input-footer {
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  .input-footer small {
+    color: #8e8ea0;
+    font-size: 12px;
+  }
+
+<<<<<<< HEAD
+  /* ─── Typing Indicator (style ChatGPT) ────────────────────── */
+=======
+  /* ─── Typing Indicator ────────────────────────────────────── */
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+  .typing-row {
+    background: var(--bg-secondary) !important;
+  }
+
+  .typing-bubble {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0;
+  }
+
+  .typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #8e8ea0;
+    border-radius: 50%;
+    animation: typingBounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* ─── Logement Cards ──────────────────────────────────────── */
+  .chat-logements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    max-width: 768px;
+    margin: 16px auto 0;
+    width: 100%;
+  }
+
+  .chat-logement-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    text-decoration: none;
+    transition: var(--transition);
+    display: block;
+  }
+
+  .chat-logement-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
+
+  .chat-logement-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .chat-logement-info {
+    padding: 12px;
+  }
+
+  .chat-logement-titre {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .chat-logement-prix {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .chat-logement-loc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .chat-logement-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ─── Scroll to bottom ────────────────────────────────────── */
+  .scroll-bottom-btn {
+    position: absolute;
+    bottom: 120px;
+    right: 32px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: var(--transition);
+    z-index: 5;
+  }
+
+  .scroll-bottom-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .scroll-bottom-btn:hover {
+    background: var(--bg-hover);
+  }
+
+  /* ─── Animation microphone ────────────────────────────────── */
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+  }
+
+  /* ─── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .chatbot-sidebar { display: none; }
+    .msg-content { padding: 0 8px; }
+    .chat-logements-grid { grid-template-columns: 1fr; }
+    .examples-container { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .msg-row { padding: 16px; }
+    .chatbot-input-area { padding: 12px 16px 16px; }
+    .welcome-title { font-size: 24px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-page">
+
+  <!-- ─── Sidebar ─────────────────────────────────────────────── -->
+  <div class="chatbot-sidebar">
+    <button class="sidebar-new-chat" onclick="newChat()">
+      <i class="bi bi-plus-lg"></i>
+      <span>Nouvelle conversation</span>
+    </button>
+
+    <div class="chatbot-sidebar-title">Historique</div>
+
+    <button class="sidebar-chat-item">
+      <i class="bi bi-chat"></i>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        Studio meublé Bastos
+      </span>
+    </button>
+    <button class="sidebar-chat-item">
+      <i class="bi bi-chat"></i>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        Villa avec piscine Douala
+      </span>
+    </button>
+    <button class="sidebar-chat-item">
+      <i class="bi bi-chat"></i>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        Appartement F3 Yaoundé
+      </span>
+    </button>
+
+    <div class="sidebar-user-section">
+      {% if user.is_authenticated %}
+      <div class="d-flex align-items-center gap-2" style="padding: 8px;">
+        <img src="{{ user.get_avatar_url }}"
+             class="sidebar-user-avatar"
+             alt="Avatar">
+        <div style="overflow:hidden; flex:1;">
+          <div class="sidebar-user-name">
+            {{ user.get_full_name }}
+          </div>
+          <div class="sidebar-user-role">
+            {{ user.get_role_display }}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ─── Zone principale ─────────────────────────────────────── -->
+  <div class="chatbot-main">
+
+    <!-- Messages -->
+    <div class="chatbot-messages" id="chatMessages">
+
+      <!-- Écran d'accueil -->
+      <div id="welcomeScreen">
+        <div class="welcome-section">
+          <div class="welcome-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <div class="welcome-title">
+            Comment puis-je vous aider ?
+          </div>
+          <div class="welcome-subtitle">
+            Je suis votre assistant immobilier. Je peux vous aider à trouver
+            le logement idéal au Cameroun. Décrivez simplement ce que vous cherchez.
+          </div>
+
+          <div class="examples-container">
+            <div class="example-card" onclick="useExample(this)"
+                 data-text="Studio meublé à Bastos Yaoundé entre 80 000 et 120 000 FCFA">
+              <span class="example-icon">🏠</span>
+              <div>
+                <div class="example-title">Studio à Bastos</div>
+                <div class="example-desc">80K–120K FCFA/mois</div>
+              </div>
+            </div>
+
+            <div class="example-card" onclick="useExample(this)"
+                 data-text="Villa avec piscine et gardien à Douala Bonapriso">
+              <span class="example-icon">🏡</span>
+              <div>
+                <div class="example-title">Villa à Douala</div>
+                <div class="example-desc">Avec piscine & gardien</div>
+              </div>
+            </div>
+
+            <div class="example-card" onclick="useExample(this)"
+                 data-text="Appartement 2 chambres meublé climatisé à Biyem-Assi max 100 000 FCFA">
+              <span class="example-icon">🏢</span>
+              <div>
+                <div class="example-title">Appartement F2</div>
+                <div class="example-desc">Biyem-Assi, max 100K</div>
+              </div>
+            </div>
+
+            <div class="example-card" onclick="useExample(this)"
+                 data-text="Maison familiale 3 chambres avec parking à Yaoundé moins de 150 000 FCFA">
+              <span class="example-icon">🏘️</span>
+              <div>
+                <div class="example-title">Maison familiale</div>
+                <div class="example-desc">3 chambres, parking</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Scroll to bottom -->
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" onclick="scrollBottom()">
+      <i class="bi bi-arrow-down" style="font-size:18px"></i>
+    </button>
+
+    <!-- Zone de saisie -->
+    <div class="chatbot-input-area">
+      <div class="chatbot-input-wrapper">
+        <form id="chatForm">
+          {% csrf_token %}
+          <div class="chatbot-input-row">
+            <textarea id="chatInput"
+                      class="chatbot-textarea"
+                      placeholder="Envoyer un message..."
+                      rows="1"
+                      maxlength="2000"></textarea>
+            
+            <div class="input-actions">
+              <!-- Bouton microphone -->
+              <button type="button"
+                      class="btn-input-action"
+                      id="micBtn"
+                      onclick="toggleMicrophone()">
+                <i class="bi bi-mic" id="micIcon"></i>
+                <span class="tooltip">Dicter un message</span>
+              </button>
+
+              <!-- Bouton volume -->
+              <button type="button"
+                      class="btn-input-action active"
+                      id="voiceBtn"
+                      onclick="toggleVoice()">
+                <i class="bi bi-volume-up" id="voiceIcon"></i>
+                <span class="tooltip">Activer/désactiver la voix</span>
+              </button>
+
+              <!-- Bouton envoyer -->
+              <button type="submit"
+                      class="chatbot-send-btn"
+                      id="sendBtn"
+                      disabled>
+<<<<<<< HEAD
+                <i class="bi bi-arrow-up" style="font-size:18px"></i>
+=======
+                <i class="bi bi-arrow-up"></i>
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="input-footer">
+          <small>
+            L'assistant peut produire des informations inexactes. Vérifiez les annonces.
+          </small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let convId = null;
+let hasStartedChat = false;
+
+// ═══════════════════════════════════════════════════════════════
+// Configuration vocale
+// ═══════════════════════════════════════════════════════════════
+let voiceEnabled = true;
+let isSpeaking = false;
+let selectedVoice = null;
+let recognition = null;
+let isListening = false;
+
+function getCsrf() {
+  const c = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+  return c ? c.trim().split('=')[1] : '';
+}
+
+const messagesEl = document.getElementById('chatMessages');
+const inputEl    = document.getElementById('chatInput');
+const sendBtn    = document.getElementById('sendBtn');
+const chatForm   = document.getElementById('chatForm');
+const scrollBtn  = document.getElementById('scrollBottomBtn');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const micBtn     = document.getElementById('micBtn');
+const voiceBtn   = document.getElementById('voiceBtn');
+const micIcon    = document.getElementById('micIcon');
+const voiceIcon  = document.getElementById('voiceIcon');
+
+// ═══════════════════════════════════════════════════════════════
+// Initialisation des voix
+// ═══════════════════════════════════════════════════════════════
+function initVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  selectedVoice = voices.find(voice => 
+    voice.lang.startsWith('fr') && voice.name.includes('Google')
+  ) || voices.find(voice => 
+    voice.lang.startsWith('fr')
+  ) || voices[0];
+  
+  console.log('Voix sélectionnée:', selectedVoice ? selectedVoice.name : 'Aucune');
+}
+
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = initVoices;
+  initVoices();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Fonctions de synthèse vocale
+// ═══════════════════════════════════════════════════════════════
+function speak(text) {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  
+  window.speechSynthesis.cancel();
+  
+  let cleanText = text
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/[#\[\]()]/g, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  if (!cleanText) return;
+  
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'fr-FR';
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+  
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+  
+  utterance.onstart = function() {
+    isSpeaking = true;
+    updateVoiceButton();
+  };
+  
+  utterance.onend = function() {
+    isSpeaking = false;
+    updateVoiceButton();
+  };
+  
+  utterance.onerror = function() {
+    isSpeaking = false;
+    updateVoiceButton();
+  };
+  
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    updateVoiceButton();
+  }
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  if (!voiceEnabled) {
+    stopSpeaking();
+  }
+  updateVoiceButton();
+}
+
+function updateVoiceButton() {
+  if (!voiceEnabled) {
+    voiceIcon.className = 'bi bi-volume-mute';
+    voiceBtn.classList.remove('active');
+  } else {
+    voiceIcon.className = 'bi bi-volume-up';
+    voiceBtn.classList.add('active');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Configuration de la reconnaissance vocale
+// ═══════════════════════════════════════════════════════════════
+function initRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    console.log('Reconnaissance vocale non supportée');
+    micBtn.style.display = 'none';
+    return;
+  }
+  
+  recognition = new SpeechRecognition();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onstart = function() {
+    isListening = true;
+    updateMicButton();
+    inputEl.placeholder = "Écoute en cours... Parlez maintenant";
+  };
+  
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    inputEl.value = transcript;
+    inputEl.dispatchEvent(new Event('input'));
+    
+    if (transcript.trim()) {
+      sendMessage();
+    }
+  };
+  
+  recognition.onerror = function(event) {
+    console.error('Erreur de reconnaissance:', event.error);
+    isListening = false;
+    updateMicButton();
+    resetMicUI();
+    
+    let errorMsg = '';
+    switch(event.error) {
+      case 'not-allowed':
+        errorMsg = 'Microphone non autorisé. Veuillez autoriser l\'accès au microphone.';
+        break;
+      case 'no-speech':
+        errorMsg = 'Aucune parole détectée. Réessayez.';
+        break;
+      case 'network':
+        errorMsg = 'Erreur réseau. Vérifiez votre connexion.';
+        break;
+      default:
+        errorMsg = 'Erreur de reconnaissance vocale.';
+    }
+    
+    addBotMsg(`<p class="mb-0">⚠️ ${errorMsg}</p>`);
+  };
+  
+  recognition.onend = function() {
+    isListening = false;
+    updateMicButton();
+    resetMicUI();
+  };
+}
+
+function toggleMicrophone() {
+  if (!recognition) {
+    initRecognition();
+  }
+  
+  if (isListening) {
+    recognition.stop();
+  } else {
+    try {
+      recognition.start();
+    } catch(e) {
+      console.error('Erreur démarrage micro:', e);
+    }
+  }
+}
+
+function updateMicButton() {
+  if (isListening) {
+    micIcon.className = 'bi bi-mic-fill';
+    micBtn.classList.add('listening');
+  } else {
+    micIcon.className = 'bi bi-mic';
+    micBtn.classList.remove('listening');
+  }
+}
+
+function resetMicUI() {
+  inputEl.placeholder = "Envoyer un message...";
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Auto-resize textarea
+// ═══════════════════════════════════════════════════════════════
+inputEl.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+  sendBtn.disabled = !this.value.trim();
+});
+
+// Enter = envoyer, Shift+Enter = nouvelle ligne
+inputEl.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!sendBtn.disabled) sendMessage();
+  }
+});
+
+// Envoyer via formulaire
+chatForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (!sendBtn.disabled) sendMessage();
+});
+
+function useExample(card) {
+  inputEl.value = card.dataset.text;
+  sendBtn.disabled = false;
+  sendMessage();
+}
+
+function addUserMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'msg-row user';
+  div.innerHTML = `
+    <div class="msg-avatar user">
+      <i class="bi bi-person-fill" style="font-size:14px"></i>
+    </div>
+    <div class="msg-content">
+      <div class="msg-bubble user">${escapeHtml(text)}</div>
+    </div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function addBotMsg(html) {
+  const div = document.createElement('div');
+  div.className = 'msg-row bot';
+  div.innerHTML = `
+    <div class="msg-avatar bot">
+      <i class="bi bi-stars" style="font-size:14px"></i>
+    </div>
+    <div class="msg-content">
+      <div class="msg-bubble bot">${html}</div>
+    </div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg-row bot typing-row';
+  div.id = 'typingRow';
+  div.innerHTML = `
+    <div class="msg-avatar bot">
+      <i class="bi bi-stars" style="font-size:14px"></i>
+    </div>
+    <div class="msg-content">
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingRow');
+  if (el) el.remove();
+}
+
+function addLogements(logements) {
+  const grid = document.createElement('div');
+  grid.className = 'chat-logements-grid';
+  logements.forEach(l => {
+    const a = document.createElement('a');
+    a.href      = l.url;
+    a.className = 'chat-logement-card';
+    a.target    = '_blank';
+    a.innerHTML = `
+      <img src="${l.photo}" alt="${escapeHtml(l.titre)}" loading="lazy">
+      <div class="chat-logement-info">
+        <div class="chat-logement-titre">${escapeHtml(l.titre)}</div>
+        <div class="chat-logement-prix">${l.prix}</div>
+        <div class="chat-logement-loc">
+          <i class="bi bi-geo-alt-fill" style="color:var(--accent); font-size:12px"></i>
+          ${l.quartier ? escapeHtml(l.quartier) + ' · ' : ''}${escapeHtml(l.ville)}
+        </div>
+        <div class="chat-logement-meta">
+          🛏 ${l.chambres} chambre(s) · ${escapeHtml(l.type)}
+        </div>
+      </div>`;
+    grid.appendChild(a);
+  });
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-row bot';
+<<<<<<< HEAD
+  wrapper.innerHTML = `<div class="msg-avatar bot" style="visibility:hidden">
+    <i class="bi bi-stars" style="font-size:14px"></i>
+  </div>`;
+=======
+  wrapper.innerHTML = `<div class="msg-avatar bot" style="visibility:hidden">🤖</div>`;
+>>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+  wrapper.appendChild(grid);
+  messagesEl.appendChild(wrapper);
+  scrollBottom();
+}
+
+function scrollBottom() {
+  messagesEl.scrollTo({
+    top: messagesEl.scrollHeight,
+    behavior: 'smooth'
+  });
+}
+
+// Scroll button visibility
+messagesEl.addEventListener('scroll', function() {
+  const isNearBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 150;
+  scrollBtn.classList.toggle('visible', !isNearBottom);
+});
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  stopSpeaking();
+
+  if (!hasStartedChat) {
+    welcomeScreen.style.display = 'none';
+    hasStartedChat = true;
+  }
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  addUserMsg(text);
+  addTyping();
+
+  try {
+    const res = await fetch('/chat/chatbot/message/', {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken':  getCsrf(),
+      },
+      body: JSON.stringify({ message: text, conv_id: convId }),
+    });
+
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) {
+      addBotMsg('<p class="mb-0">Désolé, une erreur s\'est produite. Réessayez.</p>');
+      return;
+    }
+
+    convId = data.conv_id;
+
+    const formattedHtml = data.reponse
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*\*/g, '<em>$1</em>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+
+    addBotMsg(`<p class="mb-0">${formattedHtml}</p>`);
+
+    if (voiceEnabled) {
+      speak(data.reponse);
+    }
+
+    if (data.logements && data.logements.length > 0) {
+      addLogements(data.logements);
+      
+      if (voiceEnabled) {
+        setTimeout(() => {
+          const logementAnnounce = `J'ai trouvé ${data.logements.length} logement(s) correspondant à votre recherche.`;
+          speak(logementAnnounce);
+        }, 500);
+      }
+    }
+
+  } catch(e) {
+    removeTyping();
+    addBotMsg('<p class="mb-0">Connexion impossible. Vérifiez votre réseau.</p>');
+  }
+}
+
+function newChat() {
+  stopSpeaking();
+  
+  convId = null;
+  hasStartedChat = false;
+  messagesEl.innerHTML = '';
+  
+  welcomeScreen.style.display = 'block';
+  messagesEl.appendChild(welcomeScreen);
+  
+  inputEl.focus();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Initialisation
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  initRecognition();
+  updateVoiceButton();
+  updateMicButton();
+});
+
+// Focus auto sur l'input
+inputEl.focus();
+</script>
+{% endblock %}

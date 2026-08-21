@@ -1,0 +1,651 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}{{ logement.titre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Galerie : indication visuelle que les photos sont cliquables ── */
+  #galleryMain { cursor: zoom-in; }
+  .thumb-clickable { cursor: pointer; }
+
+  /* ── Lightbox plein écran ───────────────────────────────────────── */
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,5,10,.92);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .lightbox-overlay.open { display: flex; }
+  .lightbox-img-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 0;
+  }
+  .lightbox-img-wrap img {
+    max-width: 92%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2010;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,.22); }
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .lightbox-nav:hover { background: rgba(255,255,255,.22); }
+  .lightbox-prev { left: 18px; }
+  .lightbox-next { right: 18px; }
+  .lightbox-footer {
+    flex-shrink: 0;
+    padding: .9rem 0 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255,255,255,.85);
+    font-size: .85rem;
+  }
+  .lightbox-download {
+    background: var(--primary);
+    color: white !important;
+    border: none;
+    padding: .5rem 1.1rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .lightbox-download:hover { opacity: .9; color: white !important; }
+
+  /* ── Contact : téléphone / WhatsApp ─────────────────────────────── */
+  .contact-row {
+    display: flex;
+    gap: .5rem;
+    margin-top: .5rem;
+  }
+  .contact-row a {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .55rem 0;
+    border-radius: var(--radius-sm);
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .contact-row .btn-tel {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .contact-row .btn-tel:hover { background: var(--primary); color: white; }
+  .contact-row .btn-whatsapp {
+    background: #e7f9ee;
+    color: #128c4a;
+  }
+  .contact-row .btn-whatsapp:hover { background: #25D366; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item">
+        <a href="{% url 'logements:accueil' %}">Accueil</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'logements:recherche' %}?ville={{ logement.ville.nom }}">
+          {{ logement.ville.nom }}
+        </a>
+      </li>
+      <li class="breadcrumb-item active">
+        {{ logement.titre|truncatechars:40 }}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- ─── Colonne principale ────────────────────────── -->
+    <div class="col-lg-8">
+
+      <!-- Galerie photos -->
+      <div class="rounded-4 overflow-hidden mb-4">
+        {% with photos=logement.photos.all %}
+          {% if photos %}
+          <img id="galleryMain"
+               src="{{ photos.first.image.url }}"
+               alt="{{ logement.titre }}"
+               class="w-100 rounded-4"
+               style="height:420px;object-fit:cover"
+               data-index="0"
+               onclick="openLightbox(0)">
+          {% if photos.count > 1 %}
+          <div class="d-flex gap-2 mt-2 flex-wrap">
+            {% for photo in photos %}
+            <img src="{{ photo.image.url }}"
+                 alt="Photo {{ forloop.counter }}"
+                 onclick="document.getElementById('galleryMain').src=this.src;
+                          document.getElementById('galleryMain').dataset.index='{{ forloop.counter0 }}'"
+                 ondblclick="openLightbox({{ forloop.counter0 }})"
+                 class="rounded-3 thumb-clickable"
+                 style="height:70px;width:90px;object-fit:cover;
+                        border:2px solid transparent"
+                 onmouseover="this.style.borderColor='#2563eb'"
+                 onmouseout="this.style.borderColor='transparent'"
+                 title="Clic : aperçu — Double-clic : agrandir">
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="bg-light rounded-4 d-flex align-items-center
+                      justify-content-center"
+               style="height:300px">
+            <i class="bi bi-house text-muted" style="font-size:4rem"></i>
+          </div>
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <!-- Badges -->
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="badge bg-primary px-3 py-2">
+          {{ logement.get_type_offre_display }}
+        </span>
+        <span class="badge bg-secondary px-3 py-2">
+          {{ logement.get_type_logement_display }}
+        </span>
+        <span class="badge bg-light text-dark border px-3 py-2">
+          {{ logement.get_standing_display }}
+        </span>
+        {% if logement.est_vedette %}
+        <span class="badge bg-warning text-dark px-3 py-2">⭐ En vedette</span>
+        {% endif %}
+      </div>
+
+      <!-- Titre -->
+      <h1 class="fw-bold mb-1">{{ logement.titre }}</h1>
+      <div class="text-muted mb-3">
+        <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+        {{ logement.adresse }}
+        {% if logement.quartier %}, {{ logement.quartier.nom }}{% endif %}
+        , {{ logement.ville.nom }}
+      </div>
+
+      <!-- Prix rapide -->
+      <div class="row g-3 mb-4 p-3 rounded-4 bg-primary bg-opacity-10">
+        <div class="col-md-4 text-center">
+          <div class="fw-bold text-primary" style="font-size:1.8rem">
+            {{ logement.prix_formate }}
+          </div>
+          <small class="text-muted">
+            {% if logement.type_offre == 'LOCATION' %}par mois
+            {% else %}prix de vente{% endif %}
+          </small>
+        </div>
+        <div class="col-md-4 text-center border-start border-end">
+          <div class="fw-bold fs-4">{{ logement.nb_chambres }}</div>
+          <small class="text-muted">Chambre(s)</small>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="fw-bold fs-4">
+            {{ logement.surface|default:"—" }}
+            {% if logement.surface %}m²{% endif %}
+          </div>
+          <small class="text-muted">Surface</small>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-3">Description</h4>
+        <p class="text-muted" style="line-height:1.8;white-space:pre-line">
+          {{ logement.description }}
+        </p>
+      </div>
+
+      <!-- Caractéristiques -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-3">Caractéristiques</h4>
+        <div class="row g-2">
+          <div class="col-6 col-md-4">
+            <div class="border rounded-3 p-2 text-center small">
+              <i class="bi bi-door-open text-primary d-block fs-5"></i>
+              {{ logement.nb_chambres }} Chambre(s)
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="border rounded-3 p-2 text-center small">
+              <i class="bi bi-droplet text-primary d-block fs-5"></i>
+              {{ logement.nb_salles_bain }} Salle(s) de bain
+            </div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="border rounded-3 p-2 text-center small">
+              <i class="bi bi-layers text-primary d-block fs-5"></i>
+              Étage {{ logement.etage }}
+            </div>
+          </div>
+          {% if logement.surface %}
+          <div class="col-6 col-md-4">
+            <div class="border rounded-3 p-2 text-center small">
+              <i class="bi bi-arrows-fullscreen text-primary d-block fs-5"></i>
+              {{ logement.surface }} m²
+            </div>
+          </div>
+          {% endif %}
+          <div class="col-6 col-md-4">
+            <div class="border rounded-3 p-2 text-center small">
+              <i class="bi bi-sofa text-primary d-block fs-5"></i>
+              {{ logement.get_meuble_display }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Équipements -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-3">Équipements</h4>
+        <div class="d-flex flex-wrap gap-2">
+
+          {% if logement.eau_courante %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-droplet-half me-1"></i>Eau courante
+          </span>
+          {% endif %}
+
+          {% if logement.electricite %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-lightning me-1"></i>Électricité
+          </span>
+          {% endif %}
+
+          {% if logement.internet %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-wifi me-1"></i>WiFi
+          </span>
+          {% endif %}
+
+          {% if logement.climatisation %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-thermometer-snow me-1"></i>Climatisation
+          </span>
+          {% endif %}
+
+          {% if logement.parking %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-car-front me-1"></i>Parking
+          </span>
+          {% endif %}
+
+          {% if logement.gardien %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-shield-check me-1"></i>Gardien
+          </span>
+          {% endif %}
+
+          {% if logement.generateur %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-fuel-pump me-1"></i>Groupe électrogène
+          </span>
+          {% endif %}
+
+          {% if logement.piscine %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-water me-1"></i>Piscine
+          </span>
+          {% endif %}
+
+          {% if logement.balcon %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-house-up me-1"></i>Balcon
+          </span>
+          {% endif %}
+
+          {% if logement.securite %}
+          <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+            <i class="bi bi-lock me-1"></i>Sécurité
+          </span>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <!-- Avis -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-3">
+          ⭐ Avis
+          {% if avis_list %}
+          <span class="badge bg-warning text-dark ms-2">
+            {{ note_moy }}/5
+          </span>
+          {% endif %}
+        </h4>
+
+        {% for avis in avis_list %}
+        <div class="border rounded-3 p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex gap-2">
+              <img src="{{ avis.auteur.get_avatar_url }}"
+                   class="rounded-circle"
+                   width="38" height="38"
+                   style="object-fit:cover">
+              <div>
+                <div class="fw-semibold small">
+                  {{ avis.auteur.get_full_name }}
+                </div>
+                <div class="text-warning small">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= avis.note %}⭐{% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <small class="text-muted">{{ avis.cree_le|date:"d/m/Y" }}</small>
+          </div>
+          <p class="mt-2 mb-0 small text-muted">{{ avis.commentaire }}</p>
+        </div>
+        {% empty %}
+        <p class="text-muted small">Aucun avis pour ce logement.</p>
+        {% endfor %}
+
+        <!-- Formulaire avis -->
+        {% if user.is_authenticated and user != logement.bailleur %}
+        <div class="border rounded-3 p-3 mt-3">
+          <h6 class="fw-bold">Laisser un avis</h6>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="avis" value="1">
+            <div class="mb-2">{{ avis_form.note }}</div>
+            <div class="mb-2">{{ avis_form.commentaire }}</div>
+            <button type="submit" class="btn btn-primary btn-sm">
+              Soumettre mon avis
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- ─── Sidebar ───────────────────────────────────── -->
+    <div class="col-lg-4">
+
+      <!-- Bailleur -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 text-center mb-3"
+           style="position:sticky;top:80px">
+        <img src="{{ logement.bailleur.get_avatar_url }}"
+             class="rounded-circle border mx-auto mb-3"
+             width="80" height="80"
+             style="object-fit:cover">
+        <div class="fw-bold fs-5">{{ logement.bailleur.get_full_name }}</div>
+        {% if logement.bailleur.is_verified %}
+        <span class="badge bg-success mb-2">
+          <i class="bi bi-patch-check me-1"></i>Vérifié
+        </span>
+        {% endif %}
+        <small class="text-muted d-block mb-3">
+          Membre depuis {{ logement.bailleur.date_inscription|date:"M Y" }}
+        </small>
+
+        {% if user.is_authenticated and user != logement.bailleur %}
+        <a href="{% url 'chat:demarrer' logement.pk %}"
+           class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-chat-dots me-2"></i>Contacter le bailleur
+        </a>
+
+        {% if logement.bailleur.telephone %}
+        <div class="contact-row">
+          <a href="tel:{{ logement.bailleur.telephone }}" class="btn-tel">
+            <svg data-lucide="phone" style="width:15px;height:15px"></svg>
+            Appeler
+          </a>
+          <a href="#" id="btnWhatsapp"
+             data-phone="{{ logement.bailleur.telephone }}"
+             target="_blank" rel="noopener" class="btn-whatsapp">
+            <svg data-lucide="message-circle" style="width:15px;height:15px"></svg>
+            WhatsApp
+          </a>
+        </div>
+        <div class="text-muted mt-2" style="font-size:.72rem">
+          <i class="bi bi-telephone me-1"></i>{{ logement.bailleur.telephone }}
+        </div>
+        {% endif %}
+
+        {% elif not user.is_authenticated %}
+        <a href="{% url 'accounts:connexion' %}?next={{ request.path }}"
+           class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-chat-dots me-2"></i>Connectez-vous pour contacter
+        </a>
+        {% endif %}
+
+        <!-- Prix -->
+        <div class="text-start mt-3">
+          <h6 class="fw-bold">💰 Détails financiers</h6>
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Loyer / Prix</span>
+            <strong>{{ logement.prix_formate }}</strong>
+          </div>
+          {% if logement.charges %}
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Charges</span>
+            <strong>{{ logement.charges|intcomma }} FCFA</strong>
+          </div>
+          {% endif %}
+          {% if logement.caution %}
+          <div class="d-flex justify-content-between py-2 small">
+            <span class="text-muted">Caution</span>
+            <strong>{{ logement.caution|intcomma }} FCFA</strong>
+          </div>
+          {% endif %}
+          {% if logement.prix_negociable %}
+          <span class="badge bg-success mt-2">Prix négociable</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Réservation -->
+      {% if user.is_authenticated and user != logement.bailleur and logement.disponible %}
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+        <h6 class="fw-bold mb-3">📅 Visiter ou réserver</h6>
+
+        <form method="post" action="{% url 'logements:reserver' logement.pk %}" id="reservForm">
+          {% csrf_token %}
+          <input type="hidden" name="type_demande" id="typeDemandeInput" value="VISITE">
+
+          <div class="mb-2">
+            <label class="form-label small text-muted mb-1">Date souhaitée</label>
+            {{ form_reservation.date_debut }}
+            {% if form_reservation.date_debut.errors %}
+            <div class="text-danger small mt-1">{{ form_reservation.date_debut.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted mb-1">Message (optionnel)</label>
+            {{ form_reservation.message }}
+          </div>
+
+          <button type="submit"
+                  class="btn btn-outline-primary w-100 mb-2"
+                  onclick="document.getElementById('typeDemandeInput').value='VISITE'">
+            <i class="bi bi-calendar-check me-2"></i>Demander une visite (gratuit)
+          </button>
+
+          <button type="submit"
+                  class="btn btn-success w-100"
+                  onclick="document.getElementById('typeDemandeInput').value='RESERVATION'">
+            <i class="bi bi-bookmark-check me-2"></i>Réserver maintenant — 1 000 FCFA
+          </button>
+
+          <small class="text-muted d-block text-center mt-2" style="font-size:.72rem">
+            Réserver bloque le logement et déclenche le paiement des frais de réservation.
+          </small>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        {% if user.is_authenticated %}
+        <button class="btn btn-outline-danger flex-fill btn-favori"
+                data-logement-id="{{ logement.pk }}">
+          <i class="bi bi-heart{% if est_favori %}-fill{% endif %} me-1"></i>
+          Favori
+        </button>
+        {% endif %}
+        <button class="btn btn-outline-secondary flex-fill"
+                onclick="window.print()">
+          <i class="bi bi-printer me-1"></i>Imprimer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Logements similaires -->
+  {% if similaires %}
+  <hr class="my-5">
+  <h4 class="fw-bold mb-4">Logements similaires à {{ logement.ville.nom }}</h4>
+  <div class="row g-3">
+    {% for s in similaires %}
+    <div class="col-lg-3 col-md-6">
+      {% include 'logements/includes/card_logement.html' with logement=s %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ─── Lightbox plein écran ─────────────────────────────── -->
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">
+    <svg data-lucide="x" style="width:20px;height:20px"></svg>
+  </button>
+  <div class="lightbox-img-wrap">
+    <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1)">
+      <svg data-lucide="chevron-left" style="width:22px;height:22px"></svg>
+    </button>
+    <img id="lightboxImg" src="" alt="Photo du logement">
+    <button class="lightbox-nav lightbox-next" onclick="navLightbox(1)">
+      <svg data-lucide="chevron-right" style="width:22px;height:22px"></svg>
+    </button>
+  </div>
+  <div class="lightbox-footer">
+    <span id="lightboxCounter"></span>
+    <a id="lightboxDownload" class="lightbox-download" href="" download>
+      <svg data-lucide="download" style="width:15px;height:15px"></svg>
+      Enregistrer la photo
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ─── Galerie de photos : liste complète pour la lightbox ─────────
+const galleryPhotos = [
+  {% for photo in logement.photos.all %}
+  "{{ photo.image.url|escapejs }}"{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+let lightboxIndex = 0;
+const lightboxEl   = document.getElementById('lightbox');
+const lightboxImg  = document.getElementById('lightboxImg');
+const lightboxCnt  = document.getElementById('lightboxCounter');
+const lightboxDl   = document.getElementById('lightboxDownload');
+
+function openLightbox(index) {
+  if (!galleryPhotos.length) return;
+  lightboxIndex = index;
+  updateLightbox();
+  lightboxEl.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  lightboxEl.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function navLightbox(delta) {
+  lightboxIndex = (lightboxIndex + delta + galleryPhotos.length) % galleryPhotos.length;
+  updateLightbox();
+}
+function updateLightbox() {
+  const url = galleryPhotos[lightboxIndex];
+  lightboxImg.src = url;
+  lightboxDl.href = url;
+  lightboxCnt.textContent = `${lightboxIndex + 1} / ${galleryPhotos.length}`;
+}
+
+// Fermer en cliquant en dehors de l'image, ou avec Échap / flèches clavier
+lightboxEl.addEventListener('click', function (e) {
+  if (e.target === lightboxEl) closeLightbox();
+});
+document.addEventListener('keydown', function (e) {
+  if (!lightboxEl.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navLightbox(-1);
+  if (e.key === 'ArrowRight') navLightbox(1);
+});
+
+// ─── Lien WhatsApp construit à partir du numéro de téléphone ──────
+const btnWhatsapp = document.getElementById('btnWhatsapp');
+if (btnWhatsapp) {
+  let phone = btnWhatsapp.dataset.phone.replace(/[\s.\-]/g, '');
+  if (phone.startsWith('+')) {
+    phone = phone.slice(1);
+  } else if (phone.startsWith('0')) {
+    phone = '237' + phone.slice(1);          // numéro local camerounais -> indicatif 237
+  } else if (!phone.startsWith('237')) {
+    phone = '237' + phone;
+  }
+  const message = encodeURIComponent(
+    "Bonjour, je vous contacte au sujet de votre annonce \"{{ logement.titre|escapejs }}\" sur LogementCM."
+  );
+  btnWhatsapp.href = `https://wa.me/${phone}?text=${message}`;
+}
+</script>
+{% endblock %}

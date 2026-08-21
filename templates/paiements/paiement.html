@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Paiement{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:560px">
+
+  <!-- En-tête -->
+  <div class="text-center mb-4">
+    <div style="width:60px;height:60px;
+                background:linear-gradient(135deg,#10b981,#059669);
+                border-radius:16px;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1rem;
+                box-shadow:0 8px 25px rgba(16,185,129,.3)">
+      <svg data-lucide="credit-card"
+           style="width:28px;height:28px;color:white">
+      </svg>
+    </div>
+    <h2 class="fw-bold mb-1">Paiement sécurisé</h2>
+    <p class="text-muted small">
+      Payez en toute sécurité avec Mobile Money
+    </p>
+  </div>
+
+  <div class="card border-0 shadow rounded-4 overflow-hidden">
+
+    <!-- Barre de progression -->
+    <div style="height:4px;
+                background:linear-gradient(90deg,#10b981,#6366f1)">
+    </div>
+
+    <div class="card-body p-4">
+
+      <!-- Récapitulatif -->
+      <div class="p-3 rounded-3 mb-4"
+           style="background:linear-gradient(135deg,var(--primary-light),#f5f3ff)">
+        <div class="d-flex align-items-start gap-3">
+          {% with photo=reservation.logement.get_photo_principale %}
+          {% if photo %}
+          <img src="{{ photo.image.url }}"
+               class="rounded-3 flex-shrink-0"
+               style="width:70px;height:60px;object-fit:cover"
+               alt="{{ reservation.logement.titre }}">
+          {% else %}
+          <div class="rounded-3 flex-shrink-0 d-flex align-items-center
+                      justify-content-center"
+               style="width:70px;height:60px;background:var(--gray-100)">
+            <svg data-lucide="home"
+                 style="width:24px;height:24px;color:var(--gray-300)">
+            </svg>
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <div class="flex-grow-1">
+            <div class="fw-bold small">
+              {{ reservation.logement.titre|truncatechars:40 }}
+            </div>
+            <div class="text-muted d-flex align-items-center gap-1 mt-1"
+                 style="font-size:.78rem">
+              <svg data-lucide="map-pin"
+                   style="width:11px;height:11px;color:var(--primary)">
+              </svg>
+              {% if reservation.logement.quartier %}
+              {{ reservation.logement.quartier.nom }},
+              {% endif %}
+              {{ reservation.logement.ville.nom }}
+            </div>
+            <div class="d-flex align-items-center gap-1 mt-1"
+                 style="font-size:.78rem;color:var(--text-muted)">
+              <svg data-lucide="calendar"
+                   style="width:11px;height:11px">
+              </svg>
+              {{ reservation.date_debut|date:"d/m/Y" }}
+              · {{ reservation.get_type_demande_display }}
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3
+                    pt-3 border-top border-primary border-opacity-25">
+          <span class="fw-semibold small text-muted">Montant à payer</span>
+          <span style="font-size:1.5rem;font-weight:900;
+                       background:linear-gradient(135deg,var(--primary),var(--secondary));
+                       -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                       background-clip:text">
+            {{ montant|intcomma }} FCFA
+          </span>
+        </div>
+      </div>
+
+      <!-- Formulaire paiement -->
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Méthode de paiement -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">
+            Choisissez votre méthode de paiement
+          </label>
+          <div class="row g-3">
+
+            <!-- MTN Mobile Money -->
+            <div class="col-6">
+              <label style="cursor:pointer;display:block">
+                <input type="radio" name="methode"
+                       value="MTN_MOMO" class="d-none" checked
+                       id="methodeMtn">
+                <div class="p-3 border rounded-3 text-center"
+                     id="cardMtn"
+                     style="border-color:var(--primary) !important;
+                            background:var(--primary-light);
+                            transition:.2s">
+                  <div style="font-size:2rem;margin-bottom:.5rem">📱</div>
+                  <div class="fw-bold small">MTN Mobile Money</div>
+                  <div class="text-muted" style="font-size:.72rem">
+                    MTN Cameroun
+                  </div>
+                  <div class="mt-2"
+                       style="background:var(--primary);color:white;
+                              font-size:.65rem;font-weight:700;
+                              padding:2px 8px;border-radius:50px;
+                              display:inline-block">
+                    Sélectionné
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Orange Money -->
+            <div class="col-6">
+              <label style="cursor:pointer;display:block">
+                <input type="radio" name="methode"
+                       value="ORANGE_MONEY" class="d-none"
+                       id="methodeOrange">
+                <div class="p-3 border rounded-3 text-center"
+                     id="cardOrange"
+                     style="transition:.2s">
+                  <div style="font-size:2rem;margin-bottom:.5rem">🔶</div>
+                  <div class="fw-bold small">Orange Money</div>
+                  <div class="text-muted" style="font-size:.72rem">
+                    Orange Cameroun
+                  </div>
+                  <div class="mt-2"
+                       style="font-size:.65rem;color:var(--text-muted)">
+                    Cliquer pour choisir
+                  </div>
+                </div>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Numéro de téléphone -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">
+            Numéro Mobile Money
+          </label>
+          <div class="input-group">
+            <span class="input-group-text"
+                  style="background:var(--gray-50);
+                         border:1.5px solid var(--border);
+                         border-right:none;font-size:.85rem;
+                         font-weight:600">
+              +237
+            </span>
+            <input type="tel"
+                   name="telephone"
+                   class="form-control"
+                   placeholder="6XX XXX XXX"
+                   style="border-left:none"
+                   required
+                   maxlength="15">
+          </div>
+          <small class="text-muted">
+            <svg data-lucide="info"
+                 style="width:12px;height:12px;margin-right:3px">
+            </svg>
+            Un code de confirmation sera envoyé à ce numéro par SMS
+          </small>
+        </div>
+
+        <!-- Sécurité -->
+        <div class="d-flex align-items-center gap-2 p-3 rounded-3 mb-4"
+             style="background:var(--gray-50);border:1px solid var(--border)">
+          <svg data-lucide="shield-check"
+               style="width:20px;height:20px;color:#10b981;flex-shrink:0">
+          </svg>
+          <div style="font-size:.78rem;color:var(--text-muted)">
+            Transaction sécurisée · Données chiffrées SSL · Aucune donnée bancaire stockée
+          </div>
+        </div>
+
+        <!-- Boutons -->
+        <button type="submit"
+                class="btn btn-success w-100 py-2 fw-bold"
+                style="font-size:1rem;border-radius:var(--radius-sm)">
+          <svg data-lucide="lock"
+               style="width:17px;height:17px;margin-right:7px;vertical-align:-3px">
+          </svg>
+          Payer {{ montant|intcomma }} FCFA
+        </button>
+
+        <a href="{% url 'accounts:mes_reservations' %}"
+           class="btn btn-outline-secondary w-100 mt-2"
+           style="font-size:.9rem">
+          Annuler
+        </a>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Logos opérateurs -->
+  <div class="text-center mt-3">
+    <small class="text-muted">Paiements acceptés :</small>
+    <div class="d-flex justify-content-center gap-3 mt-2">
+      <span style="background:#ffd200;color:#000;font-size:.7rem;
+                   font-weight:800;padding:3px 10px;border-radius:6px">
+        MTN MoMo
+      </span>
+      <span style="background:#ff6600;color:white;font-size:.7rem;
+                   font-weight:800;padding:3px 10px;border-radius:6px">
+        Orange Money
+      </span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Sélection méthode paiement
+const btnMtn    = document.getElementById('methodeMtn');
+const btnOrange = document.getElementById('methodeOrange');
+const cardMtn    = document.getElementById('cardMtn');
+const cardOrange = document.getElementById('cardOrange');
+
+function selectMethode(methode) {
+  if (methode === 'MTN_MOMO') {
+    cardMtn.style.borderColor    = 'var(--primary)';
+    cardMtn.style.background     = 'var(--primary-light)';
+    cardOrange.style.borderColor = 'var(--border)';
+    cardOrange.style.background  = 'white';
+    cardMtn.querySelector('div:last-child').textContent     = 'Sélectionné';
+    cardMtn.querySelector('div:last-child').style.background = 'var(--primary)';
+    cardMtn.querySelector('div:last-child').style.color      = 'white';
+    cardOrange.querySelector('div:last-child').textContent     = 'Cliquer pour choisir';
+    cardOrange.querySelector('div:last-child').style.background = '';
+    cardOrange.querySelector('div:last-child').style.color      = 'var(--text-muted)';
+  } else {
+    cardOrange.style.borderColor = '#f59e0b';
+    cardOrange.style.background  = '#fffbeb';
+    cardMtn.style.borderColor    = 'var(--border)';
+    cardMtn.style.background     = 'white';
+    cardOrange.querySelector('div:last-child').textContent     = 'Sélectionné';
+    cardOrange.querySelector('div:last-child').style.background = '#f59e0b';
+    cardOrange.querySelector('div:last-child').style.color      = 'white';
+    cardMtn.querySelector('div:last-child').textContent     = 'Cliquer pour choisir';
+    cardMtn.querySelector('div:last-child').style.background = '';
+    cardMtn.querySelector('div:last-child').style.color      = 'var(--text-muted)';
+  }
+}
+
+document.querySelectorAll('input[name="methode"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    selectMethode(this.value);
+  });
+});
+</script>
+{% endblock %}

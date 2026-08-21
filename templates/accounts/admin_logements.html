@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Gestion logements{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="mb-4">
+    <a href="{% url 'accounts:dashboard_admin' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Administration
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="building"
+           style="width:24px;height:24px;color:var(--primary)">
+      </svg>
+      Gestion des logements
+    </h2>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+    <form method="get" class="d-flex gap-3 flex-wrap align-items-end">
+      <div>
+        <label class="filter-label">Rechercher</label>
+        <input type="text"
+               name="q"
+               value="{{ search }}"
+               class="form-control form-control-sm"
+               placeholder="Titre, bailleur, ville..."
+               style="width:220px">
+      </div>
+      <div>
+        <label class="filter-label">Statut</label>
+        <select name="statut" class="form-select form-select-sm" style="width:160px">
+          <option value="">Tous</option>
+          <option value="PUBLIE"
+                  {% if statut_actuel == 'PUBLIE' %}selected{% endif %}>
+            Publiés
+          </option>
+          <option value="EN_ATTENTE"
+                  {% if statut_actuel == 'EN_ATTENTE' %}selected{% endif %}>
+            En attente
+          </option>
+          <option value="SUSPENDU"
+                  {% if statut_actuel == 'SUSPENDU' %}selected{% endif %}>
+            Suspendus
+          </option>
+          <option value="ARCHIVE"
+                  {% if statut_actuel == 'ARCHIVE' %}selected{% endif %}>
+            Archivés
+          </option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <svg data-lucide="search"
+             style="width:14px;height:14px;margin-right:4px;vertical-align:-2px">
+        </svg>
+        Filtrer
+      </button>
+      <a href="{% url 'accounts:admin_logements' %}"
+         class="btn btn-outline-secondary btn-sm">
+        Réinitialiser
+      </a>
+    </form>
+  </div>
+
+  <!-- Table logements -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Logement</th>
+              <th>Bailleur</th>
+              <th>Prix</th>
+              <th>Statut</th>
+              <th>Vues</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in logements %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  {% with photo=l.get_photo_principale %}
+                  {% if photo %}
+                  <img src="{{ photo.image.url }}"
+                       class="rounded-2 flex-shrink-0"
+                       style="width:44px;height:36px;object-fit:cover">
+                  {% else %}
+                  <div class="rounded-2 flex-shrink-0 d-flex align-items-center
+                              justify-content-center"
+                       style="width:44px;height:36px;background:var(--gray-100)">
+                    <svg data-lucide="home"
+                         style="width:14px;height:14px;color:var(--gray-300)">
+                    </svg>
+                  </div>
+                  {% endif %}
+                  {% endwith %}
+                  <div>
+                    <div class="fw-semibold small">
+                      {{ l.titre|truncatechars:30 }}
+                    </div>
+                    <div class="text-muted" style="font-size:.71rem">
+                      {{ l.ville.nom }}
+                      {% if l.quartier %} · {{ l.quartier.nom }}{% endif %}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="small text-muted">
+                {{ l.bailleur.get_full_name|truncatechars:20 }}
+              </td>
+              <td class="small fw-bold" style="color:var(--primary)">
+                {{ l.prix_formate }}
+              </td>
+              <td>
+                {% if l.statut == 'PUBLIE' %}
+                <span style="background:#d1fae5;color:#065f46;font-size:.68rem;
+                             font-weight:700;padding:2px 8px;border-radius:50px">
+                  Publié
+                </span>
+                {% elif l.statut == 'EN_ATTENTE' %}
+                <span style="background:#fef3c7;color:#92400e;font-size:.68rem;
+                             font-weight:700;padding:2px 8px;border-radius:50px">
+                  En attente
+                </span>
+                {% elif l.statut == 'SUSPENDU' %}
+                <span style="background:#fee2e2;color:#991b1b;font-size:.68rem;
+                             font-weight:700;padding:2px 8px;border-radius:50px">
+                  Suspendu
+                </span>
+                {% else %}
+                <span style="background:var(--gray-100);color:var(--gray-500);
+                             font-size:.68rem;font-weight:700;
+                             padding:2px 8px;border-radius:50px">
+                  {{ l.get_statut_display }}
+                </span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                {{ l.nb_vues|intcomma }}
+              </td>
+              <td class="small text-muted">
+                {{ l.cree_le|date:"d/m/Y" }}
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  {% if l.statut == 'EN_ATTENTE' %}
+                  <form method="post"
+                        action="{% url 'logements:admin_valider' l.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="valider">
+                    <button type="submit"
+                            class="btn btn-sm"
+                            style="background:#d1fae5;color:#065f46;
+                                   border:none;font-size:.7rem;
+                                   padding:.25rem .5rem;
+                                   border-radius:var(--radius-sm)">
+                      Valider
+                    </button>
+                  </form>
+                  {% endif %}
+                  {% if l.statut == 'PUBLIE' %}
+                  <form method="post"
+                        action="{% url 'logements:admin_valider' l.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="rejeter">
+                    <button type="submit"
+                            class="btn btn-sm"
+                            style="background:#fee2e2;color:#991b1b;
+                                   border:none;font-size:.7rem;
+                                   padding:.25rem .5rem;
+                                   border-radius:var(--radius-sm)">
+                      Suspendre
+                    </button>
+                  </form>
+                  {% endif %}
+                  <a href="{% url 'logements:detail' l.slug %}"
+                     target="_blank"
+                     class="btn btn-sm btn-outline-secondary"
+                     style="padding:.25rem .5rem">
+                    <svg data-lucide="eye" style="width:13px;height:13px"></svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">
+                Aucun logement trouvé.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if logements.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if logements.has_previous %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ logements.previous_page_number }}&statut={{ statut_actuel }}&q={{ search }}">
+          <svg data-lucide="chevron-left" style="width:16px;height:16px"></svg>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in logements.paginator.page_range %}
+      {% if logements.number == num %}
+      <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num > logements.number|add:'-3' and num < logements.number|add:'3' %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ num }}&statut={{ statut_actuel }}&q={{ search }}">
+          {{ num }}
+        </a>
+      </li>
+      {% endif %}
+      {% endfor %}
+      {% if logements.has_next %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ logements.next_page_number }}&statut={{ statut_actuel }}&q={{ search }}">
+          <svg data-lucide="chevron-right" style="width:16px;height:16px"></svg>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

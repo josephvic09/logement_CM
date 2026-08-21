@@ -1,0 +1,67 @@
+<div class="d-flex gap-3 p-3 rounded-4 align-items-start"
+     id="notif-{{ notif.pk }}"
+     style="background:{% if non_lue %}var(--primary-light){% else %}white{% endif %};
+            border:1.5px solid {% if non_lue %}var(--primary){% else %}var(--border){% endif %};
+            transition:.2s">
+
+  <!-- Icône -->
+  <div style="width:42px;height:42px;border-radius:12px;
+              background:{{ notif.couleur }}20;
+              display:flex;align-items:center;justify-content:center;
+              flex-shrink:0">
+    <svg data-lucide="{{ notif.icone }}"
+         style="width:20px;height:20px;color:{{ notif.couleur }}">
+    </svg>
+  </div>
+
+  <!-- Contenu -->
+  <div class="flex-grow-1 overflow-hidden">
+    <div class="d-flex justify-content-between align-items-start">
+      <div class="fw-semibold small">{{ notif.titre }}</div>
+      <small class="text-muted ms-2 flex-shrink-0"
+             style="font-size:.7rem">
+        {{ notif.cree_le|timesince }}
+      </small>
+    </div>
+    <p class="text-muted small mb-0 mt-1"
+       style="line-height:1.5">
+      {{ notif.message }}
+    </p>
+    <div class="d-flex gap-2 mt-2">
+      {% if notif.lien %}
+      <a href="{{ notif.lien }}"
+         class="btn btn-link p-0 text-primary"
+         style="font-size:.78rem;font-weight:600;text-decoration:none"
+         onclick="marquerLue({{ notif.pk }})">
+        Voir les détails
+        <svg data-lucide="arrow-right"
+             style="width:12px;height:12px;margin-left:3px">
+        </svg>
+      </a>
+      {% endif %}
+      {% if non_lue %}
+      <button onclick="marquerLue({{ notif.pk }})"
+              class="btn btn-link p-0 text-muted"
+              style="font-size:.72rem;text-decoration:none">
+        Marquer comme lu
+      </button>
+      {% endif %}
+      <button onclick="supprimerNotif({{ notif.pk }})"
+              class="btn btn-link p-0 text-danger ms-auto"
+              style="font-size:.72rem;text-decoration:none">
+        <svg data-lucide="trash-2"
+             style="width:13px;height:13px">
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Point non lu -->
+  {% if non_lue %}
+  <div style="width:8px;height:8px;border-radius:50%;
+              background:var(--primary);flex-shrink:0;
+              margin-top:6px">
+  </div>
+  {% endif %}
+
+</div>

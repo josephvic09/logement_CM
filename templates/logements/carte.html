@@ -1,0 +1,820 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Carte des logements{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<style>
+  main { overflow: hidden; }
+
+  .carte-page {
+    display: flex;
+    height: calc(100vh - 65px);
+    overflow: hidden;
+  }
+
+  /* ─── Sidebar ─────────────────────────────────────── */
+  .carte-sidebar {
+    width: 380px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .carte-sidebar-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: white;
+  }
+
+  .carte-filters {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--gray-50);
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+  }
+
+  .carte-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: .75rem;
+  }
+  .carte-results::-webkit-scrollbar { width: 5px; }
+  .carte-results::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 3px;
+  }
+
+  /* ─── Carte Logement mini ─────────────────────────── */
+  .map-logement-card {
+    display: flex;
+    gap: .75rem;
+    padding: .75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: .5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    background: white;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .map-logement-card:hover,
+  .map-logement-card.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--text);
+  }
+  .map-logement-card img {
+    width: 80px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+  .map-logement-info { flex: 1; overflow: hidden; }
+  .map-logement-prix {
+    font-weight: 800;
+    font-size: .95rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .map-logement-titre {
+    font-size: .82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+    margin: .15rem 0;
+  }
+  .map-logement-loc {
+    font-size: .73rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .map-logement-infos {
+    display: flex;
+    gap: .4rem;
+    margin-top: .3rem;
+    flex-wrap: wrap;
+  }
+  .map-logement-infos span {
+    font-size: .68rem;
+    background: var(--gray-100);
+    padding: 1px 7px;
+    border-radius: 50px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* ─── Carte principale ────────────────────────────── */
+  .carte-map-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ─── Floating controls ──────────────────────────── */
+  .map-control {
+    position: absolute;
+    z-index: 1000;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: .5rem;
+  }
+  .map-control-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    color: var(--text);
+  }
+  .map-control-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .map-control-btn.active {
+    background: var(--primary);
+    color: white;
+  }
+
+  /* Badge compteur */
+  .results-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 50px;
+  }
+
+  /* Popup Leaflet personnalisé */
+  .custom-popup {
+    min-width: 220px;
+    padding: 0;
+  }
+  .custom-popup img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+    display: block;
+  }
+  .custom-popup-body { padding: .75rem; }
+  .custom-popup-prix {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: .25rem;
+  }
+  .custom-popup-titre {
+    font-weight: 600;
+    font-size: .85rem;
+    margin-bottom: .25rem;
+    color: var(--text);
+  }
+  .custom-popup-loc {
+    font-size: .75rem;
+    color: var(--text-muted);
+    margin-bottom: .6rem;
+  }
+  .custom-popup-btn {
+    display: block;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: .45rem;
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+  .custom-popup-btn:hover {
+    opacity: .9;
+    color: white;
+  }
+
+  /* Prix marker */
+  .prix-marker {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(99,102,241,.4);
+    border: 2px solid white;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .prix-marker:hover, .prix-marker.active {
+    background: linear-gradient(135deg, #4f46e5, #3730a3);
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(99,102,241,.5);
+  }
+  .prix-marker.vedette {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 3px 10px rgba(245,158,11,.4);
+  }
+
+  /* Tooltip survol carte */
+  .leaflet-tooltip {
+    border: none !important;
+    box-shadow: var(--shadow) !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font) !important;
+    font-size: .78rem !important;
+    padding: .35rem .75rem !important;
+  }
+
+  @media (max-width: 768px) {
+    .carte-sidebar {
+      width: 100%;
+      height: 40vh;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .carte-page { flex-direction: column; }
+    .carte-map-container { height: 60vh; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="carte-page">
+
+  <!-- ─── Sidebar gauche ────────────────────────────── -->
+  <div class="carte-sidebar">
+
+    <!-- Header -->
+    <div class="carte-sidebar-header">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+          <svg data-lucide="map" style="width:18px;height:18px;color:var(--primary)"></svg>
+          Carte des logements
+        </h5>
+        <a href="{% url 'logements:recherche' %}"
+           class="btn btn-outline-secondary btn-sm"
+           style="font-size:.75rem">
+          <svg data-lucide="list" style="width:13px;height:13px;margin-right:4px"></svg>
+          Liste
+        </a>
+      </div>
+      <div id="resultsCount">
+        <span class="results-badge">
+          <svg data-lucide="home" style="width:13px;height:13px"></svg>
+          <span id="nbResults">{{ nb_logements }}</span> logement{{ nb_logements|pluralize }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="carte-filters">
+      <div>
+        <label class="filter-label">Ville</label>
+        <select id="filtreVille" class="form-select form-select-sm">
+          <option value="">Toutes les villes</option>
+          {% for ville in villes %}
+          <option value="{{ ville.pk }}"
+                  {% if request.GET.ville == ville.pk|stringformat:"s" %}selected{% endif %}>
+            {{ ville.nom }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="filter-label">Type d'offre</label>
+          <select id="filtreOffre" class="form-select form-select-sm">
+            <option value="">Tous</option>
+            {% for val, label in offre_choices %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="filter-label">Type logement</label>
+          <select id="filtreType" class="form-select form-select-sm">
+            <option value="">Tous</option>
+            {% for val, label in type_choices %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="filter-label">
+          Budget max : <strong id="prixLabel">Tous</strong>
+        </label>
+        <input type="range"
+               id="filtrePrix"
+               class="form-range"
+               min="0"
+               max="500000"
+               step="10000"
+               value="500000">
+        <div class="d-flex justify-content-between"
+             style="font-size:.7rem;color:var(--text-muted);margin-top:2px">
+          <span>0 FCFA</span>
+          <span>500 000 FCFA</span>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <label class="d-flex align-items-center gap-1"
+               style="cursor:pointer;font-size:.78rem;font-weight:500">
+          <input type="checkbox" id="filtreWifi" class="form-check-input mt-0">
+          <svg data-lucide="wifi" style="width:13px;height:13px;color:var(--primary)"></svg>
+          WiFi
+        </label>
+        <label class="d-flex align-items-center gap-1"
+               style="cursor:pointer;font-size:.78rem;font-weight:500">
+          <input type="checkbox" id="filtreParking" class="form-check-input mt-0">
+          <svg data-lucide="car" style="width:13px;height:13px;color:var(--primary)"></svg>
+          Parking
+        </label>
+        <label class="d-flex align-items-center gap-1"
+               style="cursor:pointer;font-size:.78rem;font-weight:500">
+          <input type="checkbox" id="filtrePiscine" class="form-check-input mt-0">
+          <svg data-lucide="waves" style="width:13px;height:13px;color:var(--primary)"></svg>
+          Piscine
+        </label>
+        <label class="d-flex align-items-center gap-1"
+               style="cursor:pointer;font-size:.78rem;font-weight:500">
+          <input type="checkbox" id="filtreGardien" class="form-check-input mt-0">
+          <svg data-lucide="shield-check" style="width:13px;height:13px;color:var(--primary)"></svg>
+          Gardien
+        </label>
+      </div>
+
+      <button onclick="reinitFiltres()"
+              class="btn btn-outline-secondary btn-sm w-100"
+              style="font-size:.78rem">
+        <svg data-lucide="refresh-cw" style="width:13px;height:13px;margin-right:4px"></svg>
+        Réinitialiser les filtres
+      </button>
+    </div>
+
+    <!-- Liste des logements -->
+    <div class="carte-results" id="logementsList">
+      <!-- Rempli par JavaScript -->
+    </div>
+
+  </div>
+
+  <!-- ─── Carte principale ──────────────────────────── -->
+  <div class="carte-map-container">
+
+    <!-- Carte Leaflet -->
+    <div id="map"></div>
+
+    <!-- Contrôles flottants -->
+    <div class="map-control" style="top:1rem;right:1rem;display:flex;flex-direction:column;gap:.25rem">
+      <button class="map-control-btn"
+              id="btnGeolocate"
+              title="Ma position"
+              onclick="geolocateUser()">
+        <svg data-lucide="crosshair" style="width:18px;height:18px"></svg>
+      </button>
+      <button class="map-control-btn"
+              id="btnFullscreen"
+              title="Plein écran"
+              onclick="toggleSidebar()">
+        <svg data-lucide="maximize-2" style="width:18px;height:18px"></svg>
+      </button>
+      <button class="map-control-btn"
+              id="btnClusters"
+              title="Grouper les marqueurs"
+              onclick="toggleClusters()"
+              class="active">
+        <svg data-lucide="layers" style="width:18px;height:18px"></svg>
+      </button>
+    </div>
+
+    <!-- Barre de recherche flottante -->
+    <div class="map-control"
+         style="top:1rem;left:50%;transform:translateX(-50%);
+                padding:.5rem .75rem;display:flex;gap:.5rem;
+                min-width:280px">
+      <svg data-lucide="search" style="width:16px;height:16px;color:var(--text-muted);flex-shrink:0;margin-top:2px"></svg>
+      <input type="text"
+             id="mapSearch"
+             placeholder="Rechercher un quartier..."
+             style="border:none;outline:none;font-size:.875rem;
+                    width:100%;background:transparent;color:var(--text)">
+    </div>
+
+    <!-- Info sélection -->
+    <div id="selectedInfo"
+         class="map-control"
+         style="bottom:1.5rem;left:50%;transform:translateX(-50%);
+                display:none;min-width:300px;max-width:400px">
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+// ─── Données des logements ────────────────────────────
+const ALL_LOGEMENTS = {{ logements_json|safe }};
+let filteredLogements = [...ALL_LOGEMENTS];
+let map, markersLayer, clusterGroup, userMarker;
+let useClusters = true;
+let activeMarkerId = null;
+
+// ─── Initialiser la carte ────────────────────────────
+function initMap() {
+  map = L.map('map', {
+    center: [3.848, 11.502],
+    zoom: 12,
+    zoomControl: true,
+  });
+
+  // Tuile carte
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Groupe clusters
+  clusterGroup = L.markerClusterGroup({
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    maxClusterRadius: 60,
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+      return L.divIcon({
+        html: `<div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                            color:white;width:40px;height:40px;border-radius:50%;
+                            display:flex;align-items:center;justify-content:center;
+                            font-weight:800;font-size:.85rem;
+                            border:3px solid white;
+                            box-shadow:0 3px 12px rgba(99,102,241,.4)">${count}</div>`,
+        className: '',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
+    }
+  });
+
+  markersLayer = L.layerGroup();
+  afficherMarqueurs();
+}
+
+// ─── Afficher les marqueurs ───────────────────────────
+function afficherMarqueurs() {
+  map.removeLayer(clusterGroup);
+  markersLayer.clearLayers();
+  clusterGroup.clearLayers();
+
+  const bounds = [];
+
+  filteredLogements.forEach(l => {
+    const prix = new Intl.NumberFormat('fr-FR').format(l.prix);
+    const icon = L.divIcon({
+      html: `<div class="prix-marker ${l.vedette ? 'vedette' : ''}"
+                  id="marker-${l.id}">
+               ${prix}
+             </div>`,
+      className: '',
+      iconAnchor: [30, 16],
+    });
+
+    const marker = L.marker([l.lat, l.lng], { icon })
+      .bindPopup(creerPopup(l), {
+        maxWidth: 240,
+        className: 'custom-popup-wrapper',
+        closeButton: true,
+      })
+      .bindTooltip(l.titre, {
+        direction: 'top',
+        offset: [0, -20],
+      });
+
+    marker.on('click', () => {
+      highlightCard(l.id);
+      activeMarkerId = l.id;
+      const markerEl = document.getElementById(`marker-${l.id}`);
+      if (markerEl) markerEl.classList.add('active');
+    });
+
+    marker.on('popupclose', () => {
+      const markerEl = document.getElementById(`marker-${l.id}`);
+      if (markerEl) markerEl.classList.remove('active');
+    });
+
+    if (useClusters) {
+      clusterGroup.addLayer(marker);
+    } else {
+      markersLayer.addLayer(marker);
+    }
+
+    bounds.push([l.lat, l.lng]);
+  });
+
+  if (useClusters) {
+    map.addLayer(clusterGroup);
+  } else {
+    map.addLayer(markersLayer);
+  }
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+  }
+
+  mettreAJourListe();
+}
+
+// ─── Créer le popup d'un logement ────────────────────
+function creerPopup(l) {
+  return `
+    <div class="custom-popup">
+      <img src="${l.photo}" alt="${l.titre}"
+           onerror="this.src='/static/images/no-image.jpg'">
+      <div class="custom-popup-body">
+        <div class="custom-popup-prix">${l.prix_formate}</div>
+        <div class="custom-popup-titre">${l.titre}</div>
+        <div class="custom-popup-loc">
+          📍 ${l.quartier ? l.quartier + ', ' : ''}${l.ville}
+        </div>
+        <div style="font-size:.73rem;color:var(--text-muted);margin-bottom:.6rem;
+                    display:flex;gap:.5rem;flex-wrap:wrap">
+          <span>🛏 ${l.chambres} ch.</span>
+          <span>📋 ${l.type}</span>
+          ${l.wifi ? '<span>📶 WiFi</span>' : ''}
+          ${l.parking ? '<span>🚗 Parking</span>' : ''}
+        </div>
+        <a href="${l.url}" target="_blank" class="custom-popup-btn">
+          Voir le logement →
+        </a>
+      </div>
+    </div>`;
+}
+
+// ─── Mettre à jour la liste sidebar ──────────────────
+function mettreAJourListe() {
+  const list = document.getElementById('logementsList');
+  document.getElementById('nbResults').textContent = filteredLogements.length;
+
+  if (filteredLogements.length === 0) {
+    list.innerHTML = `
+      <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+        <svg data-lucide="search-x" style="width:40px;height:40px;
+             color:var(--gray-200);display:block;margin:0 auto .75rem"></svg>
+        <p style="font-size:.85rem">Aucun logement trouvé<br>pour ces critères.</p>
+        <button onclick="reinitFiltres()"
+                style="background:var(--primary-light);border:none;
+                       color:var(--primary);padding:.4rem 1rem;
+                       border-radius:50px;font-size:.78rem;
+                       font-weight:600;cursor:pointer">
+          Réinitialiser
+        </button>
+      </div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+
+  list.innerHTML = filteredLogements.map(l => `
+    <div class="map-logement-card"
+         id="card-${l.id}"
+         onclick="zoomerSurLogement(${l.id}, ${l.lat}, ${l.lng})">
+      <img src="${l.photo}"
+           alt="${l.titre}"
+           onerror="this.src='/static/images/no-image.jpg'">
+      <div class="map-logement-info">
+        <div class="map-logement-prix">${l.prix_formate}</div>
+        <div class="map-logement-titre">${l.titre}</div>
+        <div class="map-logement-loc">
+          📍 ${l.quartier ? l.quartier + ', ' : ''}${l.ville}
+        </div>
+        <div class="map-logement-infos">
+          <span>🛏 ${l.chambres} ch.</span>
+          <span>${l.offre}</span>
+          ${l.wifi ? '<span>📶</span>' : ''}
+          ${l.parking ? '<span>🚗</span>' : ''}
+          ${l.piscine ? '<span>🏊</span>' : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── Zoomer sur un logement ───────────────────────────
+function zoomerSurLogement(id, lat, lng) {
+  map.setView([lat, lng], 16, { animate: true });
+  highlightCard(id);
+
+  // Ouvrir le popup
+  (useClusters ? clusterGroup : markersLayer).eachLayer(marker => {
+    if (marker.getLatLng &&
+        Math.abs(marker.getLatLng().lat - lat) < 0.0001) {
+      marker.openPopup();
+    }
+  });
+}
+
+// ─── Mettre en évidence une carte ─────────────────────
+function highlightCard(id) {
+  document.querySelectorAll('.map-logement-card').forEach(c => {
+    c.classList.remove('active');
+  });
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.classList.add('active');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ─── Géolocalisation ─────────────────────────────────
+function geolocateUser() {
+  const btn = document.getElementById('btnGeolocate');
+  btn.innerHTML = `<div style="width:18px;height:18px;border:2px solid var(--primary);
+                               border-top-color:transparent;border-radius:50%;
+                               animation:spin .6s linear infinite"></div>`;
+
+  if (!navigator.geolocation) {
+    alert("La géolocalisation n'est pas disponible.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+
+      if (userMarker) map.removeLayer(userMarker);
+
+      const icon = L.divIcon({
+        html: `<div style="width:18px;height:18px;border-radius:50%;
+                            background:#ef4444;border:3px solid white;
+                            box-shadow:0 2px 8px rgba(239,68,68,.5)"></div>`,
+        className: '',
+        iconAnchor: [9, 9],
+      });
+
+      userMarker = L.marker([lat, lng], { icon })
+        .addTo(map)
+        .bindPopup('<strong>📍 Vous êtes ici</strong>');
+
+      map.setView([lat, lng], 14, { animate: true });
+
+      // Cercle de rayon
+      L.circle([lat, lng], {
+        radius: 1000,
+        color: '#ef4444',
+        fillColor: '#fee2e2',
+        fillOpacity: 0.15,
+        weight: 2,
+      }).addTo(map);
+
+      btn.innerHTML = `<svg data-lucide="crosshair"
+                            style="width:18px;height:18px;color:#ef4444"></svg>`;
+      lucide.createIcons();
+    },
+    err => {
+      alert("Impossible d'obtenir votre position.");
+      btn.innerHTML = `<svg data-lucide="crosshair" style="width:18px;height:18px"></svg>`;
+      lucide.createIcons();
+    }
+  );
+}
+
+// ─── Toggle sidebar ───────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.querySelector('.carte-sidebar');
+  sidebar.style.display = sidebar.style.display === 'none' ? '' : 'none';
+}
+
+// ─── Toggle clusters ──────────────────────────────────
+function toggleClusters() {
+  useClusters = !useClusters;
+  const btn = document.getElementById('btnClusters');
+  btn.classList.toggle('active', useClusters);
+  afficherMarqueurs();
+}
+
+// ─── Filtres ──────────────────────────────────────────
+function appliquerFiltres() {
+  const ville   = document.getElementById('filtreVille').value;
+  const offre   = document.getElementById('filtreOffre').value;
+  const type    = document.getElementById('filtreType').value;
+  const prixMax = parseInt(document.getElementById('filtrePrix').value);
+  const wifi    = document.getElementById('filtreWifi').checked;
+  const parking = document.getElementById('filtreParking').checked;
+  const piscine = document.getElementById('filtrePiscine').checked;
+  const gardien = document.getElementById('filtreGardien').checked;
+  const search  = document.getElementById('mapSearch').value.toLowerCase().trim();
+
+  filteredLogements = ALL_LOGEMENTS.filter(l => {
+    if (ville && String(l.ville_id) !== ville) return false;
+    if (offre && !l.offre.toLowerCase().includes(offre.toLowerCase()) &&
+        l.offre !== offre) return false;
+    if (type && l.type !== type) return false;
+    if (l.prix > prixMax) return false;
+    if (wifi    && !l.wifi)    return false;
+    if (parking && !l.parking) return false;
+    if (piscine && !l.piscine) return false;
+    if (gardien && !l.gardien) return false;
+    if (search && !l.titre.toLowerCase().includes(search) &&
+        !l.quartier.toLowerCase().includes(search) &&
+        !l.ville.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  afficherMarqueurs();
+}
+
+function reinitFiltres() {
+  document.getElementById('filtreVille').value   = '';
+  document.getElementById('filtreOffre').value   = '';
+  document.getElementById('filtreType').value    = '';
+  document.getElementById('filtrePrix').value    = '500000';
+  document.getElementById('filtreWifi').checked    = false;
+  document.getElementById('filtreParking').checked = false;
+  document.getElementById('filtrePiscine').checked = false;
+  document.getElementById('filtreGardien').checked = false;
+  document.getElementById('mapSearch').value     = '';
+  document.getElementById('prixLabel').textContent = 'Tous';
+  filteredLogements = [...ALL_LOGEMENTS];
+  afficherMarqueurs();
+}
+
+// ─── Slider prix ──────────────────────────────────────
+document.getElementById('filtrePrix').addEventListener('input', function() {
+  const val = parseInt(this.value);
+  const fmt = new Intl.NumberFormat('fr-FR').format(val);
+  document.getElementById('prixLabel').textContent =
+    val >= 500000 ? 'Tous' : fmt + ' FCFA';
+  appliquerFiltres();
+});
+
+// Autres filtres
+['filtreVille','filtreOffre','filtreType'].forEach(id => {
+  document.getElementById(id).addEventListener('change', appliquerFiltres);
+});
+['filtreWifi','filtreParking','filtrePiscine','filtreGardien'].forEach(id => {
+  document.getElementById(id).addEventListener('change', appliquerFiltres);
+});
+document.getElementById('mapSearch').addEventListener('input', appliquerFiltres);
+
+// ─── CSS animation spin ──────────────────────────────
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+  .leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: none !important;
+  }
+  .custom-popup-wrapper .leaflet-popup-content-wrapper {
+    box-shadow: 0 10px 40px rgba(0,0,0,.15) !important;
+  }
+`;
+document.head.appendChild(styleEl);
+
+// ─── Lancement ───────────────────────────────────────
+initMap();
+</script>
+{% endblock %}

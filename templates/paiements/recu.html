@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Reçu de paiement{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:560px">
+
+  <!-- Animation succès -->
+  <div class="text-center mb-4">
+    <div style="width:80px;height:80px;
+                background:linear-gradient(135deg,#10b981,#059669);
+                border-radius:50%;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1.5rem;
+                box-shadow:0 8px 30px rgba(16,185,129,.4);
+                animation:pulse 2s infinite">
+      <svg data-lucide="check"
+           style="width:40px;height:40px;color:white;stroke-width:3">
+      </svg>
+    </div>
+    <h2 class="fw-bold mb-1" style="color:#10b981">
+      Paiement réussi !
+    </h2>
+    <p class="text-muted">
+      Votre transaction a été effectuée avec succès
+    </p>
+  </div>
+
+  <!-- Carte reçu -->
+  <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+    <!-- Barre verte -->
+    <div style="height:6px;
+                background:linear-gradient(90deg,#10b981,#6366f1)">
+    </div>
+
+    <div class="card-body p-4">
+
+      <!-- Montant principal -->
+      <div class="text-center py-3 mb-4"
+           style="background:linear-gradient(135deg,var(--primary-light),#f0fdf4);
+                  border-radius:var(--radius)">
+        <div style="font-size:3rem;font-weight:900;
+                    background:linear-gradient(135deg,var(--primary),#10b981);
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                    background-clip:text">
+          {{ paiement.montant_formate }}
+        </div>
+        <div class="text-muted small">Montant payé</div>
+      </div>
+
+      <!-- Détails transaction -->
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Référence
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;
+                     font-weight:700;font-family:monospace;
+                     font-size:.85rem">
+            {{ paiement.reference }}
+          </td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            ID Transaction
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;
+                     font-family:monospace;font-size:.78rem">
+            {{ paiement.transaction_id }}
+          </td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Méthode
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;
+                     font-size:.85rem;font-weight:600">
+            {{ paiement.get_methode_display }}
+          </td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Numéro
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;font-size:.85rem">
+            {{ paiement.telephone }}
+          </td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Date
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;font-size:.85rem">
+            {{ paiement.traite_le|date:"d/m/Y à H:i" }}
+          </td>
+        </tr>
+        {% if paiement.reservation %}
+        <tr style="border-bottom:1px solid var(--gray-100)">
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Logement
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right;font-size:.82rem;font-weight:600">
+            {{ paiement.reservation.logement.titre|truncatechars:35 }}
+          </td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td style="padding:.75rem .5rem;color:var(--text-muted);font-size:.85rem">
+            Statut
+          </td>
+          <td style="padding:.75rem .5rem;text-align:right">
+            <span style="background:#d1fae5;color:#065f46;
+                         font-size:.78rem;font-weight:700;
+                         padding:3px 12px;border-radius:50px">
+              ✅ Réussi
+            </span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Actions -->
+      <div class="d-flex flex-column gap-2 mt-4">
+        <a href="{% url 'paiements:telecharger_recu' paiement.uuid %}"
+           class="btn btn-outline-primary w-100"
+           style="font-size:.9rem">
+          <svg data-lucide="download"
+               style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+          </svg>
+          Télécharger le reçu PDF
+        </a>
+        {% if paiement.reservation %}
+        <a href="{% url 'logements:detail' paiement.reservation.logement.slug %}"
+           class="btn btn-primary w-100"
+           style="font-size:.9rem">
+          <svg data-lucide="home"
+               style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+          </svg>
+          Voir le logement
+        </a>
+        {% endif %}
+        <a href="{% url 'accounts:mes_reservations' %}"
+           class="btn btn-outline-secondary w-100"
+           style="font-size:.9rem">
+          Mes réservations
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Partager -->
+  <div class="text-center mt-3">
+    <small class="text-muted">
+      <svg data-lucide="share-2"
+           style="width:13px;height:13px;margin-right:4px">
+      </svg>
+      Partagez votre expérience LogementCM
+    </small>
+  </div>
+
+</div>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 8px 30px rgba(16,185,129,.4); }
+    50%       { box-shadow: 0 8px 40px rgba(16,185,129,.7); }
+  }
+</style>
+{% endblock %}

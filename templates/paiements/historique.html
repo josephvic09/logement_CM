@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Historique paiements{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="mb-4">
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="credit-card"
+           style="width:24px;height:24px;color:var(--primary)">
+      </svg>
+      Historique des paiements
+    </h2>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="dash-stat">
+        <div class="dash-icon green">
+          <svg data-lucide="trending-up"
+               style="width:22px;height:22px;color:#10b981">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">
+            {{ total_paye|intcomma }} FCFA
+          </div>
+          <div class="dash-lbl">Total payé</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-stat">
+        <div class="dash-icon indigo">
+          <svg data-lucide="check-circle"
+               style="width:22px;height:22px;color:#6366f1">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_reussis }}</div>
+          <div class="dash-lbl">Paiements réussis</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-stat">
+        <div class="dash-icon red">
+          <svg data-lucide="x-circle"
+               style="width:22px;height:22px;color:#ef4444">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_echecs }}</div>
+          <div class="dash-lbl">Paiements échoués</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste paiements -->
+  {% if paiements %}
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Type</th>
+              <th>Méthode</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in paiements %}
+            <tr>
+              <td>
+                <span style="font-family:monospace;font-size:.82rem;
+                             font-weight:700;color:var(--text)">
+                  {{ p.reference }}
+                </span>
+              </td>
+              <td>
+                <span style="background:var(--primary-light);
+                             color:var(--primary);
+                             font-size:.7rem;font-weight:700;
+                             padding:2px 8px;border-radius:50px">
+                  {{ p.get_type_paiement_display }}
+                </span>
+              </td>
+              <td class="small">
+                {% if p.methode == 'MTN_MOMO' %}
+                <span style="background:#ffd200;color:#000;
+                             font-size:.7rem;font-weight:800;
+                             padding:2px 8px;border-radius:4px">
+                  MTN MoMo
+                </span>
+                {% elif p.methode == 'ORANGE_MONEY' %}
+                <span style="background:#ff6600;color:white;
+                             font-size:.7rem;font-weight:800;
+                             padding:2px 8px;border-radius:4px">
+                  Orange Money
+                </span>
+                {% else %}
+                {{ p.get_methode_display }}
+                {% endif %}
+              </td>
+              <td class="fw-bold" style="color:var(--primary)">
+                {{ p.montant|intcomma }} FCFA
+              </td>
+              <td>
+                {% if p.statut == 'REUSSI' %}
+                <span style="background:#d1fae5;color:#065f46;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  ✅ Réussi
+                </span>
+                {% elif p.statut == 'EN_ATTENTE' %}
+                <span style="background:#fef3c7;color:#92400e;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  ⏳ En attente
+                </span>
+                {% elif p.statut == 'TRAITEMENT' %}
+                <span style="background:#dbeafe;color:#1e40af;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  🔄 En traitement
+                </span>
+                {% elif p.statut == 'ECHOUE' %}
+                <span style="background:#fee2e2;color:#991b1b;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  ❌ Échoué
+                </span>
+                {% elif p.statut == 'ANNULE' %}
+                <span style="background:var(--gray-100);color:var(--gray-500);
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  Annulé
+                </span>
+                {% else %}
+                <span style="background:var(--gray-100);color:var(--gray-500);
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  {{ p.get_statut_display }}
+                </span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                {{ p.cree_le|date:"d/m/Y H:i" }}
+              </td>
+              <td>
+                {% if p.statut == 'REUSSI' %}
+                <a href="{% url 'paiements:recu' p.uuid %}"
+                   class="btn btn-sm btn-outline-primary"
+                   style="font-size:.72rem;padding:.25rem .65rem">
+                  <svg data-lucide="receipt"
+                       style="width:13px;height:13px;margin-right:3px">
+                  </svg>
+                  Reçu
+                </a>
+                {% elif p.statut == 'TRAITEMENT' %}
+                <a href="{% url 'paiements:confirmer' p.uuid %}"
+                   class="btn btn-sm btn-outline-warning"
+                   style="font-size:.72rem;padding:.25rem .65rem">
+                  Confirmer
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:var(--gray-100);
+                border-radius:50%;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1.5rem">
+      <svg data-lucide="credit-card"
+           style="width:36px;height:36px;color:var(--gray-300)">
+      </svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucun paiement</h4>
+    <p class="text-muted mb-4">
+      Vous n'avez pas encore effectué de paiement.
+    </p>
+    <a href="{% url 'logements:recherche' %}"
+       class="btn btn-primary px-4">
+      Trouver un logement
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

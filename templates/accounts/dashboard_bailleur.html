@@ -1,0 +1,997 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Tableau de bord Bailleur{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ─── Variables de design ─────────────────────────────── */
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --primary-dark: #3730A3;
+    --secondary: #8B5CF6;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1E293B;
+    --gray-900: #0F172A;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.03);
+    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02);
+    --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── En-tête ───────────────────────────────────────────── */
+  .dash-header {
+    margin-bottom: 2rem;
+  }
+
+  .dash-header .greeting {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--gray-900);
+    letter-spacing: -0.02em;
+  }
+
+  .dash-header .greeting span {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dash-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--gray-500);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .btn-primary-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: none;
+    color: white;
+    padding: 10px 28px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn-primary-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.45);
+    color: white;
+  }
+
+  /* ─── Stats Cards ───────────────────────────────────────── */
+  .stat-card-modern {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--gray-100);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .stat-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .stat-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+
+  .stat-card-modern .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+  }
+
+  .stat-card-modern .stat-icon.purple {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .stat-card-modern .stat-icon.green {
+    background: #D1FAE5;
+    color: var(--success);
+  }
+  .stat-card-modern .stat-icon.orange {
+    background: #FEF3C7;
+    color: var(--warning);
+  }
+  .stat-card-modern .stat-icon.red {
+    background: #FEE2E2;
+    color: var(--danger);
+  }
+  .stat-card-modern .stat-icon.blue {
+    background: #DBEAFE;
+    color: #3B82F6;
+  }
+
+  .stat-card-modern .stat-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--gray-900);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-card-modern .stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+
+  .stat-card-modern .stat-change {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-change.up {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+  .stat-change.down {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+
+  /* Couleurs des bordures */
+  .stat-card-modern:nth-child(1)::before { background: var(--primary); }
+  .stat-card-modern:nth-child(2)::before { background: var(--success); }
+  .stat-card-modern:nth-child(3)::before { background: var(--warning); }
+  .stat-card-modern:nth-child(4)::before { background: var(--primary); }
+  .stat-card-modern:nth-child(5)::before { background: var(--danger); }
+  .stat-card-modern:nth-child(6)::before { background: var(--warning); }
+
+  /* ─── Quick Actions ────────────────────────────────────── */
+  .quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 992px) {
+    .quick-action-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 576px) {
+    .quick-action-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .quick-action-item {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    border: 1px solid var(--gray-100);
+    transition: var(--transition);
+    text-decoration: none;
+    display: block;
+    position: relative;
+  }
+
+  .quick-action-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+  }
+
+  .quick-action-item .qa-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 8px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: var(--transition);
+  }
+
+  .quick-action-item:hover .qa-icon {
+    transform: scale(1.05);
+  }
+
+  .quick-action-item .qa-icon.purple { background: var(--primary-light); }
+  .quick-action-item .qa-icon.green { background: #D1FAE5; }
+  .quick-action-item .qa-icon.orange { background: #FEF3C7; }
+  .quick-action-item .qa-icon.blue { background: #DBEAFE; }
+  .quick-action-item .qa-icon.pink { background: #FCE7F3; }
+
+  .quick-action-item .qa-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--gray-800);
+  }
+
+  .quick-action-item .qa-sub {
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    margin-top: 2px;
+  }
+
+  .quick-action-item .qa-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--danger);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+
+  /* ─── Card principale ───────────────────────────────────── */
+  .card-modern {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+
+  .card-modern:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-modern .card-header-modern {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--gray-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+  }
+
+  .card-modern .card-header-modern .title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-modern .card-header-modern .title svg {
+    color: var(--primary);
+    width: 18px;
+    height: 18px;
+  }
+
+  .card-modern .card-body-modern {
+    padding: 0;
+  }
+
+  /* ─── Tableau ───────────────────────────────────────────── */
+  .table-dash {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .table-dash thead th {
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    border-bottom: 1px solid var(--gray-100);
+    padding: 12px 16px;
+    background: var(--gray-50);
+  }
+
+  .table-dash tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--gray-50);
+  }
+
+  .table-dash tbody tr {
+    transition: var(--transition);
+  }
+
+  .table-dash tbody tr:hover {
+    background: var(--gray-50);
+  }
+
+  .table-dash tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ─── Badges de statut ──────────────────────────────────── */
+  .badge-status {
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .badge-status.publie { background: #D1FAE5; color: #065F46; }
+  .badge-status.attente { background: #FEF3C7; color: #92400E; }
+  .badge-status.suspendu { background: #FEE2E2; color: #991B1B; }
+  .badge-status.loue { background: #DBEAFE; color: #1E40AF; }
+  .badge-status.default { background: var(--gray-100); color: var(--gray-500); }
+
+  /* ─── Boutons d'action ──────────────────────────────────── */
+  .btn-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    cursor: pointer;
+    color: var(--gray-400);
+  }
+
+  .btn-icon:hover {
+    transform: scale(1.05);
+  }
+
+  .btn-icon.view:hover { background: var(--gray-100); color: var(--gray-600); }
+  .btn-icon.edit:hover { background: var(--primary-light); color: var(--primary); }
+  .btn-icon.delete:hover { background: #FEE2E2; color: var(--danger); }
+
+  .btn-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ─── Profile Card ──────────────────────────────────────── */
+  .profile-card-modern {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-100);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .profile-card-modern .avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .profile-card-modern .name {
+    font-weight: 700;
+    color: var(--gray-800);
+    font-size: 1rem;
+  }
+
+  .profile-card-modern .email {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+  }
+
+  .profile-card-modern .badge-role {
+    font-size: 0.65rem;
+    padding: 2px 12px;
+    border-radius: 50px;
+    font-weight: 600;
+  }
+
+  .badge-role.bailleur {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .badge-role.verified {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+
+  .profile-card-modern .progress-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--gray-100);
+    overflow: hidden;
+  }
+
+  .profile-card-modern .progress-track .bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transition: width 0.6s ease;
+  }
+
+  .profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .profile-stats-grid .stat-box {
+    padding: 8px;
+    border-radius: var(--radius-xs);
+    background: var(--gray-50);
+    text-align: center;
+  }
+
+  .profile-stats-grid .stat-box .num {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--gray-800);
+  }
+
+  .profile-stats-grid .stat-box .lbl {
+    font-size: 0.6rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* ─── Reservation Items ────────────────────────────────── */
+  .reservation-item-modern {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    transition: var(--transition);
+  }
+
+  .reservation-item-modern:last-child {
+    border-bottom: none;
+  }
+
+  .reservation-item-modern:hover {
+    background: var(--gray-50);
+  }
+
+  .reservation-item-modern .res-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--gray-800);
+  }
+
+  .reservation-item-modern .res-property {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+  }
+
+  .reservation-item-modern .res-date {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+  }
+
+  .res-status-modern {
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+
+  .res-status-modern.attente { background: #FEF3C7; color: #92400E; }
+  .res-status-modern.confirme { background: #D1FAE5; color: #065F46; }
+  .res-status-modern.refuse { background: #FEE2E2; color: #991B1B; }
+  .res-status-modern.default { background: var(--gray-100); color: var(--gray-500); }
+
+  .btn-response {
+    padding: 4px 12px;
+    border-radius: var(--radius-xs);
+    border: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .btn-response.confirm {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+  .btn-response.confirm:hover {
+    background: #A7F3D0;
+    transform: scale(1.02);
+  }
+
+  .btn-response.refuse {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+  .btn-response.refuse:hover {
+    background: #FCA5A5;
+    transform: scale(1.02);
+  }
+
+  /* ─── Animations ────────────────────────────────────────── */
+  .animate-in {
+    animation: fadeUp 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-in:nth-child(1) { animation-delay: 0.05s; }
+  .animate-in:nth-child(2) { animation-delay: 0.10s; }
+  .animate-in:nth-child(3) { animation-delay: 0.15s; }
+  .animate-in:nth-child(4) { animation-delay: 0.20s; }
+  .animate-in:nth-child(5) { animation-delay: 0.25s; }
+  .animate-in:nth-child(6) { animation-delay: 0.30s; }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ─── Responsive ────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .dash-header .greeting {
+      font-size: 1.35rem;
+    }
+
+    .stat-card-modern {
+      padding: 1rem;
+    }
+
+    .stat-card-modern .stat-number {
+      font-size: 1.2rem;
+    }
+
+    .stat-card-modern .stat-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 1rem;
+    }
+
+    .quick-action-item {
+      padding: 1rem 0.5rem;
+    }
+
+    .quick-action-item .qa-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+
+    .quick-action-item .qa-title {
+      font-size: 0.75rem;
+    }
+
+    .card-modern .card-header-modern {
+      padding: 1rem;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .profile-card-modern {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .quick-action-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .stat-card-modern .stat-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 0.9rem;
+    }
+
+    .stat-card-modern .stat-number {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+<!-- ─── EN-TÊTE ──────────────────────────────────────────── -->
+<div class="container py-4">
+
+  <div class="dash-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <div class="subtitle">🏠 Espace Bailleur</div>
+      <h1 class="greeting">
+        Bonjour, <span>{{ user.prenom }}</span>
+      </h1>
+    </div>
+    <a href="{% url 'logements:creer' %}" class="btn-primary-gradient">
+      <svg data-lucide="plus-circle" style="width:18px;height:18px;"></svg>
+      Nouvelle annonce
+    </a>
+  </div>
+
+  <!-- ─── STATISTIQUES ────────────────────────────────────── -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon purple">
+            <svg data-lucide="building" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ nb_total }}</div>
+            <div class="stat-label">Total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon green">
+            <svg data-lucide="check-circle" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ nb_publie }}</div>
+            <div class="stat-label">Publiées</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon orange">
+            <svg data-lucide="clock" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ nb_en_attente }}</div>
+            <div class="stat-label">En attente</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon blue">
+            <svg data-lucide="eye" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ total_vues|intcomma }}</div>
+            <div class="stat-label">Vues</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon red">
+            <svg data-lucide="heart" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ total_favoris }}</div>
+            <div class="stat-label">Favoris</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-6 animate-in">
+      <div class="stat-card-modern">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon orange">
+            <svg data-lucide="calendar" style="width:22px;height:22px;"></svg>
+          </div>
+          <div>
+            <div class="stat-number">{{ reservations_attente }}</div>
+            <div class="stat-label">Demandes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── ACTIONS RAPIDES ────────────────────────────────── -->
+  <div class="quick-action-grid">
+    <a href="{% url 'logements:creer' %}" class="quick-action-item">
+      <div class="qa-icon purple">📝</div>
+      <div class="qa-title">Publier</div>
+      <div class="qa-sub">Nouvelle annonce</div>
+    </a>
+    <a href="{% url 'paiements:abonnements' %}" class="quick-action-item">
+      <div class="qa-icon pink">⭐</div>
+      <div class="qa-title">Premium</div>
+      <div class="qa-sub">{% if user.premium_actif %}Actif{% else %}Upgrade{% endif %}</div>
+    </a>
+    <a href="{% url 'accounts:mes_annonces' %}" class="quick-action-item">
+      <div class="qa-icon blue">📋</div>
+      <div class="qa-title">Mes annonces</div>
+      <div class="qa-sub">{{ nb_total }} annonce{{ nb_total|pluralize }}</div>
+    </a>
+    <a href="{% url 'accounts:gerer_reservations' %}" class="quick-action-item">
+      <div class="qa-icon orange">📅</div>
+      <div class="qa-title">Réservations</div>
+      <div class="qa-sub">
+        {% if reservations_attente > 0 %}
+        {{ reservations_attente }} en attente
+        {% else %}
+        Gérer les demandes
+        {% endif %}
+      </div>
+      {% if reservations_attente > 0 %}
+      <div class="qa-badge">{{ reservations_attente }}</div>
+      {% endif %}
+    </a>
+    <a href="{% url 'chat:conversations' %}" class="quick-action-item">
+      <div class="qa-icon green">💬</div>
+      <div class="qa-title">Messages</div>
+      <div class="qa-sub">Locataires</div>
+    </a>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ─── MES ANNONCES ──────────────────────────────────── -->
+    <div class="col-lg-8">
+      <div class="card-modern">
+        <div class="card-header-modern">
+          <div class="title">
+            <svg data-lucide="building"></svg>
+            Mes annonces récentes
+          </div>
+          <a href="{% url 'accounts:mes_annonces' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold" style="font-size:0.75rem;">
+            Voir toutes
+            <svg data-lucide="arrow-right" style="width:14px;height:14px;margin-left:4px;display:inline;"></svg>
+          </a>
+        </div>
+        <div class="card-body-modern">
+          {% if logements %}
+          <div class="table-responsive">
+            <table class="table table-dash">
+              <thead>
+                <tr>
+                  <th>Logement</th>
+                  <th>Prix</th>
+                  <th>Statut</th>
+                  <th>Vues</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for l in logements %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-3">
+                      {% with photo=l.get_photo_principale %}
+                      <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}"
+                           class="rounded-2 flex-shrink-0"
+                           style="width:48px;height:40px;object-fit:cover;border:1px solid var(--gray-100);">
+                      {% endwith %}
+                      <div>
+                        <div class="fw-semibold" style="font-size:0.85rem;color:var(--gray-800);">
+                          {{ l.titre|truncatechars:30 }}
+                        </div>
+                        <div class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:var(--gray-400);">
+                          <svg data-lucide="map-pin" style="width:11px;height:11px;"></svg>
+                          {% if l.quartier %}{{ l.quartier.nom }}, {% endif %}
+                          {{ l.ville.nom }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="fw-bold" style="font-size:0.85rem;color:var(--primary);">
+                    {{ l.prix_formate }}
+                  </td>
+                  <td>
+                    {% if l.statut == 'PUBLIE' %}
+                    <span class="badge-status publie">✅ Publié</span>
+                    {% elif l.statut == 'EN_ATTENTE' %}
+                    <span class="badge-status attente">⏳ En attente</span>
+                    {% elif l.statut == 'SUSPENDU' %}
+                    <span class="badge-status suspendu">⛔ Suspendu</span>
+                    {% elif l.statut == 'LOUE' %}
+                    <span class="badge-status loue">🏠 Loué</span>
+                    {% else %}
+                    <span class="badge-status default">{{ l.get_statut_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-size:0.8rem;color:var(--gray-400);">
+                    <div class="d-flex align-items-center gap-1">
+                      <svg data-lucide="eye" style="width:13px;height:13px;"></svg>
+                      {{ l.nb_vues|intcomma }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1 justify-content-center">
+                      <a href="{% url 'logements:detail' l.slug %}" class="btn-icon view" title="Voir">
+                        <svg data-lucide="eye"></svg>
+                      </a>
+                      <a href="{% url 'logements:modifier' l.slug %}" class="btn-icon edit" title="Modifier">
+                        <svg data-lucide="pencil"></svg>
+                      </a>
+                      <form method="post" action="{% url 'logements:supprimer' l.slug %}" class="d-inline" onsubmit="return confirm('Archiver cette annonce ?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-icon delete" title="Archiver">
+                          <svg data-lucide="trash-2"></svg>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <svg data-lucide="building" style="width:48px;height:48px;color:var(--gray-200);margin-bottom:1rem;"></svg>
+            <p class="text-muted mb-3" style="font-size:0.9rem;">Vous n'avez pas encore d'annonces.</p>
+            <a href="{% url 'logements:creer' %}" class="btn btn-primary rounded-pill px-4">
+              Publier ma première annonce
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SIDEBAR ────────────────────────────────────────── -->
+    <div class="col-lg-4">
+
+      <!-- Profil -->
+      <div class="profile-card-modern mb-3">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img src="{{ user.get_avatar_url }}" class="avatar" width="60" height="60" style="object-fit:cover;">
+          <div>
+            <div class="name">{{ user.get_full_name }}</div>
+            <div class="email">{{ user.email }}</div>
+            <div class="d-flex gap-1 mt-1">
+              <span class="badge-role bailleur">Bailleur</span>
+              {% if user.is_verified %}
+              <span class="badge-role verified">
+                <svg data-lucide="badge-check" style="width:11px;height:11px;display:inline;margin-right:2px;"></svg>
+                Vérifié
+              </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <small style="font-size:0.75rem;font-weight:600;color:var(--gray-600);">Score de profil</small>
+            <small style="font-size:0.75rem;color:var(--gray-400);">80%</small>
+          </div>
+          <div class="progress-track">
+            <div class="bar" style="width:80%;"></div>
+          </div>
+        </div>
+
+        <div class="profile-stats-grid mb-3">
+          <div class="stat-box">
+            <div class="num" style="color:var(--primary);">{{ nb_publie }}</div>
+            <div class="lbl">Publiées</div>
+          </div>
+          <div class="stat-box">
+            <div class="num" style="color:var(--warning);">{{ nb_en_attente }}</div>
+            <div class="lbl">Attente</div>
+          </div>
+          <div class="stat-box">
+            <div class="num" style="color:var(--success);">{{ nb_loue }}</div>
+            <div class="lbl">Loués</div>
+          </div>
+        </div>
+
+        <a href="{% url 'accounts:profil' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-semibold">
+          <svg data-lucide="pencil" style="width:14px;height:14px;margin-right:5px;display:inline;"></svg>
+          Modifier le profil
+        </a>
+      </div>
+
+      <!-- Demandes récentes -->
+      <div class="card-modern">
+        <div class="card-header-modern">
+          <div class="title">
+            <svg data-lucide="calendar"></svg>
+            Demandes récentes
+            {% if reservations_attente > 0 %}
+            <span style="background:var(--danger);color:white;width:20px;height:20px;border-radius:50%;font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">
+              {{ reservations_attente }}
+            </span>
+            {% endif %}
+          </div>
+          <a href="{% url 'accounts:gerer_reservations' %}" class="text-primary small fw-semibold text-decoration-none">
+            Voir tout →
+          </a>
+        </div>
+        <div class="card-body-modern">
+          {% for res in reservations|slice:":5" %}
+          <div class="reservation-item-modern">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div class="res-name">{{ res.locataire.get_full_name }}</div>
+              <span class="res-status-modern {% if res.statut == 'EN_ATTENTE' %}attente{% elif res.statut == 'CONFIRME' %}confirme{% elif res.statut == 'REFUSE' %}refuse{% else %}default{% endif %}">
+                {{ res.get_statut_display }}
+              </span>
+            </div>
+            <div class="res-property">{{ res.logement.titre|truncatechars:30 }}</div>
+            <div class="res-date d-flex align-items-center gap-1 mt-1">
+              <svg data-lucide="calendar" style="width:11px;height:11px;"></svg>
+              {{ res.date_debut|date:"d/m/Y" }}
+              · {{ res.cree_le|timesince }}
+            </div>
+            {% if res.statut == 'EN_ATTENTE' %}
+            <div class="d-flex gap-2 mt-2">
+              <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}" class="flex-fill">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirmer">
+                <button type="submit" class="btn-response confirm w-100">✅ Confirmer</button>
+              </form>
+              <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}" class="flex-fill">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="refuser">
+                <button type="submit" class="btn-response refuse w-100">❌ Refuser</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+          {% empty %}
+          <div class="text-center py-4">
+            <svg data-lucide="inbox" style="width:32px;height:32px;color:var(--gray-200);margin-bottom:8px;"></svg>
+            <p class="text-muted small mb-0">Aucune demande reçue.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

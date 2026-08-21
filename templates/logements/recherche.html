@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Recherche{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="row g-4">
+
+    <!-- ─── Sidebar Filtres ───────────────────────────── -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3"
+           style="position:sticky;top:80px">
+
+        <form method="get" id="filterForm">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">🔍 Filtres</h6>
+            <a href="{% url 'logements:recherche' %}"
+               class="text-danger small">Réinitialiser</a>
+          </div>
+
+          <!-- Recherche texte -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Recherche
+            </label>
+            {{ form.q }}
+          </div>
+
+          <!-- Ville -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Ville
+            </label>
+            {{ form.ville }}
+          </div>
+
+          <!-- Quartier -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Quartier
+            </label>
+            {{ form.quartier }}
+          </div>
+
+          <!-- Type offre -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Type d'offre
+            </label>
+            {{ form.type_offre }}
+          </div>
+
+          <!-- Type logement -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Type de logement
+            </label>
+            {{ form.type_logement }}
+          </div>
+
+          <!-- Budget -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Budget (FCFA)
+            </label>
+            <div class="row g-2">
+              <div class="col-6">{{ form.prix_min }}</div>
+              <div class="col-6">{{ form.prix_max }}</div>
+            </div>
+          </div>
+
+          <!-- Chambres -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Chambres min.
+            </label>
+            {{ form.nb_chambres }}
+          </div>
+
+          <!-- Standing -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Standing
+            </label>
+            {{ form.standing }}
+          </div>
+
+          <!-- Équipements -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted text-uppercase">
+              Équipements
+            </label>
+            <div class="d-flex flex-column gap-2 small">
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="wifi"
+                       {% if request.GET.wifi %}checked{% endif %}
+                       class="form-check-input mt-0">
+                WiFi
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="parking"
+                       {% if request.GET.parking %}checked{% endif %}
+                       class="form-check-input mt-0">
+                Parking
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="climatisation"
+                       {% if request.GET.climatisation %}checked{% endif %}
+                       class="form-check-input mt-0">
+                Climatisation
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="gardien"
+                       {% if request.GET.gardien %}checked{% endif %}
+                       class="form-check-input mt-0">
+                Gardien
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="piscine"
+                       {% if request.GET.piscine %}checked{% endif %}
+                       class="form-check-input mt-0">
+                Piscine
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="checkbox" name="generateur"
+                       {% if request.GET.generateur %}checked{% endif %}
+                       class="form-check-input mt-0">
+                Groupe électrogène
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-search me-2"></i>Appliquer
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ─── Résultats ─────────────────────────────────── -->
+    <div class="col-lg-9">
+
+      <!-- En-tête résultats -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h5 class="fw-bold mb-0">
+            {{ nb_resultats }} logement{{ nb_resultats|pluralize }} trouvé{{ nb_resultats|pluralize }}
+          </h5>
+          {% if request.GET.q %}
+          <small class="text-muted">Pour « {{ request.GET.q }} »</small>
+          {% endif %}
+        </div>
+
+        <!-- Tri -->
+        <select class="form-select form-select-sm"
+                style="width:auto"
+                onchange="
+                  const url = new URL(window.location);
+                  url.searchParams.set('tri', this.value);
+                  window.location = url;
+                ">
+          <option value="recent"
+                  {% if tri_actuel == 'recent' %}selected{% endif %}>
+            Plus récents
+          </option>
+          <option value="prix_asc"
+                  {% if tri_actuel == 'prix_asc' %}selected{% endif %}>
+            Prix croissant
+          </option>
+          <option value="prix_desc"
+                  {% if tri_actuel == 'prix_desc' %}selected{% endif %}>
+            Prix décroissant
+          </option>
+          <option value="populaire"
+                  {% if tri_actuel == 'populaire' %}selected{% endif %}>
+            Plus vus
+          </option>
+        </select>
+      </div>
+
+      <!-- Grille logements -->
+      <div class="row g-3">
+        {% for logement in logements %}
+        <div class="col-lg-4 col-md-6">
+          {% include 'logements/includes/card_logement.html' %}
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="text-center py-5">
+            <div class="fs-1 mb-3">🔍</div>
+            <h4 class="text-muted">Aucun logement trouvé</h4>
+            <p class="text-muted">
+              Essayez d'élargir vos critères de recherche.
+            </p>
+            <a href="{% url 'chat:chatbot' %}" class="btn btn-primary mt-2">
+              <i class="bi bi-robot me-2"></i>Chercher avec le chatbot IA
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if logements.has_other_pages %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+          {% if logements.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ request.GET.urlencode }}&page={{ logements.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+
+          {% for num in logements.paginator.page_range %}
+            {% if logements.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > logements.number|add:'-3' and num < logements.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?{{ request.GET.urlencode }}&page={{ num }}">
+                {{ num }}
+              </a>
+            </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if logements.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?{{ request.GET.urlencode }}&page={{ logements.next_page_number }}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+
+        </ul>
+      </nav>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

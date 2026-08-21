@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LogementCM{% endblock %} | LogementCM 🏠</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DARK MODE — variables CSS globales
+       La classe [data-theme="dark"] sur <html> active le mode sombre.
+       Toutes les pages héritent automatiquement.
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-body:        #ffffff;
+      --bg-card:        #ffffff;
+      --bg-navbar:      #ffffff;
+      --bg-footer:      #0f0a3c;
+      --bg-input:       #f8fafc;
+      --bg-dropdown:    #ffffff;
+      --text-primary:   #1e1b3a;
+      --text-secondary: #64748b;
+      --text-muted:     #94a3b8;
+      --border-color:   #e2e8f0;
+      --shadow-color:   rgba(0,0,0,.08);
+      --navbar-border:  rgba(0,0,0,.06);
+      --dropdown-shadow: 0 10px 40px rgba(0,0,0,.12);
+      --link-color:     #64748b;
+      --link-hover:     #1e1b3a;
+      --hr-color:       rgba(255,255,255,.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-body:        #0f0f13;
+      --bg-card:        #1a1a24;
+      --bg-navbar:      #13131a;
+      --bg-footer:      #09090d;
+      --bg-input:       #1e1e2a;
+      --bg-dropdown:    #1a1a24;
+      --text-primary:   #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted:     #64748b;
+      --border-color:   #2d2d3d;
+      --shadow-color:   rgba(0,0,0,.4);
+      --navbar-border:  rgba(255,255,255,.06);
+      --dropdown-shadow: 0 10px 40px rgba(0,0,0,.6);
+      --link-color:     #94a3b8;
+      --link-hover:     #f1f5f9;
+      --hr-color:       rgba(255,255,255,.06);
+    }
+
+    /* ─── Application des variables ──────────────────────────────── */
+    body {
+      background-color: var(--bg-body) !important;
+      color: var(--text-primary) !important;
+      transition: background-color .25s ease, color .25s ease;
+    }
+    .navbar {
+      background: var(--bg-navbar) !important;
+      border-bottom: 1px solid var(--navbar-border) !important;
+      transition: background .25s ease;
+    }
+    .nav-link { color: var(--link-color) !important; }
+    .nav-link:hover { color: var(--link-hover) !important; }
+    .navbar-brand { color: var(--text-primary) !important; }
+
+    .dropdown-menu {
+      background: var(--bg-dropdown) !important;
+      border: 1px solid var(--border-color) !important;
+      box-shadow: var(--dropdown-shadow) !important;
+    }
+    .dropdown-item { color: var(--text-primary) !important; }
+    .dropdown-item:hover { background: var(--bg-input) !important; }
+    .dropdown-divider { border-color: var(--border-color) !important; }
+    .dropdown-header { color: var(--text-muted) !important; }
+
+    .card, .rounded-4, .shadow-sm {
+      background: var(--bg-card) !important;
+      border-color: var(--border-color) !important;
+    }
+    .form-control, .form-select, input, textarea, select {
+      background: var(--bg-input) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-color) !important;
+    }
+    .form-control::placeholder { color: var(--text-muted) !important; }
+    .form-control:focus {
+      background: var(--bg-input) !important;
+      color: var(--text-primary) !important;
+    }
+    .border, .border-bottom, .border-top {
+      border-color: var(--border-color) !important;
+    }
+    .text-muted { color: var(--text-secondary) !important; }
+    .alert { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
+    footer { background: var(--bg-footer) !important; }
+
+    [data-theme="dark"] .nav-search .form-control {
+      background: #1e1e2a !important;
+      color: #f1f5f9 !important;
+      border-color: #2d2d3d !important;
+    }
+    [data-theme="dark"] .btn-outline-secondary {
+      color: #94a3b8 !important;
+      border-color: #2d2d3d !important;
+    }
+    [data-theme="dark"] .modal-content {
+      background: #1a1a24 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .table {
+      color: var(--text-primary) !important;
+    }
+    [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+      background: rgba(255,255,255,.03) !important;
+    }
+
+    /* ─── Toggle button ──────────────────────────────────────────── */
+    .dark-toggle {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .2s ease;
+      flex-shrink: 0;
+    }
+    .dark-toggle:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      background: #eef2ff;
+    }
+    [data-theme="dark"] .dark-toggle:hover {
+      background: #1e1e35;
+    }
+    .dark-toggle svg { width: 16px; height: 16px; }
+    .icon-sun  { display: none; }
+    .icon-moon { display: block; }
+    [data-theme="dark"] .icon-sun  { display: block; }
+    [data-theme="dark"] .icon-moon { display: none; }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ─── Navbar ────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'logements:accueil' %}">
+      <img src="{% static 'images/logo.png' %}"
+           alt="LogementCM"
+           style="height:52px;width:52px;object-fit:contain;border-radius:50%;margin:-12px 0">
+      <span style="font-weight:800;font-size:1.1rem">
+        Logement<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                             -webkit-background-clip:text;
+                             -webkit-text-fill-color:transparent;
+                             background-clip:text">CM</span>
+      </span>
+    </a>
+
+    <!-- Toggle mobile -->
+    <button class="navbar-toggler border-0" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navMain">
+      <svg data-lucide="menu" style="width:22px;height:22px"></svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+
+      <!-- Recherche rapide -->
+      <form class="d-flex mx-auto nav-search"
+            action="{% url 'logements:recherche' %}" method="get">
+        <div class="input-group input-group-sm">
+          <input class="form-control" type="search" name="q"
+                 placeholder="Rechercher un logement..."
+                 value="{{ request.GET.q }}">
+          <button class="btn btn-primary" type="submit">
+            <svg data-lucide="search" style="width:15px;height:15px"></svg>
+          </button>
+        </div>
+      </form>
+
+      <ul class="navbar-nav ms-auto align-items-center gap-1">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'logements:recherche' %}">
+            <svg data-lucide="search" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            Rechercher
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'logements:carte' %}">
+            <svg data-lucide="map" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            Carte
+          </a>
+        </li>
+
+        {% if user.is_authenticated %}
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'chat:chatbot' %}">
+            <svg data-lucide="bot" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            Chatbot IA
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'chat:conversations' %}">
+            <svg data-lucide="message-circle" style="width:20px;height:20px;vertical-align:-4px"></svg>
+          </a>
+        </li>
+
+        <!-- Notifications -->
+        <li class="nav-item dropdown">
+          <a class="nav-link position-relative" href="#"
+             data-bs-toggle="dropdown" id="notifDropdown"
+             onclick="chargerNotifications()">
+            <svg data-lucide="bell" style="width:20px;height:20px;vertical-align:-4px"></svg>
+            <span id="notifBadge"
+                  style="position:absolute;top:-2px;right:-4px;
+                         background:#ef4444;color:white;
+                         width:18px;height:18px;border-radius:50%;
+                         font-size:.65rem;font-weight:800;
+                         display:none;align-items:center;
+                         justify-content:center;line-height:1">0</span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end p-0 shadow border-0 rounded-4"
+               style="width:360px;max-height:500px;overflow:hidden">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+              <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                <svg data-lucide="bell" style="width:16px;height:16px;color:var(--primary)"></svg>
+                Notifications
+                <span id="notifCountBadge"
+                      style="background:var(--primary-light);color:var(--primary);
+                             font-size:.7rem;font-weight:700;
+                             padding:1px 8px;border-radius:50px;display:none">0</span>
+              </h6>
+              <button onclick="toutMarquerLu()"
+                      class="btn btn-link btn-sm p-0 text-muted"
+                      style="font-size:.75rem;text-decoration:none">Tout lire</button>
+            </div>
+            <div id="notifList" style="max-height:380px;overflow-y:auto">
+              <div class="text-center py-4 text-muted small" id="notifLoading">
+                <div style="width:20px;height:20px;border:2px solid var(--primary);
+                            border-top-color:transparent;border-radius:50%;
+                            animation:spin .6s linear infinite;margin:0 auto .5rem"></div>
+                Chargement...
+              </div>
+            </div>
+            <div class="border-top p-2 text-center">
+              <a href="{% url 'notifs:liste' %}" class="text-primary small fw-semibold text-decoration-none">
+                Voir toutes les notifications
+                <svg data-lucide="arrow-right" style="width:13px;height:13px;margin-left:3px"></svg>
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- ── Dark mode toggle ────────────────────────────────── -->
+        <li class="nav-item">
+          <button class="dark-toggle" id="darkToggle"
+                  onclick="toggleDark()" title="Changer de thème">
+            <svg data-lucide="sun"  class="icon-sun"></svg>
+            <svg data-lucide="moon" class="icon-moon"></svg>
+          </button>
+        </li>
+
+        <!-- Menu profil -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#" data-bs-toggle="dropdown">
+            <img src="{{ user.get_avatar_url }}" class="rounded-circle"
+                 width="32" height="32" style="object-fit:cover">
+            <span class="d-none d-md-inline">{{ user.prenom }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-2">
+            <li><h6 class="dropdown-header">{{ user.get_full_name }}</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="{% url 'accounts:tableau_de_bord' %}">
+                <svg data-lucide="layout-dashboard" style="width:16px;height:16px"></svg>
+                Tableau de bord
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="{% url 'accounts:profil' %}">
+                <svg data-lucide="user" style="width:16px;height:16px"></svg>
+                Mon profil
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="{% url 'accounts:mes_favoris' %}">
+                <svg data-lucide="heart" style="width:16px;height:16px"></svg>
+                Mes favoris
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="{% url 'accounts:mes_reservations' %}">
+                <svg data-lucide="calendar-check" style="width:16px;height:16px"></svg>
+                Mes réservations
+              </a>
+            </li>
+            {% if user.est_bailleur %}
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 href="{% url 'logements:creer' %}">
+                <svg data-lucide="plus-circle" style="width:16px;height:16px"></svg>
+                Publier une annonce
+              </a>
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                 href="{% url 'accounts:deconnexion' %}">
+                <svg data-lucide="log-out" style="width:16px;height:16px"></svg>
+                Déconnexion
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        {% else %}
+
+        <!-- ── Dark mode toggle (non connecté) ───────────────── -->
+        <li class="nav-item">
+          <button class="dark-toggle" id="darkToggle"
+                  onclick="toggleDark()" title="Changer de thème">
+            <svg data-lucide="sun"  class="icon-sun"></svg>
+            <svg data-lucide="moon" class="icon-moon"></svg>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accounts:connexion' %}">Connexion</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary btn-sm px-3"
+             href="{% url 'accounts:inscription' %}">S'inscrire</a>
+        </li>
+
+        {% endif %}
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── Messages Django ───────────────────────────────────────── -->
+{% if messages %}
+<div class="container mt-3">
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ─── Contenu principal ─────────────────────────────────────── -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ─── Footer ───────────────────────────────────────────────── -->
+<footer class="mt-5 py-5">
+  <div class="container">
+    <div class="row g-4">
+
+      <div class="col-lg-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+          <img src="{% static 'images/logo.png' %}" alt="LogementCM"
+               style="height:32px;width:32px;object-fit:contain;border-radius:50%">
+          LogementCM
+        </h5>
+        <p style="color:var(--gray-400);font-size:.875rem;line-height:1.7">
+          La plateforme intelligente de recherche de logements au Cameroun.
+          Trouvez votre chez-vous en quelques clics.
+        </p>
+        <div class="d-flex gap-3 mt-3">
+          <a href="#" style="color:var(--gray-400);transition:.2s"
+             onmouseover="this.style.color='#6366f1'"
+             onmouseout="this.style.color='var(--gray-400)'">
+            <svg data-lucide="facebook" style="width:20px;height:20px"></svg>
+          </a>
+          <a href="#" style="color:var(--gray-400);transition:.2s"
+             onmouseover="this.style.color='#6366f1'"
+             onmouseout="this.style.color='var(--gray-400)'">
+            <svg data-lucide="twitter" style="width:20px;height:20px"></svg>
+          </a>
+          <a href="#" style="color:var(--gray-400);transition:.2s"
+             onmouseover="this.style.color='#6366f1'"
+             onmouseout="this.style.color='var(--gray-400)'">
+            <svg data-lucide="instagram" style="width:20px;height:20px"></svg>
+          </a>
+          <a href="#" style="color:var(--gray-400);transition:.2s"
+             onmouseover="this.style.color='#25d366'"
+             onmouseout="this.style.color='var(--gray-400)'">
+            <svg data-lucide="message-circle" style="width:20px;height:20px"></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-6">
+        <h6 class="fw-semibold mb-3" style="color:white">Rechercher</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=LOCATION">À louer</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=VENTE">À vendre</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Yaoundé">Yaoundé</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Douala">Douala</a></li>
+          <li class="mb-2"><a href="{% url 'logements:carte' %}">Carte interactive</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-2 col-6">
+        <h6 class="fw-semibold mb-3" style="color:white">Compte</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="{% url 'accounts:inscription' %}">S'inscrire</a></li>
+          <li class="mb-2"><a href="{% url 'accounts:connexion' %}">Connexion</a></li>
+          <li class="mb-2"><a href="{% url 'chat:chatbot' %}">Chatbot IA</a></li>
+          {% if user.is_authenticated %}
+          <li class="mb-2"><a href="{% url 'accounts:mes_favoris' %}">Mes favoris</a></li>
+          <li class="mb-2"><a href="{% url 'accounts:mes_reservations' %}">Réservations</a></li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <div class="col-lg-4">
+        <h6 class="fw-semibold mb-3" style="color:white">Contact</h6>
+        <ul class="list-unstyled" style="color:var(--gray-400);font-size:.875rem">
+          <li class="mb-2 d-flex align-items-center gap-2">
+            <svg data-lucide="map-pin" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
+            Yaoundé, Cameroun
+          </li>
+          <li class="mb-2 d-flex align-items-center gap-2">
+            <svg data-lucide="phone" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
+            +237 653381189
+          </li>
+          <li class="mb-2 d-flex align-items-center gap-2">
+            <svg data-lucide="mail" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
+            khaliploic@gmail.com
+          </li>
+        </ul>
+        <span class="badge mt-2"
+              style="background:var(--primary-light);color:var(--primary);font-size:.72rem;font-weight:700">
+          IAI Cameroun — Projet fin d'études
+        </span>
+      </div>
+
+    </div>
+
+    <hr style="border-color:var(--hr-color);margin-top:2rem">
+    <div class="d-flex justify-content-between flex-wrap gap-2"
+         style="font-size:.8rem;color:var(--gray-400)">
+      <span>© 2026 LogementCM</span>
+      <span>Développé avec ❤️ pour le Cameroun 🇨🇲</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Bouton retour en haut -->
+<button id="btnTop"
+        style="position:fixed;bottom:2rem;right:1.5rem;
+               width:44px;height:44px;
+               background:linear-gradient(135deg,#6366f1,#8b5cf6);
+               border:none;border-radius:50%;color:white;
+               display:none;align-items:center;justify-content:center;
+               cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);
+               z-index:999;transition:.2s"
+        onmouseover="this.style.transform='translateY(-3px)'"
+        onmouseout="this.style.transform=''"
+        onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg data-lucide="arrow-up" style="width:20px;height:20px"></svg>
+</button>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% load static %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/icons.js' %}"></script>
+{% block extra_js %}{% endblock %}
+
+<script>
+  // ─── Dark mode ──────────────────────────────────────────────────
+  (function () {
+    const saved = localStorage.getItem('lcm_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+  })();
+
+  function toggleDark() {
+    const html    = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('lcm_theme', next);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // ─── Retour en haut ─────────────────────────────────────────────
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('btnTop');
+    if (btn) btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+  });
+</script>
+
+</body>
+</html>

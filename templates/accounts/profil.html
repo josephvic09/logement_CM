@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <div class="card border-0 shadow rounded-4 p-4 text-center">
+        <img src="{{ user.get_avatar_url }}"
+             class="rounded-circle border mx-auto mb-3"
+             width="90" height="90"
+             style="object-fit:cover">
+        <h5 class="fw-bold mb-0">{{ user.get_full_name }}</h5>
+        <p class="text-muted small mb-2">{{ user.email }}</p>
+        <span class="badge {% if user.role == 'BAILLEUR' %}bg-info text-dark{% elif user.role == 'ADMIN' %}bg-danger{% else %}bg-primary{% endif %}">
+          {{ user.get_role_display }}
+        </span>
+        {% if user.is_verified %}
+        <div class="mt-2">
+          <span class="badge bg-success">
+            <i class="bi bi-patch-check me-1"></i>Vérifié
+          </span>
+        </div>
+        {% endif %}
+        <hr>
+        <ul class="list-unstyled text-start small">
+          <li class="mb-2">
+            <i class="bi bi-calendar3 text-primary me-2"></i>
+            Inscrit le {{ user.date_inscription|date:"d/m/Y" }}
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-geo-alt text-primary me-2"></i>
+            {{ user.ville|default:"Non renseigné" }}
+          </li>
+          <li>
+            <i class="bi bi-telephone text-primary me-2"></i>
+            {{ user.telephone|default:"Non renseigné" }}
+          </li>
+        </ul>
+        <a href="{% url 'accounts:tableau_de_bord' %}"
+           class="btn btn-outline-primary btn-sm w-100 mt-2">
+          <i class="bi bi-speedometer2 me-1"></i>Tableau de bord
+        </a>
+      </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="col-lg-9">
+      <div class="card border-0 shadow rounded-4">
+        <div class="card-header bg-white fw-bold py-3 border-bottom rounded-top-4">
+          <i class="bi bi-person-gear me-2 text-primary"></i>Modifier mon profil
+        </div>
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Prénom</label>
+                {{ form.prenom }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nom</label>
+                {{ form.nom }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Téléphone</label>
+                {{ form.telephone }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Genre</label>
+                {{ form.genre }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Date de naissance</label>
+                {{ form.date_naissance }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Ville</label>
+                {{ form.ville }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Quartier</label>
+                {{ form.quartier }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Photo de profil</label>
+                {{ form.avatar }}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Biographie</label>
+                {{ form.bio }}
+              </div>
+            </div>
+
+            <hr class="my-4">
+            <h6 class="fw-bold mb-3">Préférences</h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  {{ form.notifications_email }}
+                  <label class="form-check-label">Notifications email</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  {{ form.notifications_push }}
+                  <label class="form-check-label">Notifications push</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check form-switch">
+                  {{ form.mode_sombre }}
+                  <label class="form-check-label">Mode sombre</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-3">
+              <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                <i class="bi bi-check-circle me-2"></i>Enregistrer
+              </button>
+              <a href="{% url 'accounts:changer_mdp' %}"
+                 class="btn btn-outline-secondary">
+                <i class="bi bi-key me-2"></i>Changer le MDP
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

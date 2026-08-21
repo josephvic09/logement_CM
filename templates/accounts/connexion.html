@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ─── Cacher header et footer ─────────────────────────── */
+  header, 
+  footer,
+  .navbar,
+  .site-footer,
+  .footer,
+  #footer {
+    display: none !important;
+  }
+
+  /* ─── Page de connexion avec background ──────────────── */
+  .page-connexion {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    overflow: hidden;
+    isolation: isolate;
+    background: #0F0A3C;
+  }
+
+  /* Background Image */
+  .page-connexion .bg-image {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url("{% static 'images/aceuil.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  
+  .page-connexion .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ─── Auth Card améliorée ────────────────────────────── */
+  .auth-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 3;
+  }
+
+  @media (max-width: 576px) {
+    .auth-card {
+      padding: 1.75rem 1.25rem;
+      margin: 0 12px;
+    }
+  }
+
+  /* ─── Correction pour le scroll ───────────────────────── */
+  body {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  html {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+</style>
+
+<!-- ─── Page avec background ────────────────────────────── -->
+<section class="page-connexion">
+  <!-- Background Image -->
+  <div class="bg-image"></div>
+
+  <div class="container">
+    <div class="auth-card">
+
+      <div class="text-center mb-4">
+        <div style="width:56px;height:56px;
+                    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                    border-radius:16px;display:flex;align-items:center;
+                    justify-content:center;margin:0 auto 1rem;
+                    box-shadow:0 8px 25px rgba(99,102,241,.3)">
+          <svg data-lucide="log-in" style="width:28px;height:28px;color:white"></svg>
+        </div>
+        <h2 class="fw-bold mb-1">Connexion</h2>
+        <p class="text-muted small">Bienvenue sur LogementCM</p>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">
+            <svg data-lucide="mail" style="width:14px;height:14px;margin-right:5px"></svg>
+            Adresse email
+          </label>
+          {{ form.email }}
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="form-label mb-0">
+              <svg data-lucide="lock" style="width:14px;height:14px;margin-right:5px"></svg>
+              Mot de passe
+            </label>
+            <a href="{% url 'accounts:reset_password_demande' %}"
+               class="text-primary small">
+              Mot de passe oublié ?
+            </a>
+          </div>
+          <div class="mt-2">{{ form.password }}</div>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger small">
+          <svg data-lucide="alert-circle" style="width:15px;height:15px;margin-right:6px"></svg>
+          {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3 form-check">
+          {{ form.se_souvenir }}
+          <label class="form-check-label small">Se souvenir de moi</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+          <svg data-lucide="log-in" style="width:17px;height:17px;margin-right:7px;vertical-align:-3px"></svg>
+          Se connecter
+        </button>
+
+      </form>
+
+      <hr class="my-3">
+      <p class="text-center text-muted small mb-0">
+        Pas encore de compte ?
+        <a href="{% url 'accounts:inscription' %}" class="text-primary fw-semibold">
+          S'inscrire gratuitement
+          <svg data-lucide="arrow-right" style="width:14px;height:14px;margin-left:3px"></svg>
+        </a>
+      </p>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,564 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+  <!-- ─── En-tête ──────────────────────────────────── -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <p class="text-muted small mb-0">Panneau de contrôle</p>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <svg data-lucide="shield-check"
+             style="width:26px;height:26px;color:var(--primary)">
+        </svg>
+        Administration
+      </h2>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/" class="btn btn-outline-secondary btn-sm">
+        <svg data-lucide="settings"
+             style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
+        </svg>
+        Admin Django
+      </a>
+      <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
+         class="btn btn-primary btn-sm">
+        <svg data-lucide="clock"
+             style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
+        </svg>
+        Annonces en attente
+        {% if nb_en_attente > 0 %}
+        <span class="badge bg-white text-primary ms-1"
+              style="font-size:.68rem">
+          {{ nb_en_attente }}
+        </span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+
+  <!-- ─── Stats globales ────────────────────────────── -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon indigo">
+          <svg data-lucide="users"
+               style="width:22px;height:22px;color:#6366f1">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_utilisateurs|intcomma }}</div>
+          <div class="dash-lbl">Utilisateurs actifs</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon green">
+          <svg data-lucide="building"
+               style="width:22px;height:22px;color:#10b981">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_logements|intcomma }}</div>
+          <div class="dash-lbl">Logements publiés</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon orange">
+          <svg data-lucide="clock"
+               style="width:22px;height:22px;color:#f59e0b">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_en_attente }}</div>
+          <div class="dash-lbl">En attente validation</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon red">
+          <svg data-lucide="flag"
+               style="width:22px;height:22px;color:#ef4444">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_signalements }}</div>
+          <div class="dash-lbl">Signalements</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon purple">
+          <svg data-lucide="user-check"
+               style="width:22px;height:22px;color:#8b5cf6">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_bailleurs }}</div>
+          <div class="dash-lbl">Bailleurs</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon indigo">
+          <svg data-lucide="user"
+               style="width:22px;height:22px;color:#6366f1">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_locataires }}</div>
+          <div class="dash-lbl">Locataires</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon green">
+          <svg data-lucide="calendar-check"
+               style="width:22px;height:22px;color:#10b981">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_reservations }}</div>
+          <div class="dash-lbl">Réservations</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="dash-stat">
+        <div class="dash-icon orange">
+          <svg data-lucide="message-circle"
+               style="width:22px;height:22px;color:#f59e0b">
+          </svg>
+        </div>
+        <div>
+          <div class="dash-val">{{ nb_conversations }}</div>
+          <div class="dash-lbl">Conversations</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Actions rapides ───────────────────────────── -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <a href="{% url 'accounts:admin_utilisateurs' %}"
+         class="d-block text-decoration-none">
+        <div class="card p-3 text-center"
+             style="border:1.5px solid var(--border);transition:.2s"
+             onmouseover="this.style.borderColor='var(--primary)';this.style.background='var(--primary-light)'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
+          <svg data-lucide="users"
+               style="width:26px;height:26px;color:var(--primary);margin:0 auto .5rem">
+          </svg>
+          <div class="fw-semibold small">Utilisateurs</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="{% url 'accounts:admin_logements' %}"
+         class="d-block text-decoration-none">
+        <div class="card p-3 text-center"
+             style="border:1.5px solid var(--border);transition:.2s"
+             onmouseover="this.style.borderColor='#10b981';this.style.background='#f0fdf4'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
+          <svg data-lucide="building"
+               style="width:26px;height:26px;color:#10b981;margin:0 auto .5rem">
+          </svg>
+          <div class="fw-semibold small">Logements</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="{% url 'accounts:admin_signalements' %}"
+         class="d-block text-decoration-none">
+        <div class="card p-3 text-center"
+             style="border:1.5px solid var(--border);transition:.2s;position:relative"
+             onmouseover="this.style.borderColor='#ef4444';this.style.background='#fff5f5'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
+          {% if nb_signalements > 0 %}
+          <span style="position:absolute;top:8px;right:8px;
+                       background:#ef4444;color:white;
+                       width:20px;height:20px;border-radius:50%;
+                       font-size:.7rem;font-weight:700;
+                       display:flex;align-items:center;justify-content:center">
+            {{ nb_signalements }}
+          </span>
+          {% endif %}
+          <svg data-lucide="flag"
+               style="width:26px;height:26px;color:#ef4444;margin:0 auto .5rem">
+          </svg>
+          <div class="fw-semibold small">Signalements</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
+         class="d-block text-decoration-none">
+        <div class="card p-3 text-center"
+             style="border:1.5px solid var(--border);transition:.2s;position:relative"
+             onmouseover="this.style.borderColor='#f59e0b';this.style.background='#fffbeb'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
+          {% if nb_en_attente > 0 %}
+          <span style="position:absolute;top:8px;right:8px;
+                       background:#f59e0b;color:white;
+                       width:20px;height:20px;border-radius:50%;
+                       font-size:.7rem;font-weight:700;
+                       display:flex;align-items:center;justify-content:center">
+            {{ nb_en_attente }}
+          </span>
+          {% endif %}
+          <svg data-lucide="clock"
+               style="width:26px;height:26px;color:#f59e0b;margin:0 auto .5rem">
+          </svg>
+          <div class="fw-semibold small">Validations</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ─── Annonces en attente ───────────────────── -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4
+                    d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <svg data-lucide="clock"
+                 style="width:18px;height:18px;color:#f59e0b">
+            </svg>
+            Annonces en attente
+            {% if nb_en_attente > 0 %}
+            <span style="background:#fef3c7;color:#92400e;
+                         font-size:.72rem;font-weight:700;
+                         padding:2px 10px;border-radius:50px">
+              {{ nb_en_attente }}
+            </span>
+            {% endif %}
+          </h5>
+          <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
+             class="text-primary small fw-semibold text-decoration-none">
+            Voir toutes
+          </a>
+        </div>
+        <div class="card-body p-0">
+          {% for logement in annonces_attente %}
+          <div class="p-3 border-bottom d-flex gap-3 align-items-center">
+
+            {% with photo=logement.get_photo_principale %}
+            {% if photo %}
+            <img src="{{ photo.image.url }}"
+                 class="rounded-3 flex-shrink-0"
+                 style="width:60px;height:50px;object-fit:cover">
+            {% else %}
+            <div class="rounded-3 flex-shrink-0 d-flex align-items-center
+                        justify-content-center"
+                 style="width:60px;height:50px;background:var(--gray-100)">
+              <svg data-lucide="home"
+                   style="width:20px;height:20px;color:var(--gray-300)">
+              </svg>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-semibold small text-truncate">
+                {{ logement.titre }}
+              </div>
+              <div class="text-muted d-flex align-items-center gap-1"
+                   style="font-size:.73rem">
+                <svg data-lucide="map-pin"
+                     style="width:11px;height:11px;color:var(--primary)">
+                </svg>
+                {{ logement.ville.nom }}
+                &nbsp;·&nbsp;
+                <svg data-lucide="user"
+                     style="width:11px;height:11px">
+                </svg>
+                {{ logement.bailleur.get_full_name }}
+              </div>
+              <div class="fw-bold"
+                   style="font-size:.85rem;color:var(--primary);margin-top:2px">
+                {{ logement.prix_formate }}
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-shrink-0">
+              <form method="post"
+                    action="{% url 'logements:admin_valider' logement.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="valider">
+                <button type="submit"
+                        class="btn btn-sm"
+                        style="background:#d1fae5;color:#065f46;
+                               border:none;font-size:.75rem;
+                               font-weight:600;padding:.3rem .75rem;
+                               border-radius:var(--radius-sm)">
+                  Valider
+                </button>
+              </form>
+              <form method="post"
+                    action="{% url 'logements:admin_valider' logement.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rejeter">
+                <button type="submit"
+                        class="btn btn-sm"
+                        style="background:#fee2e2;color:#991b1b;
+                               border:none;font-size:.75rem;
+                               font-weight:600;padding:.3rem .75rem;
+                               border-radius:var(--radius-sm)">
+                  Rejeter
+                </button>
+              </form>
+              <a href="{% url 'logements:detail' logement.slug %}"
+                 target="_blank"
+                 class="btn btn-sm btn-outline-secondary"
+                 style="font-size:.75rem;padding:.3rem .65rem">
+                <svg data-lucide="eye" style="width:14px;height:14px"></svg>
+              </a>
+            </div>
+
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted small">
+            <svg data-lucide="check-circle"
+                 style="width:32px;height:32px;color:#10b981;
+                        display:block;margin:0 auto .5rem">
+            </svg>
+            Aucune annonce en attente. Tout est validé !
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Derniers logements -->
+      <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4
+                    d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <svg data-lucide="building"
+                 style="width:18px;height:18px;color:var(--primary)">
+            </svg>
+            Dernières annonces
+          </h5>
+          <a href="{% url 'accounts:admin_logements' %}"
+             class="text-primary small fw-semibold text-decoration-none">
+            Voir toutes
+          </a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Logement</th>
+                  <th>Bailleur</th>
+                  <th>Prix</th>
+                  <th>Statut</th>
+                  <th>Vues</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for logement in derniers_logements %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold small">
+                      {{ logement.titre|truncatechars:30 }}
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                      {{ logement.ville.nom }}
+                    </div>
+                  </td>
+                  <td class="small text-muted">
+                    {{ logement.bailleur.get_full_name|truncatechars:20 }}
+                  </td>
+                  <td class="small fw-bold" style="color:var(--primary)">
+                    {{ logement.prix_formate }}
+                  </td>
+                  <td>
+                    {% if logement.statut == 'PUBLIE' %}
+                    <span style="background:#d1fae5;color:#065f46;
+                                 font-size:.68rem;font-weight:700;
+                                 padding:2px 8px;border-radius:50px">
+                      Publié
+                    </span>
+                    {% elif logement.statut == 'EN_ATTENTE' %}
+                    <span style="background:#fef3c7;color:#92400e;
+                                 font-size:.68rem;font-weight:700;
+                                 padding:2px 8px;border-radius:50px">
+                      En attente
+                    </span>
+                    {% elif logement.statut == 'SUSPENDU' %}
+                    <span style="background:#fee2e2;color:#991b1b;
+                                 font-size:.68rem;font-weight:700;
+                                 padding:2px 8px;border-radius:50px">
+                      Suspendu
+                    </span>
+                    {% else %}
+                    <span style="background:var(--gray-100);color:var(--gray-500);
+                                 font-size:.68rem;font-weight:700;
+                                 padding:2px 8px;border-radius:50px">
+                      {{ logement.get_statut_display }}
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td class="small text-muted">
+                    {{ logement.nb_vues|intcomma }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Sidebar droite ────────────────────────── -->
+    <div class="col-lg-5">
+
+      <!-- Derniers inscrits -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4
+                    d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <svg data-lucide="user-plus"
+                 style="width:16px;height:16px;color:var(--primary)">
+            </svg>
+            Derniers inscrits
+          </h6>
+          <a href="{% url 'accounts:admin_utilisateurs' %}"
+             class="text-primary small fw-semibold text-decoration-none">
+            Voir tous
+          </a>
+        </div>
+        <div class="card-body p-0">
+          {% for u in derniers_users %}
+          <div class="p-3 border-bottom d-flex align-items-center gap-3">
+            <img src="{{ u.get_avatar_url }}"
+                 class="rounded-circle flex-shrink-0"
+                 width="38" height="38"
+                 style="object-fit:cover"
+                 alt="{{ u.get_full_name }}">
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-semibold small text-truncate">
+                {{ u.get_full_name }}
+              </div>
+              <div class="text-muted text-truncate" style="font-size:.72rem">
+                {{ u.email }}
+              </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span style="font-size:.65rem;font-weight:700;padding:2px 8px;
+                           border-radius:50px;white-space:nowrap;
+                           {% if u.role == 'BAILLEUR' %}background:#dbeafe;color:#1e40af
+                           {% elif u.role == 'ADMIN' %}background:#fee2e2;color:#991b1b
+                           {% else %}background:var(--primary-light);color:var(--primary){% endif %}">
+                {{ u.get_role_display }}
+              </span>
+              <span style="font-size:.65rem;color:var(--text-muted)">
+                {{ u.date_inscription|date:"d/m/Y" }}
+              </span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-3 text-muted small">
+            Aucun utilisateur.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Signalements récents -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom py-3 rounded-top-4
+                    d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <svg data-lucide="flag"
+                 style="width:16px;height:16px;color:#ef4444">
+            </svg>
+            Signalements récents
+            {% if nb_signalements > 0 %}
+            <span style="background:#fee2e2;color:#991b1b;
+                         font-size:.68rem;font-weight:700;
+                         padding:2px 8px;border-radius:50px">
+              {{ nb_signalements }}
+            </span>
+            {% endif %}
+          </h6>
+          <a href="{% url 'accounts:admin_signalements' %}"
+             class="text-primary small fw-semibold text-decoration-none">
+            Voir tous
+          </a>
+        </div>
+        <div class="card-body p-0">
+          {% for signal in signalements %}
+          <div class="p-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div class="fw-semibold small">
+                {{ signal.logement.titre|truncatechars:35 }}
+              </div>
+              <span style="font-size:.65rem;font-weight:700;padding:2px 8px;
+                           border-radius:50px;background:#fee2e2;color:#991b1b;
+                           white-space:nowrap;flex-shrink:0;margin-left:.5rem">
+                {{ signal.get_motif_display }}
+              </span>
+            </div>
+            <div class="text-muted" style="font-size:.72rem">
+              Signalé par {{ signal.auteur.get_full_name }}
+              · {{ signal.cree_le|timesince }}
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <form method="post"
+                    action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="traiter">
+                <button type="submit"
+                        class="btn btn-sm"
+                        style="background:#d1fae5;color:#065f46;
+                               border:none;font-size:.72rem;
+                               font-weight:600;padding:.25rem .65rem;
+                               border-radius:var(--radius-sm)">
+                  Traité
+                </button>
+              </form>
+              <form method="post"
+                    action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="suspendre">
+                <button type="submit"
+                        class="btn btn-sm"
+                        style="background:#fee2e2;color:#991b1b;
+                               border:none;font-size:.72rem;
+                               font-weight:600;padding:.25rem .65rem;
+                               border-radius:var(--radius-sm)">
+                  Suspendre annonce
+                </button>
+              </form>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted small">
+            <svg data-lucide="check-circle"
+                 style="width:28px;height:28px;color:#10b981;
+                        display:block;margin:0 auto .5rem">
+            </svg>
+            Aucun signalement en attente.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

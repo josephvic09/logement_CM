@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Signalements{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:900px">
+
+  <div class="mb-4">
+    <a href="{% url 'accounts:dashboard_admin' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Administration
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="flag" style="width:24px;height:24px;color:#ef4444"></svg>
+      Signalements
+      {% if signalements %}
+      <span style="background:#fee2e2;color:#991b1b;
+                   font-size:.8rem;font-weight:700;
+                   padding:3px 12px;border-radius:50px">
+        {{ signalements|length }}
+      </span>
+      {% endif %}
+    </h2>
+  </div>
+
+  {% if signalements %}
+  <div class="d-flex flex-column gap-3">
+    {% for signal in signalements %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="row g-0">
+
+        <!-- Info logement -->
+        <div class="col-md-6 p-3">
+          <div class="d-flex align-items-start gap-2 mb-2">
+            <span style="background:#fee2e2;color:#991b1b;
+                         font-size:.7rem;font-weight:700;
+                         padding:3px 10px;border-radius:50px;
+                         white-space:nowrap;flex-shrink:0">
+              {{ signal.get_motif_display }}
+            </span>
+            <div class="fw-bold small">
+              {{ signal.logement.titre|truncatechars:40 }}
+            </div>
+          </div>
+
+          <div class="text-muted small mb-2 d-flex align-items-center gap-1">
+            <svg data-lucide="map-pin"
+                 style="width:12px;height:12px;color:var(--primary)">
+            </svg>
+            {{ signal.logement.ville.nom }}
+            &nbsp;·&nbsp;
+            {{ signal.logement.prix_formate }}
+          </div>
+
+          <div class="p-2 rounded-2"
+               style="background:var(--gray-50);font-size:.78rem;
+                      border-left:3px solid #ef4444;color:var(--text-muted)">
+            {{ signal.description|truncatechars:150 }}
+          </div>
+        </div>
+
+        <!-- Info auteur + actions -->
+        <div class="col-md-6 p-3 border-start">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <img src="{{ signal.auteur.get_avatar_url }}"
+                 class="rounded-circle flex-shrink-0"
+                 width="34" height="34"
+                 style="object-fit:cover"
+                 alt="{{ signal.auteur.get_full_name }}">
+            <div>
+              <div class="fw-semibold small">
+                {{ signal.auteur.get_full_name }}
+              </div>
+              <div class="text-muted" style="font-size:.72rem">
+                Signalé {{ signal.cree_le|timesince }}
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column gap-2">
+            <a href="{% url 'logements:detail' signal.logement.slug %}"
+               target="_blank"
+               class="btn btn-outline-secondary btn-sm w-100"
+               style="font-size:.78rem">
+              <svg data-lucide="eye"
+                   style="width:14px;height:14px;margin-right:4px;vertical-align:-2px">
+              </svg>
+              Voir l'annonce
+            </a>
+            <form method="post"
+                  action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="traiter">
+              <button type="submit"
+                      class="btn w-100"
+                      style="background:#d1fae5;color:#065f46;
+                             border:none;font-weight:600;
+                             font-size:.78rem;border-radius:var(--radius-sm);
+                             padding:.4rem">
+                Marquer comme traité
+              </button>
+            </form>
+            <form method="post"
+                  action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="suspendre">
+              <button type="submit"
+                      class="btn w-100"
+                      style="background:#fee2e2;color:#991b1b;
+                             border:none;font-weight:600;
+                             font-size:.78rem;border-radius:var(--radius-sm);
+                             padding:.4rem"
+                      onclick="return confirm('Suspendre cette annonce ?')">
+                Suspendre l'annonce
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:#d1fae5;border-radius:50%;
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 1.5rem">
+      <svg data-lucide="check-circle"
+           style="width:40px;height:40px;color:#10b981">
+      </svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucun signalement</h4>
+    <p class="text-muted">Tous les signalements ont été traités.</p>
+    <a href="{% url 'accounts:dashboard_admin' %}"
+       class="btn btn-outline-primary mt-2">
+      Retour au tableau de bord
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

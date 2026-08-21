@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Mes conversations{% endblock %}
+
+{% block extra_css %}
+<style>
+  .conv-item {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1.5px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+  }
+  .conv-item:hover { background: var(--primary-light); }
+  .conv-item:last-child { border-bottom: none; }
+  .conv-badge {
+    background: var(--primary);
+    color: white;
+    font-size: .68rem;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <h2 class="fw-bold mb-4 d-flex align-items-center gap-2">
+        <svg data-lucide="message-circle" style="width:24px;height:24px;color:var(--primary)"></svg>
+        Mes conversations
+      </h2>
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        {% for conv in conversations %}
+        <a href="{% url 'chat:detail' conv.uuid %}" class="conv-item">
+
+          {% if request.user == conv.locataire %}
+            <img src="{{ conv.bailleur.get_avatar_url }}" class="rounded-circle flex-shrink-0"
+                 width="48" height="48" style="object-fit:cover">
+          {% else %}
+            <img src="{{ conv.locataire.get_avatar_url }}" class="rounded-circle flex-shrink-0"
+                 width="48" height="48" style="object-fit:cover">
+          {% endif %}
+
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold small">
+                {% if request.user == conv.locataire %}
+                  {{ conv.bailleur.get_full_name }}
+                {% else %}
+                  {{ conv.locataire.get_full_name }}
+                {% endif %}
+              </span>
+              {% with dernier=conv.dernier_message %}
+              {% if dernier %}
+              <span class="text-muted" style="font-size:.7rem">
+                {{ dernier.cree_le|timesince }}
+              </span>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            {% if conv.logement %}
+            <div class="text-muted text-truncate" style="font-size:.75rem">
+              <svg data-lucide="home" style="width:11px;height:11px;margin-right:3px"></svg>
+              {{ conv.logement.titre }}
+            </div>
+            {% endif %}
+
+            {% with dernier=conv.dernier_message %}
+            {% if dernier %}
+            <div class="text-muted text-truncate small mt-1">
+              {% if dernier.expediteur == request.user %}<span class="text-muted">Vous : </span>{% endif %}
+              {{ dernier.contenu }}
+            </div>
+            {% else %}
+            <div class="text-muted small mt-1 fst-italic">Aucun message</div>
+            {% endif %}
+            {% endwith %}
+          </div>
+
+        </a>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+          <svg data-lucide="message-circle" style="width:40px;height:40px;display:block;margin:0 auto 1rem;color:var(--gray-300)"></svg>
+          Aucune conversation pour l'instant.<br>
+          <span class="small">Contactez un bailleur depuis une annonce pour démarrer une discussion.</span>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

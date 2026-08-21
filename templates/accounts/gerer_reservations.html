@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Gérer les réservations{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- En-tête -->
+  <div class="mb-4">
+    <a href="{% url 'accounts:tableau_de_bord' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Tableau de bord
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="calendar-check"
+           style="width:24px;height:24px;color:var(--primary)">
+      </svg>
+      Gérer les réservations
+    </h2>
+  </div>
+
+  <!-- Filtres par statut -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="{% url 'accounts:gerer_reservations' %}"
+       class="btn btn-sm
+       {% if not statut_actuel %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Toutes
+    </a>
+    <a href="?statut=EN_ATTENTE"
+       class="btn btn-sm
+       {% if statut_actuel == 'EN_ATTENTE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      En attente
+    </a>
+    <a href="?statut=CONFIRME"
+       class="btn btn-sm
+       {% if statut_actuel == 'CONFIRME' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Confirmées
+    </a>
+    <a href="?statut=REFUSE"
+       class="btn btn-sm
+       {% if statut_actuel == 'REFUSE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Refusées
+    </a>
+  </div>
+
+  {% if reservations %}
+  <div class="d-flex flex-column gap-3">
+    {% for res in reservations %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="row g-0">
+
+        <!-- Photo logement -->
+        <div class="col-md-2">
+          {% with photo=res.logement.get_photo_principale %}
+          {% if photo %}
+          <img src="{{ photo.image.url }}"
+               alt="Photo logement"
+               style="width:100%;height:140px;object-fit:cover">
+          {% else %}
+          <div style="height:140px;background:var(--gray-100);
+                      display:flex;align-items:center;justify-content:center">
+            <svg data-lucide="home"
+                 style="width:28px;height:28px;color:var(--gray-300)">
+            </svg>
+          </div>
+          {% endif %}
+          {% endwith %}
+        </div>
+
+        <!-- Infos logement + locataire -->
+        <div class="col-md-5 p-3">
+          <div class="fw-bold mb-1">
+            {{ res.logement.titre|truncatechars:45 }}
+          </div>
+          <div class="fw-bold mb-2"
+               style="font-size:.95rem;
+                      background:linear-gradient(135deg,var(--primary),var(--secondary));
+                      -webkit-background-clip:text;
+                      -webkit-text-fill-color:transparent;
+                      background-clip:text">
+            {{ res.logement.prix_formate }}
+          </div>
+
+          <hr class="my-2">
+
+          <!-- Locataire -->
+          <div class="d-flex align-items-center gap-2">
+            <img src="{{ res.locataire.get_avatar_url }}"
+                 class="rounded-circle flex-shrink-0"
+                 width="32" height="32"
+                 style="object-fit:cover"
+                 alt="{{ res.locataire.get_full_name }}">
+            <div>
+              <div class="fw-semibold small">
+                {{ res.locataire.get_full_name }}
+              </div>
+              <div class="text-muted" style="font-size:.73rem">
+                {{ res.locataire.email }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Message locataire -->
+          {% if res.message %}
+          <div class="mt-2 p-2 rounded-2"
+               style="background:var(--gray-50);
+                      font-size:.78rem;
+                      border-left:3px solid var(--primary);
+                      color:var(--text-muted)">
+            {{ res.message|truncatechars:100 }}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Dates + statut + actions -->
+        <div class="col-md-5 p-3 border-start">
+
+          <!-- Informations -->
+          <div class="d-flex gap-3 mb-3">
+            <div>
+              <div style="font-size:.7rem;
+                          color:var(--text-muted);
+                          font-weight:600;
+                          text-transform:uppercase;
+                          letter-spacing:.5px">
+                Type
+              </div>
+              <div class="fw-semibold small">
+                {{ res.get_type_demande_display }}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:.7rem;
+                          color:var(--text-muted);
+                          font-weight:600;
+                          text-transform:uppercase;
+                          letter-spacing:.5px">
+                Date
+              </div>
+              <div class="fw-semibold small">
+                {{ res.date_debut|date:"d/m/Y" }}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:.7rem;
+                          color:var(--text-muted);
+                          font-weight:600;
+                          text-transform:uppercase;
+                          letter-spacing:.5px">
+                Reçu
+              </div>
+              <div class="fw-semibold small">
+                {{ res.cree_le|timesince }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge statut -->
+          <div class="mb-3">
+            {% if res.statut == 'EN_ATTENTE' %}
+            <span style="font-size:.78rem;font-weight:700;
+                         padding:4px 14px;border-radius:50px;
+                         background:#fef3c7;color:#92400e">
+              En attente
+            </span>
+            {% elif res.statut == 'CONFIRME' %}
+            <span style="font-size:.78rem;font-weight:700;
+                         padding:4px 14px;border-radius:50px;
+                         background:#d1fae5;color:#065f46">
+              Confirmée
+            </span>
+            {% elif res.statut == 'REFUSE' %}
+            <span style="font-size:.78rem;font-weight:700;
+                         padding:4px 14px;border-radius:50px;
+                         background:#fee2e2;color:#991b1b">
+              Refusée
+            </span>
+            {% elif res.statut == 'ANNULE' %}
+            <span style="font-size:.78rem;font-weight:700;
+                         padding:4px 14px;border-radius:50px;
+                         background:var(--gray-100);color:var(--gray-500)">
+              Annulée
+            </span>
+            {% else %}
+            <span style="font-size:.78rem;font-weight:700;
+                         padding:4px 14px;border-radius:50px;
+                         background:var(--primary-light);color:var(--primary)">
+              {{ res.get_statut_display }}
+            </span>
+            {% endif %}
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex flex-column gap-2">
+
+            {% if res.statut == 'EN_ATTENTE' %}
+
+            <!-- Bouton Confirmer -->
+            <form method="post"
+                  action="{% url 'accounts:repondre_reservation' res.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="confirmer">
+              <button type="submit"
+                      class="btn w-100"
+                      style="background:#d1fae5;
+                             color:#065f46;
+                             border:none;
+                             font-weight:600;
+                             font-size:.82rem;
+                             border-radius:var(--radius-sm);
+                             padding:.5rem">
+                Confirmer la demande
+              </button>
+            </form>
+
+            <!-- Bouton Refuser -->
+            <form method="post"
+                  action="{% url 'accounts:repondre_reservation' res.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="refuser">
+              <button type="submit"
+                      class="btn w-100"
+                      style="background:#fee2e2;
+                             color:#991b1b;
+                             border:none;
+                             font-weight:600;
+                             font-size:.82rem;
+                             border-radius:var(--radius-sm);
+                             padding:.5rem">
+                Refuser la demande
+              </button>
+            </form>
+
+            {% endif %}
+
+            <!-- Bouton Contacter -->
+            <a href="{% url 'chat:demarrer' res.logement.pk %}"
+               class="btn btn-outline-secondary btn-sm w-100"
+               style="font-size:.78rem">
+              <svg data-lucide="message-circle"
+                   style="width:14px;height:14px;margin-right:4px;vertical-align:-2px">
+              </svg>
+              Contacter le locataire
+            </a>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+
+  <!-- État vide -->
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;
+                background:var(--gray-100);
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                margin:0 auto 1.5rem">
+      <svg data-lucide="calendar"
+           style="width:36px;height:36px;color:var(--gray-300)">
+      </svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucune réservation</h4>
+    <p class="text-muted">
+      {% if statut_actuel %}
+        Aucune réservation avec ce statut.
+      {% else %}
+        Vous n'avez pas encore reçu de demandes.
+      {% endif %}
+    </p>
+    <a href="{% url 'accounts:tableau_de_bord' %}"
+       class="btn btn-outline-primary mt-2">
+      Retour au tableau de bord
+    </a>
+  </div>
+
+  {% endif %}
+
+</div>
+
+{% block extra_js %}
+<script>
+  // Réinitialiser les icônes Lucide après chargement
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  });
+
+  // Confirmation avant refus
+  document.querySelectorAll('form').forEach(function(form) {
+    var actionInput = form.querySelector('input[name="action"]');
+    if (actionInput && actionInput.value === 'refuser') {
+      form.addEventListener('submit', function(e) {
+        if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) {
+          e.preventDefault();
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
+
+{% endblock %}

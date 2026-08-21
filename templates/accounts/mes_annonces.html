@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Mes annonces{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- En-tête -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <a href="{% url 'accounts:tableau_de_bord' %}"
+         class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+        <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+        Tableau de bord
+      </a>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <svg data-lucide="building"
+             style="width:24px;height:24px;color:var(--primary)">
+        </svg>
+        Mes annonces
+        <span class="badge rounded-pill"
+              style="background:var(--primary-light);color:var(--primary);
+                     font-size:.8rem;font-weight:700">
+          {{ nb_total }}
+        </span>
+      </h2>
+    </div>
+    <a href="{% url 'logements:creer' %}" class="btn btn-primary">
+      <svg data-lucide="plus-circle"
+           style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+      </svg>
+      Nouvelle annonce
+    </a>
+  </div>
+
+  <!-- Filtres par statut -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="{% url 'accounts:mes_annonces' %}"
+       class="btn btn-sm {% if not statut_actuel %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Toutes
+    </a>
+    <a href="?statut=PUBLIE"
+       class="btn btn-sm {% if statut_actuel == 'PUBLIE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      ✅ Publiées
+    </a>
+    <a href="?statut=EN_ATTENTE"
+       class="btn btn-sm {% if statut_actuel == 'EN_ATTENTE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      ⏳ En attente
+    </a>
+    <a href="?statut=SUSPENDU"
+       class="btn btn-sm {% if statut_actuel == 'SUSPENDU' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      ⛔ Suspendues
+    </a>
+    <a href="?statut=LOUE"
+       class="btn btn-sm {% if statut_actuel == 'LOUE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      🏠 Louées
+    </a>
+  </div>
+
+  {% if logements %}
+
+  <!-- Grille annonces -->
+  <div class="row g-3">
+    {% for l in logements %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="row g-0">
+
+          <!-- Image -->
+          <div class="col-md-2">
+            {% with photo=l.get_photo_principale %}
+            {% if photo %}
+            <img src="{{ photo.image.url }}"
+                 style="width:100%;height:130px;object-fit:cover">
+            {% else %}
+            <div style="height:130px;background:var(--gray-100);
+                        display:flex;align-items:center;justify-content:center">
+              <svg data-lucide="image"
+                   style="width:28px;height:28px;color:var(--gray-300)">
+              </svg>
+            </div>
+            {% endif %}
+            {% endwith %}
+          </div>
+
+          <!-- Infos -->
+          <div class="col-md-6 p-3">
+            <div class="d-flex align-items-start gap-2 mb-1">
+              {% if l.statut == 'PUBLIE' %}
+              <span style="background:#d1fae5;color:#065f46;font-size:.68rem;
+                           font-weight:700;padding:2px 10px;border-radius:50px;
+                           white-space:nowrap;flex-shrink:0">✅ Publié</span>
+              {% elif l.statut == 'EN_ATTENTE' %}
+              <span style="background:#fef3c7;color:#92400e;font-size:.68rem;
+                           font-weight:700;padding:2px 10px;border-radius:50px;
+                           white-space:nowrap;flex-shrink:0">⏳ En attente</span>
+              {% elif l.statut == 'SUSPENDU' %}
+              <span style="background:#fee2e2;color:#991b1b;font-size:.68rem;
+                           font-weight:700;padding:2px 10px;border-radius:50px;
+                           white-space:nowrap;flex-shrink:0">⛔ Suspendu</span>
+              {% else %}
+              <span style="background:var(--gray-100);color:var(--gray-500);font-size:.68rem;
+                           font-weight:700;padding:2px 10px;border-radius:50px;
+                           white-space:nowrap;flex-shrink:0">{{ l.get_statut_display }}</span>
+              {% endif %}
+              <div class="fw-bold" style="font-size:.9rem">
+                {{ l.titre|truncatechars:50 }}
+              </div>
+            </div>
+
+            <div class="text-muted d-flex align-items-center gap-1 mb-2"
+                 style="font-size:.78rem">
+              <svg data-lucide="map-pin"
+                   style="width:12px;height:12px;color:var(--primary)">
+              </svg>
+              {% if l.quartier %}{{ l.quartier.nom }}, {% endif %}
+              {{ l.ville.nom }}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2" style="font-size:.75rem">
+              <span style="background:var(--gray-50);border:1px solid var(--border);
+                           padding:2px 8px;border-radius:50px;color:var(--text-muted);
+                           display:flex;align-items:center;gap:3px">
+                <svg data-lucide="door-open" style="width:11px;height:11px"></svg>
+                {{ l.nb_chambres }} ch.
+              </span>
+              <span style="background:var(--gray-50);border:1px solid var(--border);
+                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
+                {{ l.get_type_logement_display }}
+              </span>
+              <span style="background:var(--gray-50);border:1px solid var(--border);
+                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
+                {{ l.get_type_offre_display }}
+              </span>
+              <span style="background:var(--gray-50);border:1px solid var(--border);
+                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
+                Publié le {{ l.cree_le|date:"d/m/Y" }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Stats + actions -->
+          <div class="col-md-4 p-3 border-start">
+            <div class="text-center mb-3"
+                 style="font-size:1.3rem;font-weight:800;
+                        background:linear-gradient(135deg,var(--primary),var(--secondary));
+                        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                        background-clip:text">
+              {{ l.prix_formate }}
+            </div>
+
+            <!-- Mini stats -->
+            <div class="row g-2 mb-3 text-center">
+              <div class="col-4">
+                <div style="font-size:1rem;font-weight:700;color:var(--text)">
+                  {{ l.nb_vues }}
+                </div>
+                <div style="font-size:.68rem;color:var(--text-muted)">Vues</div>
+              </div>
+              <div class="col-4">
+                <div style="font-size:1rem;font-weight:700;color:#ef4444">
+                  {{ l.nb_favoris }}
+                </div>
+                <div style="font-size:.68rem;color:var(--text-muted)">Favoris</div>
+              </div>
+              <div class="col-4">
+                <div style="font-size:1rem;font-weight:700;color:#10b981">
+                  {{ l.nb_contacts }}
+                </div>
+                <div style="font-size:.68rem;color:var(--text-muted)">Contacts</div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="{% url 'logements:detail' l.slug %}"
+                 class="btn btn-outline-secondary btn-sm flex-fill"
+                 style="font-size:.78rem">
+                <svg data-lucide="eye" style="width:13px;height:13px;margin-right:3px"></svg>
+                Voir
+              </a>
+              <a href="{% url 'logements:modifier' l.slug %}"
+                 class="btn btn-outline-primary btn-sm flex-fill"
+                 style="font-size:.78rem">
+                <svg data-lucide="pencil" style="width:13px;height:13px;margin-right:3px"></svg>
+                Modifier
+              </a>
+              <form method="post"
+                    action="{% url 'logements:supprimer' l.slug %}"
+                    onsubmit="return confirm('Archiver ?')">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn btn-outline-danger btn-sm"
+                        style="font-size:.78rem;padding:.35rem .65rem">
+                  <svg data-lucide="trash-2" style="width:13px;height:13px"></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:var(--gray-100);
+                border-radius:50%;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1.5rem">
+      <svg data-lucide="building"
+           style="width:36px;height:36px;color:var(--gray-300)">
+      </svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucune annonce</h4>
+    <p class="text-muted mb-4">
+      {% if statut_actuel %}
+      Aucune annonce avec ce statut.
+      {% else %}
+      Vous n'avez pas encore publié d'annonce.
+      {% endif %}
+    </p>
+    <a href="{% url 'logements:creer' %}" class="btn btn-primary px-4">
+      <svg data-lucide="plus-circle"
+           style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+      </svg>
+      Publier ma première annonce
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

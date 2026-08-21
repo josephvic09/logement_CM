@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Modifier l'annonce{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      <!-- En-tête -->
+      <div class="mb-4">
+        <h2 class="fw-bold mb-0">✏️ Modifier l'annonce</h2>
+        <p class="text-muted small">{{ logement.titre }}</p>
+      </div>
+
+      <!-- Afficher les erreurs détaillées -->
+      {% if form.errors %}
+      <div class="alert mb-4"
+           style="background:#fee2e2;border-left:4px solid #ef4444;
+                  border-right:none;border-top:none;border-bottom:none;
+                  color:#991b1b">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <i class="bi bi-exclamation-circle"></i>
+          <strong>Veuillez corriger les erreurs suivantes :</strong>
+        </div>
+        <ul class="mb-0 ps-4 small">
+          {% for field in form %}
+            {% if field.errors %}
+              {% for error in field.errors %}
+              <li><strong>{{ field.label }} :</strong> {{ error }}</li>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate id="modifierForm">
+        {% csrf_token %}
+
+        <!-- ─── Informations générales ──────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-primary text-white fw-bold py-3 rounded-top-4">
+            <i class="bi bi-info-circle me-2"></i>Informations générales
+          </div>
+          <div class="card-body p-4">
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Titre *</label>
+              {{ form.titre }}
+              {% if form.titre.errors %}<div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Type de logement</label>
+                {{ form.type_logement }}
+                {% if form.type_logement.errors %}<div class="text-danger small mt-1">{{ form.type_logement.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Type d'offre</label>
+                {{ form.type_offre }}
+                {% if form.type_offre.errors %}<div class="text-danger small mt-1">{{ form.type_offre.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Standing</label>
+                {{ form.standing }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Description</label>
+              {{ form.description }}
+              {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div>
+              <label class="form-label fw-semibold">Meublé ?</label>
+              {{ form.meuble }}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ─── Localisation ───────────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-success text-white fw-bold py-3 rounded-top-4">
+            <i class="bi bi-geo-alt me-2"></i>Localisation
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Ville</label>
+                {{ form.ville }}
+                {% if form.ville.errors %}<div class="text-danger small mt-1">{{ form.ville.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Quartier</label>
+                {{ form.quartier }}
+              </div>
+            </div>
+            <div>
+              <label class="form-label fw-semibold">Adresse</label>
+              {{ form.adresse }}
+              {% if form.adresse.errors %}<div class="text-danger small mt-1">{{ form.adresse.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Position sur la carte : conservée telle quelle (non modifiable ici) -->
+            {{ form.latitude }}
+            {{ form.longitude }}
+            {% if logement.latitude and logement.longitude %}
+            <small class="text-muted d-block mt-2">
+              <i class="bi bi-pin-map me-1"></i>
+              Position actuelle conservée ({{ logement.latitude }}, {{ logement.longitude }})
+            </small>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ─── Caractéristiques ───────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-info text-white fw-bold py-3 rounded-top-4">
+            <i class="bi bi-list-check me-2"></i>Caractéristiques
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Chambres</label>
+                {{ form.nb_chambres }}
+                {% if form.nb_chambres.errors %}<div class="text-danger small mt-1">{{ form.nb_chambres.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Salles de bain</label>
+                {{ form.nb_salles_bain }}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Toilettes</label>
+                {{ form.nb_toilettes }}
+                {% if form.nb_toilettes.errors %}<div class="text-danger small mt-1">{{ form.nb_toilettes.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Surface (m²)</label>
+                {{ form.surface }}
+              </div>
+              <div class="col-md-3 col-6 mt-3">
+                <label class="form-label fw-semibold">Étage</label>
+                {{ form.etage }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Prix ───────────────────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-warning text-dark fw-bold py-3 rounded-top-4">
+            <i class="bi bi-currency-dollar me-2"></i>Prix
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Prix (FCFA) *</label>
+                {{ form.prix }}
+                {% if form.prix.errors %}<div class="text-danger small mt-1">{{ form.prix.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Charges</label>
+                {{ form.charges }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Caution</label>
+                {{ form.caution }}
+              </div>
+            </div>
+            <div class="d-flex gap-4">
+              <div class="form-check">
+                {{ form.prix_negociable }}
+                <label class="form-check-label">Prix négociable</label>
+              </div>
+              <div class="form-check">
+                {{ form.disponible }}
+                <label class="form-check-label">Disponible</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Équipements ────────────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-secondary text-white fw-bold py-3 rounded-top-4">
+            <i class="bi bi-tools me-2"></i>Équipements
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.eau_courante }}
+                  <label class="form-check-label small">Eau courante</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.electricite }}
+                  <label class="form-check-label small">Électricité</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.internet }}
+                  <label class="form-check-label small">WiFi</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.climatisation }}
+                  <label class="form-check-label small">Climatisation</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.parking }}
+                  <label class="form-check-label small">Parking</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.gardien }}
+                  <label class="form-check-label small">Gardien</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.generateur }}
+                  <label class="form-check-label small">Groupe électrogène</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.piscine }}
+                  <label class="form-check-label small">Piscine</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.balcon }}
+                  <label class="form-check-label small">Balcon</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.securite }}
+                  <label class="form-check-label small">Sécurité</label>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="form-check">
+                  {{ form.cuisine_equipee }}
+                  <label class="form-check-label small">Cuisine équipée</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── Disponibilité ──────────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-light fw-bold py-3 rounded-top-4">
+            <i class="bi bi-calendar-event me-2"></i>Disponibilité
+          </div>
+          <div class="card-body p-4">
+            <label class="form-label fw-semibold">
+              Date de disponibilité
+              <span class="text-muted fw-normal small">(si pas immédiatement disponible)</span>
+            </label>
+            {{ form.date_disponibilite }}
+          </div>
+        </div>
+
+        <!-- ─── Photos ─────────────────────────────────── -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-header bg-dark text-white fw-bold py-3 rounded-top-4">
+            <i class="bi bi-images me-2"></i>Photos
+          </div>
+          <div class="card-body p-4">
+
+            <!-- Photos actuelles -->
+            {% if logement.photos.exists %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Photos actuelles</label>
+              <div class="d-flex flex-wrap gap-2">
+                {% for photo in logement.photos.all %}
+                <img src="{{ photo.image.url }}"
+                     style="width:90px;height:70px;object-fit:cover;
+                            border-radius:8px;border:2px solid
+                            {% if photo.principale %}#2563eb{% else %}#e2e8f0{% endif %}">
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <label class="form-label fw-semibold">
+              Ajouter de nouvelles photos
+              <span class="text-muted fw-normal small">(JPG, PNG, WebP — max 5 Mo chacune)</span>
+            </label>
+            <input type="file"
+                   name="photos"
+                   class="form-control"
+                   multiple
+                   accept="image/jpeg,image/png,image/webp">
+
+          </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="d-flex gap-3 justify-content-end">
+          <a href="{% url 'accounts:dashboard_bailleur' %}"
+             class="btn btn-outline-secondary px-4">
+            Annuler
+          </a>
+          <button type="submit" class="btn btn-primary px-5 fw-semibold">
+            <i class="bi bi-check-circle me-2"></i>Enregistrer les modifications
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

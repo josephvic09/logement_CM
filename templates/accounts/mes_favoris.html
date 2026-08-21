@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Mes favoris{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- En-tête -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <a href="{% url 'accounts:tableau_de_bord' %}"
+         class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+        <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+        Retour au tableau de bord
+      </a>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <svg data-lucide="heart" style="width:24px;height:24px;color:#ef4444"></svg>
+        Mes favoris
+        <span class="badge rounded-pill"
+              style="background:var(--primary-light);color:var(--primary);
+                     font-size:.8rem;font-weight:700">
+          {{ nb_favoris }}
+        </span>
+      </h2>
+    </div>
+    <a href="{% url 'logements:recherche' %}" class="btn btn-primary">
+      <svg data-lucide="search" style="width:16px;height:16px;margin-right:6px;vertical-align:-2px"></svg>
+      Découvrir plus
+    </a>
+  </div>
+
+  {% if favoris %}
+
+  <!-- Barre d'actions -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <button class="btn btn-outline-secondary btn-sm"
+            onclick="window.location='{% url 'accounts:comparer' %}?ids={% for f in favoris %}{{ f.logement.pk }}{% if not forloop.last %}&ids={% endif %}{% endfor %}'">
+      <svg data-lucide="git-compare" style="width:14px;height:14px;margin-right:5px"></svg>
+      Comparer
+    </button>
+    <a href="{% url 'logements:recherche' %}" class="btn btn-outline-secondary btn-sm">
+      <svg data-lucide="map" style="width:14px;height:14px;margin-right:5px"></svg>
+      Voir sur la carte
+    </a>
+  </div>
+
+  <div class="row g-3">
+    {% for fav in favoris %}
+    <div class="col-lg-3 col-md-6">
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 card-logement">
+
+        <!-- Image -->
+        <div style="position:relative;height:200px;overflow:hidden;background:var(--gray-100)">
+          {% with photo=fav.logement.get_photo_principale %}
+          {% if photo %}
+          <img src="{{ photo.image.url }}"
+               alt="{{ fav.logement.titre }}"
+               style="width:100%;height:100%;object-fit:cover;transition:.4s">
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center h-100">
+            <svg data-lucide="home" style="width:40px;height:40px;color:var(--gray-300)"></svg>
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <span style="position:absolute;top:10px;left:10px;
+                       background:linear-gradient(135deg,var(--primary),var(--secondary));
+                       color:white;font-size:.68rem;font-weight:700;
+                       padding:3px 10px;border-radius:50px">
+            {{ fav.logement.get_type_offre_display }}
+          </span>
+
+          <!-- Bouton retirer favori -->
+          <button onclick="retirerFavori({{ fav.logement.pk }}, this)"
+                  style="position:absolute;bottom:10px;right:10px;
+                         width:34px;height:34px;background:white;
+                         border:none;border-radius:50%;cursor:pointer;
+                         display:flex;align-items:center;justify-content:center;
+                         box-shadow:0 2px 8px rgba(0,0,0,.15);transition:.2s"
+                  title="Retirer des favoris">
+            <svg data-lucide="heart" style="width:16px;height:16px;color:#ef4444;fill:#ef4444"></svg>
+          </button>
+        </div>
+
+        <!-- Corps -->
+        <div class="card-body p-3 d-flex flex-column">
+          <div style="font-size:1.2rem;font-weight:800;
+                      background:linear-gradient(135deg,var(--primary),var(--secondary));
+                      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                      background-clip:text;margin-bottom:.25rem">
+            {{ fav.logement.prix_formate }}
+            {% if fav.logement.type_offre == 'LOCATION' %}
+            <small style="-webkit-text-fill-color:var(--text-muted);font-weight:400;font-size:.75rem">/mois</small>
+            {% endif %}
+          </div>
+
+          <a href="{% url 'logements:detail' fav.logement.slug %}"
+             class="text-decoration-none">
+            <div class="fw-semibold mb-1"
+                 style="color:var(--text);font-size:.9rem;
+                        display:-webkit-box;-webkit-line-clamp:2;
+                        -webkit-box-orient:vertical;overflow:hidden">
+              {{ fav.logement.titre }}
+            </div>
+          </a>
+
+          <div class="text-muted d-flex align-items-center gap-1 mb-2"
+               style="font-size:.78rem">
+            <svg data-lucide="map-pin" style="width:12px;height:12px;color:var(--primary)"></svg>
+            {% if fav.logement.quartier %}{{ fav.logement.quartier.nom }}, {% endif %}
+            {{ fav.logement.ville.nom }}
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap mb-3 mt-auto"
+               style="font-size:.73rem">
+            <span style="background:var(--gray-50);border:1px solid var(--border);
+                         padding:2px 8px;border-radius:50px;color:var(--text-muted);
+                         display:flex;align-items:center;gap:3px">
+              <svg data-lucide="door-open" style="width:11px;height:11px"></svg>
+              {{ fav.logement.nb_chambres }} ch.
+            </span>
+            <span style="background:var(--gray-50);border:1px solid var(--border);
+                         padding:2px 8px;border-radius:50px;color:var(--text-muted);
+                         display:flex;align-items:center;gap:3px">
+              <svg data-lucide="droplets" style="width:11px;height:11px"></svg>
+              {{ fav.logement.nb_salles_bain }} sdb
+            </span>
+            {% if fav.logement.surface %}
+            <span style="background:var(--gray-50);border:1px solid var(--border);
+                         padding:2px 8px;border-radius:50px;color:var(--text-muted)">
+              {{ fav.logement.surface }}m²
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-2">
+            <a href="{% url 'logements:detail' fav.logement.slug %}"
+               class="btn btn-primary btn-sm flex-fill"
+               style="font-size:.8rem">
+              Voir le logement
+            </a>
+            <a href="{% url 'chat:demarrer' fav.logement.pk %}"
+               class="btn btn-outline-secondary btn-sm"
+               title="Contacter le bailleur"
+               style="padding:.35rem .65rem">
+              <svg data-lucide="message-circle" style="width:15px;height:15px"></svg>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- État vide -->
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:var(--gray-100);border-radius:50%;
+                display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg data-lucide="heart" style="width:36px;height:36px;color:var(--gray-300)"></svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucun favori pour le moment</h4>
+    <p class="text-muted mb-4">
+      Explorez les logements et cliquez sur
+      <svg data-lucide="heart" style="width:16px;height:16px;color:#ef4444;margin:0 3px;vertical-align:-2px"></svg>
+      pour les ajouter à vos favoris.
+    </p>
+    <a href="{% url 'logements:recherche' %}" class="btn btn-primary px-4">
+      <svg data-lucide="search" style="width:16px;height:16px;margin-right:6px;vertical-align:-2px"></svg>
+      Explorer les logements
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+async function retirerFavori(logementId, btn) {
+  try {
+    const res = await fetch(`/logements/${logementId}/favori/`, {
+      method:  'POST',
+      headers: { 'X-CSRFToken': getCsrf() },
+    });
+    const data = await res.json();
+    if (data.status === 'removed') {
+      const card = btn.closest('.col-lg-3, .col-md-6');
+      card.style.transition = '.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(.95)';
+      setTimeout(() => card.remove(), 300);
+      LCM.showToast('Retiré des favoris', 'info');
+    }
+  } catch(e) {
+    LCM.showToast('Erreur réseau', 'error');
+  }
+}
+</script>
+{% endblock %}

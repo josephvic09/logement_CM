@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block title %}Confirmer le paiement{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:480px">
+
+  <div class="text-center mb-4">
+    <div style="width:60px;height:60px;
+                background:linear-gradient(135deg,#f59e0b,#d97706);
+                border-radius:16px;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1rem;
+                box-shadow:0 8px 25px rgba(245,158,11,.3)">
+      <svg data-lucide="message-square"
+           style="width:28px;height:28px;color:white">
+      </svg>
+    </div>
+    <h2 class="fw-bold mb-1">Code de confirmation</h2>
+    <p class="text-muted small">
+      Un SMS a été envoyé au
+      <strong>{{ telephone_masque }}</strong>
+    </p>
+  </div>
+
+  <div class="card border-0 shadow rounded-4">
+    <div style="height:4px;
+                background:linear-gradient(90deg,#f59e0b,#6366f1)">
+    </div>
+    <div class="card-body p-4">
+
+      <!-- Info paiement -->
+      <div class="d-flex justify-content-between align-items-center
+                  p-3 rounded-3 mb-4"
+           style="background:var(--gray-50);border:1px solid var(--border)">
+        <div>
+          <div class="text-muted small">Montant</div>
+          <div class="fw-bold" style="color:var(--primary)">
+            {{ paiement.montant_formate }}
+          </div>
+        </div>
+        <div>
+          <div class="text-muted small">Méthode</div>
+          <div class="fw-semibold small">
+            {{ paiement.get_methode_display }}
+          </div>
+        </div>
+        <div>
+          <div class="text-muted small">Référence</div>
+          <div class="fw-semibold small" style="font-family:monospace">
+            {{ paiement.reference }}
+          </div>
+        </div>
+      </div>
+
+      {% if erreur %}
+      <div class="alert"
+           style="background:#fee2e2;border-left:4px solid #ef4444;
+                  color:#991b1b;border-right:none;border-top:none;
+                  border-bottom:none;font-size:.875rem">
+        <svg data-lucide="alert-circle"
+             style="width:16px;height:16px;margin-right:6px;vertical-align:-3px">
+        </svg>
+        {{ erreur }}
+      </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold text-center d-block">
+            Entrez le code à 6 chiffres reçu par SMS
+          </label>
+
+          <!-- Input code OTP style -->
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <input type="text"
+                   name="code"
+                   id="codeInput"
+                   class="form-control text-center fw-bold"
+                   style="font-size:2rem;letter-spacing:.5rem;
+                          border:2px solid var(--border);
+                          border-radius:var(--radius-sm);
+                          padding:1rem;max-width:260px"
+                   maxlength="6"
+                   pattern="[0-9]{6}"
+                   placeholder="______"
+                   autocomplete="one-time-code"
+                   inputmode="numeric"
+                   required>
+          </div>
+          <p class="text-center text-muted" style="font-size:.78rem">
+            <svg data-lucide="clock"
+                 style="width:12px;height:12px;margin-right:4px">
+            </svg>
+            Code valable 10 minutes
+          </p>
+        </div>
+
+        <!-- Mode démo -->
+        <div class="alert mb-4"
+             style="background:#fef3c7;border-left:4px solid #f59e0b;
+                    border-right:none;border-top:none;border-bottom:none;
+                    font-size:.78rem;color:#92400e">
+          <svg data-lucide="info"
+               style="width:14px;height:14px;margin-right:5px;vertical-align:-2px">
+          </svg>
+          <strong>Mode démonstration :</strong>
+          Le code de confirmation est
+          <strong
+            style="font-family:monospace;background:#fff;
+                   padding:1px 6px;border-radius:4px;cursor:pointer"
+            onclick="document.getElementById('codeInput').value='{{ paiement.code_confirmation }}'">
+            {{ paiement.code_confirmation }}
+          </strong>
+          (cliquez pour remplir)
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary w-100 py-2 fw-bold"
+                style="font-size:1rem">
+          <svg data-lucide="check-circle"
+               style="width:17px;height:17px;margin-right:7px;vertical-align:-3px">
+          </svg>
+          Confirmer le paiement
+        </button>
+
+      </form>
+
+      <hr class="my-3">
+
+      <div class="d-flex justify-content-between">
+        <button onclick="resendCode()"
+                class="btn btn-link btn-sm p-0 text-muted"
+                style="font-size:.8rem">
+          <svg data-lucide="refresh-cw"
+               style="width:13px;height:13px;margin-right:4px">
+          </svg>
+          Renvoyer le code
+        </button>
+        <form method="post"
+              action="{% url 'paiements:annuler' paiement.uuid %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn btn-link btn-sm p-0 text-danger"
+                  style="font-size:.8rem">
+            Annuler le paiement
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-focus et format code OTP
+const input = document.getElementById('codeInput');
+if (input) {
+  input.focus();
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value.length === 6) {
+      this.closest('form').submit();
+    }
+  });
+}
+
+function resendCode() {
+  LCM.showToast('Code renvoyé par SMS !', 'success');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1299 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}Accueil - LogementCM{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ─── Variables et reset ─────────────────────────────── */
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #818CF8;
+    --primary-dark: #3730A3;
+    --primary-gradient: linear-gradient(135deg, #4F46E5, #7C3AED);
+    --secondary: #F59E0B;
+    --success: #10B981;
+    --danger: #EF4444;
+    --text: #1F2937;
+    --text-light: #6B7280;
+    --text-muted: #9CA3AF;
+    --bg: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --border: #E5E7EB;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── Hero Section avec Background Image ──────────────── */
+  .hero-modern {
+    position: relative;
+    padding: 100px 0 80px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .hero-modern .hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:  url("{% static 'images/aceuil.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .hero-modern .hero-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(15, 10, 60, 0.85) 0%, 
+      rgba(30, 27, 75, 0.80) 40%, 
+      rgba(49, 46, 129, 0.75) 70%, 
+      rgba(79, 70, 229, 0.70) 100%
+    );
+    z-index: 1;
+  }
+
+  .hero-modern .hero-background {
+    transform: scale(1.05);
+    animation: heroZoom 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes heroZoom {
+    0% { transform: scale(1.05); }
+    100% { transform: scale(1.15); }
+  }
+
+  .hero-modern .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  @media (max-width: 992px) {
+    .hero-modern {
+      padding: 60px 0 50px;
+      min-height: auto;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      text-align: center;
+    }
+
+    .hero-modern .hero-background {
+      animation: none;
+      transform: scale(1);
+    }
+  }
+
+  /* ─── Hero Badge ──────────────────────────────────────── */
+  .hero-badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 16px 6px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 0.3px;
+    margin-bottom: 24px;
+  }
+
+  .hero-badge-modern .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34D399;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ─── Hero Title ──────────────────────────────────────── */
+  .hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .hero-title .gradient-text {
+    background: linear-gradient(135deg, #A5B4FC, #C4B5FD, #F9A8D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 500px;
+    margin-bottom: 32px;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 992px) {
+    .hero-subtitle {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  /* ─── Hero Stats ──────────────────────────────────────── */
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 36px;
+  }
+
+  @media (max-width: 992px) {
+    .hero-stats {
+      justify-content: center;
+      gap: 32px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .hero-stats {
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+  }
+
+  .hero-stat-item .stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1.2;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .hero-stat-item .stat-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+
+  /* ─── Hero CTA ────────────────────────────────────────── */
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 992px) {
+    .hero-cta {
+      justify-content: center;
+    }
+  }
+
+  .btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: white;
+    color: #4F46E5;
+    font-weight: 700;
+    border-radius: 50px;
+    border: none;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+    text-decoration: none;
+  }
+
+  .btn-hero-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.5);
+    color: #3730A3;
+  }
+
+  .btn-hero-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-radius: 50px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    font-size: 1rem;
+    transition: var(--transition);
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px) scale(1.02);
+    color: white;
+  }
+
+  /* ─── Hero Search Card ────────────────────────────────── */
+  .hero-search-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 36px 32px 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .hero-search-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .hero-search-card .card-header .icon {
+    width: 24px;
+    height: 24px;
+    color: #4F46E5;
+  }
+
+  .hero-search-card .card-header h5 {
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .hero-search-card .form-control,
+  .hero-search-card .form-select {
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    background: white;
+  }
+
+  .hero-search-card .form-control:focus,
+  .hero-search-card .form-select:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  }
+
+  .hero-search-card .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  .btn-search-modern {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 1rem;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-search-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+  }
+
+  .hero-search-card .chatbot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #4F46E5;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+
+  .hero-search-card .chatbot-link:hover {
+    color: #3730A3;
+    text-decoration: underline;
+  }
+
+  /* ─── Floating Orbs ───────────────────────────────────── */
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-orb-1 {
+    width: 500px;
+    height: 500px;
+    background: #4F46E5;
+    top: -200px;
+    right: -100px;
+  }
+
+  .hero-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: #7C3AED;
+    bottom: -100px;
+    left: -50px;
+  }
+
+  .hero-orb-3 {
+    width: 200px;
+    height: 200px;
+    background: #EC4899;
+    top: 50%;
+    right: 40%;
+  }
+
+  /* ─── Section avec Background Image ───────────────────── */
+  .section-with-bg {
+    position: relative;
+    padding: 80px 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .section-with-bg .section-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .section-with-bg .section-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .section-with-bg .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Section Vedette */
+  .section-vedette .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1600&q=80');
+  }
+  .section-vedette .section-bg::after {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* Section Villes */
+  .section-villes .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1600&q=80');
+  }
+  .section-villes .section-bg::after {
+    background: rgba(248, 250, 252, 0.94);
+  }
+
+  /* Section Nouvelles Annonces */
+  .section-nouvelles .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=1600&q=80');
+  }
+  .section-nouvelles .section-bg::after {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* Section Chatbot */
+  .section-chatbot .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=1600&q=80');
+  }
+  .section-chatbot .section-bg::after {
+    background: linear-gradient(135deg, 
+      rgba(15, 10, 60, 0.88) 0%, 
+      rgba(30, 27, 75, 0.85) 40%, 
+      rgba(49, 46, 129, 0.82) 70%, 
+      rgba(79, 70, 229, 0.80) 100%
+    );
+  }
+
+  /* Section Pourquoi */
+  .section-pourquoi .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=1600&q=80');
+  }
+  .section-pourquoi .section-bg::after {
+    background: rgba(248, 250, 252, 0.94);
+  }
+
+  /* Section CTA */
+  .section-cta .section-bg {
+    background-image: url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1600&q=80');
+  }
+  .section-cta .section-bg::after {
+    background: linear-gradient(135deg, 
+      rgba(79, 70, 229, 0.92) 0%, 
+      rgba(124, 58, 237, 0.88) 100%
+    );
+  }
+
+  @media (max-width: 768px) {
+    .section-with-bg {
+      padding: 50px 0;
+    }
+  }
+
+  /* ─── Section Titles ──────────────────────────────────── */
+  .section-badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(79, 70, 229, 0.1);
+    color: #4F46E5;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 14px;
+    border-radius: 50px;
+    margin-bottom: 8px;
+  }
+
+  .section-title-modern {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .section-subtitle-modern {
+    color: var(--text-light);
+    font-size: 1rem;
+  }
+
+  .section-chatbot .section-title-modern,
+  .section-chatbot .section-subtitle-modern,
+  .section-cta .section-title-modern,
+  .section-cta .section-subtitle-modern {
+    color: white;
+  }
+
+  .section-chatbot .section-subtitle-modern {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .section-chatbot .section-badge-modern {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  /* ─── Popular Tags ────────────────────────────────────── */
+  .tags-modern {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+  }
+
+  .tags-modern .tag-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-right: 8px;
+  }
+
+  .tag-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 4px 16px 4px 10px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .tag-link:hover {
+    border-color: #4F46E5;
+    color: #4F46E5;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tag-link .tag-img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  /* ─── Ville Cards ─────────────────────────────────────── */
+  .ville-card-modern {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: var(--transition);
+    text-align: center;
+  }
+
+  .ville-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: #4F46E5;
+  }
+
+  .ville-card-modern .ville-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 8px;
+    border: 3px solid var(--border);
+    transition: var(--transition);
+  }
+
+  .ville-card-modern:hover .ville-img {
+    border-color: #4F46E5;
+  }
+
+  .ville-card-modern .ville-name {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1rem;
+  }
+
+  .ville-card-modern .ville-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* ─── Feature Cards avec Images ──────────────────────── */
+  .feature-card-image {
+    padding: 32px 24px 28px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: var(--transition);
+    height: 100%;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .feature-card-image:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl);
+    border-color: #4F46E5;
+    background: white;
+  }
+
+  .feature-card-image .feature-img-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+    transition: var(--transition);
+  }
+
+  .feature-card-image:hover .feature-img-wrapper {
+    transform: scale(1.05) rotate(-3deg);
+  }
+
+  .feature-card-image .feature-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .feature-card-image h5 {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
+
+  .feature-card-image p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ─── CTA Banner ──────────────────────────────────────── */
+  .cta-banner {
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .cta-banner .content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .cta-banner h3 {
+    font-weight: 800;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+
+  .cta-banner p {
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+  }
+
+  .btn-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    background: white;
+    color: #4F46E5;
+    font-weight: 700;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+  }
+
+  .btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  /* ─── Chatbot Banner ──────────────────────────────────── */
+  .chatbot-banner-inner {
+    text-align: center;
+  }
+
+  .chatbot-banner-inner .bot-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .chatbot-banner-inner .bot-icon-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .chatbot-banner-inner h2 {
+    font-weight: 800;
+    color: white;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    margin-bottom: 12px;
+  }
+
+  .chatbot-banner-inner p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto 28px;
+  }
+
+  .chatbot-examples {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .chatbot-example {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+  }
+
+  .btn-chatbot {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 40px;
+    background: white;
+    color: #4F46E5;
+    font-weight: 700;
+    border-radius: 50px;
+    border: none;
+    font-size: 1rem;
+    transition: var(--transition);
+    text-decoration: none;
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.3);
+  }
+
+  .btn-chatbot:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(79, 70, 229, 0.4);
+  }
+
+  /* ─── Animations ───────────────────────────────────────── */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .animate-delay-1 { animation-delay: 0.1s; }
+  .animate-delay-2 { animation-delay: 0.2s; }
+  .animate-delay-3 { animation-delay: 0.3s; }
+  .animate-delay-4 { animation-delay: 0.4s; }
+
+  /* ─── Responsive ───────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .hero-modern {
+      padding: 60px 0 50px;
+      min-height: auto;
+    }
+
+    .hero-stats {
+      gap: 24px;
+    }
+
+    .hero-stat-item .stat-number {
+      font-size: 1.5rem;
+    }
+
+    .cta-banner {
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .cta-banner .content {
+      justify-content: center;
+    }
+
+    .feature-card-image .feature-img-wrapper {
+      width: 64px;
+      height: 64px;
+    }
+
+    .ville-card-modern .ville-img {
+      width: 48px;
+      height: 48px;
+    }
+
+    .hero-search-card {
+      padding: 24px 20px;
+    }
+
+    .hero-modern .hero-background {
+      animation: none;
+      transform: scale(1);
+    }
+
+    .section-with-bg {
+      padding: 50px 0;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .hero-cta {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .btn-hero-primary,
+    .btn-hero-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .chatbot-examples {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .chatbot-example {
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+  }
+</style>
+
+<!-- ─── HERO SECTION ────────────────────────────────────── -->
+<section class="hero-modern">
+  <div class="hero-background"></div>
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-orb hero-orb-3"></div>
+
+  <div class="container">
+    <div class="hero-grid">
+      <div class="animate-fade-in-up">
+        <div class="hero-badge-modern">
+          <span class="badge-dot"></span>
+          Plateforme N°1 au Cameroun
+        </div>
+
+        <h1 class="hero-title">
+          Trouvez votre<br>
+          <span class="gradient-text">logement idéal</span><br>
+          au Cameroun 🏠
+        </h1>
+
+        <p class="hero-subtitle">
+          Studios, appartements, villas... Recherche intelligente par quartier,
+          budget et équipements.
+        </p>
+
+        <div class="hero-stats">
+          <div class="hero-stat-item">
+            <div class="stat-number">{{ stats.nb_logements|intcomma }}</div>
+            <div class="stat-label">Logements</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="stat-number">{{ stats.nb_villes }}+</div>
+            <div class="stat-label">Villes</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="stat-number">{{ stats.nb_bailleurs }}+</div>
+            <div class="stat-label">Bailleurs</div>
+          </div>
+        </div>
+
+        <div class="hero-cta">
+          <a href="{% url 'logements:recherche' %}" class="btn-hero-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            Rechercher
+          </a>
+          <a href="{% url 'chat:chatbot' %}" class="btn-hero-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 8V4H8"/>
+              <rect x="4" y="8" width="16" height="12" rx="2"/>
+              <path d="M2 8h20"/>
+            </svg>
+            Essayer l'IA
+          </a>
+        </div>
+      </div>
+
+      <div class="animate-fade-in-up animate-delay-2">
+        <div class="hero-search-card">
+          <div class="card-header">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <h5>Recherche rapide</h5>
+          </div>
+
+          <form action="{% url 'logements:recherche' %}" method="get">
+            <div class="mb-3">
+              <input type="text" name="q" class="form-control" placeholder="Quartier, ville, type de logement..." autocomplete="off">
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <select name="type_offre" class="form-select">
+                  <option value="">Location / Vente</option>
+                  <option value="LOCATION">À louer</option>
+                  <option value="VENTE">À vendre</option>
+                  <option value="COURTE_DUREE">Court séjour</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <select name="type_logement" class="form-select">
+                  <option value="">Tous types</option>
+                  <option value="STUDIO">Studio</option>
+                  <option value="APPARTEMENT">Appartement</option>
+                  <option value="VILLA">Villa</option>
+                  <option value="MAISON">Maison</option>
+                  <option value="DUPLEX">Duplex</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <input type="number" name="prix_min" class="form-control" placeholder="Prix min (FCFA)">
+              </div>
+              <div class="col-6">
+                <input type="number" name="prix_max" class="form-control" placeholder="Prix max (FCFA)">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-search-modern">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              Rechercher maintenant
+            </button>
+          </form>
+
+          <div class="text-center mt-3">
+            <small style="color: var(--text-muted);">
+              Ou essayez notre
+              <a href="{% url 'chat:chatbot' %}" class="chatbot-link">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 8V4H8"/>
+                  <rect x="4" y="8" width="16" height="12" rx="2"/>
+                  <path d="M2 8h20"/>
+                </svg>
+                Chatbot IA
+              </a>
+              gratuit
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TAGS POPULAIRES ─────────────────────────────────── -->
+<div class="tags-modern">
+  <div class="container">
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center">
+      <span class="tag-label">🔥 Populaires :</span>
+      <a href="{% url 'logements:recherche' %}?q=Studio+Yaoundé" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=40&h=40&fit=crop&crop=center" alt="Studio" class="tag-img" loading="lazy">
+        Studio Yaoundé
+      </a>
+      <a href="{% url 'logements:recherche' %}?q=Villa+Bastos" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=40&h=40&fit=crop&crop=center" alt="Villa" class="tag-img" loading="lazy">
+        Villa Bastos
+      </a>
+      <a href="{% url 'logements:recherche' %}?q=Appartement+Douala" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=40&h=40&fit=crop&crop=center" alt="Appartement" class="tag-img" loading="lazy">
+        Appartement Douala
+      </a>
+      <a href="{% url 'logements:recherche' %}?q=F3+Biyem-Assi" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=40&h=40&fit=crop&crop=center" alt="F3" class="tag-img" loading="lazy">
+        F3 Biyem-Assi
+      </a>
+      <a href="{% url 'logements:recherche' %}?prix_max=50000" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=40&h=40&fit=crop&crop=center" alt="Prix" class="tag-img" loading="lazy">
+        Moins de 50 000 FCFA
+      </a>
+      <a href="{% url 'logements:recherche' %}?wifi=on" class="tag-link">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=40&h=40&fit=crop&crop=center" alt="WiFi" class="tag-img" loading="lazy">
+        WiFi inclus
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION LOGEMENTS EN VEDETTE ───────────────────── -->
+{% if logements_vedette %}
+<section class="section-with-bg section-vedette">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <div class="section-badge-modern">
+          <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=20&h=20&fit=crop&crop=center" alt="⭐" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">
+          Sélection
+        </div>
+        <h2 class="section-title-modern">⭐ En vedette</h2>
+        <p class="section-subtitle-modern">Sélection premium vérifiée par notre équipe</p>
+      </div>
+      <a href="{% url 'logements:recherche' %}" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-4">
+        Voir tout
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px;">
+          <path d="M5 12h14"/>
+          <path d="M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+    <div class="row g-3">
+      {% for logement in logements_vedette %}
+      <div class="col-lg-4 col-md-6">
+        {% include 'logements/includes/card_logement.html' %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ─── SECTION EXPLORER PAR VILLE ──────────────────────── -->
+<section class="section-with-bg section-villes">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="text-center mb-4">
+      <div class="section-badge-modern" style="background: rgba(79, 70, 229, 0.1); color: #4F46E5; margin: 0 auto 8px;">
+        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=20&h=20&fit=crop&crop=center" alt="🌍" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">
+        Destinations
+      </div>
+      <h2 class="section-title-modern">🌍 Explorer par ville</h2>
+      <p class="section-subtitle-modern">Les principales villes du Cameroun</p>
+    </div>
+    <div class="row g-3">
+      {% for ville in villes_populaires %}
+      <div class="col-lg-3 col-md-4 col-6">
+        <a href="{% url 'logements:recherche' %}?ville={{ ville.nom }}" class="ville-card-modern">
+          <img src="{% if ville.nom == 'Yaoundé' %}https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=120&h=120&fit=crop&crop=center{% elif ville.nom == 'Douala' %}https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&h=120&fit=crop&crop=center{% elif ville.nom == 'Bafoussam' %}https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=120&h=120&fit=crop&crop=center{% elif ville.nom == 'Garoua' %}https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=120&h=120&fit=crop&crop=center{% elif ville.nom == 'Bamenda' %}https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=120&h=120&fit=crop&crop=center{% else %}https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=120&h=120&fit=crop&crop=center{% endif %}" alt="{{ ville.nom }}" class="ville-img" loading="lazy">
+          <span class="ville-name">{{ ville.nom }}</span>
+          <span class="ville-count">{{ ville.nb }} annonce{{ ville.nb|pluralize }}</span>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5">
+        <p class="text-muted">Aucune ville disponible pour le moment.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION NOUVELLES ANNONCES ──────────────────────── -->
+<section class="section-with-bg section-nouvelles">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <div class="section-badge-modern">
+          <img src="https://images.unsplash.com/photo-1508615070457-7baeba4003ab?w=20&h=20&fit=crop&crop=center" alt="🆕" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">
+          Récent
+        </div>
+        <h2 class="section-title-modern">🆕 Nouvelles annonces</h2>
+        <p class="section-subtitle-modern">Ajoutées récemment sur la plateforme</p>
+      </div>
+      <a href="{% url 'logements:recherche' %}?tri=recent" class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-4">
+        Voir tout
+      </a>
+    </div>
+    <div class="row g-3">
+      {% for logement in logements_recents %}
+      <div class="col-lg-3 col-md-6">
+        {% include 'logements/includes/card_logement.html' %}
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🏗️</div>
+        <h5 class="text-muted">Aucun logement disponible.</h5>
+        {% if user.is_authenticated and user.est_bailleur %}
+        <a href="{% url 'logements:creer' %}" class="btn btn-primary mt-3 rounded-pill px-4">
+          Publier la première annonce
+        </a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION CHATBOT AVEC IMAGE LOCALE ──────────────── -->
+<section class="section-with-bg section-chatbot">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="chatbot-banner-inner">
+      <div class="bot-icon-wrapper">
+        <img src="{% static 'images/chatbot.jpg' %}" alt="Chatbot IA" loading="lazy">
+      </div>
+      <h2> Essayez notre Chatbot IA</h2>
+      <p>Décrivez ce que vous cherchez en français naturel. L'IA trouve les meilleures options pour vous.</p>
+
+      <div class="chatbot-examples">
+        <span class="chatbot-example">"Studio meublé Bastos 80 000 FCFA"</span>
+        <span class="chatbot-example">"Villa avec piscine Douala"</span>
+        <span class="chatbot-example">"Appartement 3 chambres Yaoundé"</span>
+      </div>
+
+      <a href="{% url 'chat:chatbot' %}" class="btn-chatbot">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8V4H8"/>
+          <rect x="4" y="8" width="16" height="12" rx="2"/>
+          <path d="M2 8h20"/>
+        </svg>
+        Essayer — C'est gratuit !
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION POURQUOI LOGEMENTCM ─────────────────────── -->
+<section class="section-with-bg section-pourquoi">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge-modern" style="background: rgba(79, 70, 229, 0.1); color: #4F46E5; margin: 0 auto 8px;">
+        <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=20&h=20&fit=crop&crop=center" alt="✨" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">
+        Avantages
+      </div>
+      <h2 class="section-title-modern">✨ Pourquoi choisir LogementCM ?</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+        <img src="{% static 'images/chatbot.jpg' %}" alt="Chatbot IA" loading="lazy">
+          
+          </div>
+          <h5>🔍 Recherche Intelligente</h5>
+          <p>Moteur IA qui comprend vos besoins en français naturel. Trouvez en secondes.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=200&h=200&fit=crop&crop=center" alt="Carte Interactive" loading="lazy">
+          </div>
+          <h5>🗺️ Carte Interactive</h5>
+          <p>Visualisez tous les logements sur une carte Leaflet en temps réel.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=200&h=200&fit=crop&crop=center" alt="Annonces Vérifiées" loading="lazy">
+          </div>
+          <h5>✅ Annonces Vérifiées</h5>
+          <p>Chaque bailleur est contrôlé par notre équipe. Zéro arnaque garantie.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=200&fit=crop&crop=center" alt="Chat Instantané" loading="lazy">
+          </div>
+          <h5>💬 Chat Instantané</h5>
+          <p>Contactez le bailleur directement depuis la plateforme.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=200&h=200&fit=crop&crop=center" alt="100% Mobile" loading="lazy">
+          </div>
+          <h5>📱 100% Mobile</h5>
+          <p>Interface optimisée pour smartphone, tablette et desktop.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card-image">
+          <div class="feature-img-wrapper">
+            <img src="https://imgs.search.brave.com/avQ74_-mLok98xlIzsGgvZN6wO6iYSDV7rUfCDLr3bY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZXNv/bWIuY29tL19uZXh0/L2ltYWdlP3VybD0v/aW1hZ2VzL2Jsb2cv/d2hhdC1hcmUtdGhl/LW9yYW5nZS1tb25l/eS1hbmQtbW9iaWxl/LW1vbmV5LXJhdGVz/LnBuZyZ3PTEwODAm/cT03NQ" alt="Mobile Money" loading="lazy">
+          </div>
+          <h5>💰 Mobile Money</h5>
+          <p>MTN MoMo et Orange Money intégrés pour payer en toute sécurité.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SECTION CTA BAILLEUR ────────────────────────────── -->
+<section class="section-with-bg section-cta">
+  <div class="section-bg"></div>
+  <div class="container">
+    <div class="cta-banner">
+      <div class="content">
+        <div>
+          <h3>
+            <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=30&h=30&fit=crop&crop=center" alt="🏢" style="width:28px;height:28px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:8px;">
+            Vous êtes bailleur ou agent immobilier ?
+          </h3>
+          <p>Publiez vos annonces gratuitement et atteignez des milliers de locataires potentiels au Cameroun.</p>
+        </div>
+        <div>
+          {% if user.is_authenticated and user.est_bailleur %}
+          <a href="{% url 'logements:creer' %}" class="btn-cta">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v8"/>
+              <path d="M8 12h8"/>
+            </svg>
+            Publier une annonce
+          </a>
+          {% else %}
+          <a href="{% url 'accounts:inscription' %}" class="btn-cta">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Démarrer gratuitement
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

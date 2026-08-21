@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}Comparer les logements{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="mb-4">
+    <a href="{% url 'accounts:mes_favoris' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Retour aux favoris
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="git-compare" style="width:24px;height:24px;color:var(--primary)"></svg>
+      Comparer les logements
+    </h2>
+  </div>
+
+  {% if logements %}
+  <div class="table-responsive">
+    <table class="table border rounded-4 overflow-hidden"
+           style="min-width:600px">
+      <thead>
+        <tr style="background:var(--gray-50)">
+          <th style="width:180px;padding:1rem">Critère</th>
+          {% for l in logements %}
+          <th style="padding:1rem;text-align:center">
+            {% with photo=l.get_photo_principale %}
+            {% if photo %}
+            <img src="{{ photo.image.url }}"
+                 class="rounded-3 mb-2 d-block mx-auto"
+                 style="width:100%;max-width:160px;height:100px;object-fit:cover">
+            {% endif %}
+            {% endwith %}
+            <a href="{% url 'logements:detail' l.slug %}"
+               class="fw-bold text-decoration-none d-block"
+               style="font-size:.85rem">
+              {{ l.titre|truncatechars:35 }}
+            </a>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Prix -->
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="dollar-sign" style="width:14px;height:14px;margin-right:4px"></svg>
+            Prix
+          </td>
+          {% for l in logements %}
+          <td class="text-center fw-bold"
+              style="color:var(--primary)">
+            {{ l.prix_formate }}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <!-- Type -->
+        <tr style="background:var(--gray-50)">
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="home" style="width:14px;height:14px;margin-right:4px"></svg>
+            Type
+          </td>
+          {% for l in logements %}
+          <td class="text-center small">{{ l.get_type_logement_display }}</td>
+          {% endfor %}
+        </tr>
+
+        <!-- Localisation -->
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="map-pin" style="width:14px;height:14px;margin-right:4px"></svg>
+            Localisation
+          </td>
+          {% for l in logements %}
+          <td class="text-center small">
+            {% if l.quartier %}{{ l.quartier.nom }}, {% endif %}
+            {{ l.ville.nom }}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <!-- Chambres -->
+        <tr style="background:var(--gray-50)">
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="door-open" style="width:14px;height:14px;margin-right:4px"></svg>
+            Chambres
+          </td>
+          {% for l in logements %}
+          <td class="text-center small fw-semibold">{{ l.nb_chambres }}</td>
+          {% endfor %}
+        </tr>
+
+        <!-- Surface -->
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="maximize-2" style="width:14px;height:14px;margin-right:4px"></svg>
+            Surface
+          </td>
+          {% for l in logements %}
+          <td class="text-center small">
+            {% if l.surface %}{{ l.surface }} m²{% else %}—{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <!-- Standing -->
+        <tr style="background:var(--gray-50)">
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="star" style="width:14px;height:14px;margin-right:4px"></svg>
+            Standing
+          </td>
+          {% for l in logements %}
+          <td class="text-center small">{{ l.get_standing_display }}</td>
+          {% endfor %}
+        </tr>
+
+        <!-- Meublé -->
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="armchair" style="width:14px;height:14px;margin-right:4px"></svg>
+            Meublé
+          </td>
+          {% for l in logements %}
+          <td class="text-center small">{{ l.get_meuble_display }}</td>
+          {% endfor %}
+        </tr>
+
+        <!-- Équipements -->
+        {% for equip, icon, label in "internet,wifi,WiFi|parking,car,Parking|climatisation,snowflake,Clim|piscine,waves,Piscine|gardien,shield-check,Gardien|generateur,fuel,Groupe élec."|split:"|" %}
+        {% endfor %}
+        <tr style="background:var(--gray-50)">
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="wifi" style="width:14px;height:14px;margin-right:4px"></svg>
+            WiFi
+          </td>
+          {% for l in logements %}
+          <td class="text-center">
+            {% if l.internet %}
+            <svg data-lucide="check-circle" style="width:18px;height:18px;color:#10b981"></svg>
+            {% else %}
+            <svg data-lucide="x-circle" style="width:18px;height:18px;color:var(--gray-300)"></svg>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="car" style="width:14px;height:14px;margin-right:4px"></svg>
+            Parking
+          </td>
+          {% for l in logements %}
+          <td class="text-center">
+            {% if l.parking %}
+            <svg data-lucide="check-circle" style="width:18px;height:18px;color:#10b981"></svg>
+            {% else %}
+            <svg data-lucide="x-circle" style="width:18px;height:18px;color:var(--gray-300)"></svg>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <tr style="background:var(--gray-50)">
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="snowflake" style="width:14px;height:14px;margin-right:4px"></svg>
+            Climatisation
+          </td>
+          {% for l in logements %}
+          <td class="text-center">
+            {% if l.climatisation %}
+            <svg data-lucide="check-circle" style="width:18px;height:18px;color:#10b981"></svg>
+            {% else %}
+            <svg data-lucide="x-circle" style="width:18px;height:18px;color:var(--gray-300)"></svg>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <td class="fw-semibold small text-muted">
+            <svg data-lucide="shield-check" style="width:14px;height:14px;margin-right:4px"></svg>
+            Gardien
+          </td>
+          {% for l in logements %}
+          <td class="text-center">
+            {% if l.gardien %}
+            <svg data-lucide="check-circle" style="width:18px;height:18px;color:#10b981"></svg>
+            {% else %}
+            <svg data-lucide="x-circle" style="width:18px;height:18px;color:var(--gray-300)"></svg>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+
+        <!-- Boutons -->
+        <tr style="background:var(--gray-50)">
+          <td></td>
+          {% for l in logements %}
+          <td class="text-center p-3">
+            <a href="{% url 'logements:detail' l.slug %}"
+               class="btn btn-primary btn-sm w-100 mb-2"
+               style="font-size:.8rem">
+              Voir l'annonce
+            </a>
+            <a href="{% url 'chat:demarrer' l.pk %}"
+               class="btn btn-outline-secondary btn-sm w-100"
+               style="font-size:.8rem">
+              Contacter
+            </a>
+          </td>
+          {% endfor %}
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <svg data-lucide="git-compare" style="width:48px;height:48px;color:var(--gray-200);margin-bottom:1rem"></svg>
+    <h4 class="fw-bold mb-2">Aucun logement à comparer</h4>
+    <p class="text-muted mb-4">
+      Ajoutez des logements à vos favoris puis sélectionnez-en pour les comparer.
+    </p>
+    <a href="{% url 'accounts:mes_favoris' %}" class="btn btn-primary">
+      Voir mes favoris
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

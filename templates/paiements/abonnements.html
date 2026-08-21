@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Abonnements{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="text-center mb-5">
+    <div class="section-badge">Premium</div>
+    <h2 class="section-title">Choisissez votre plan</h2>
+    <p class="section-sub">
+      Publiez plus d'annonces et atteignez plus de locataires
+    </p>
+    {% if abonnement_actif %}
+    <div class="alert d-inline-block mt-3"
+         style="background:#d1fae5;border-left:4px solid #10b981;
+                border-right:none;border-top:none;border-bottom:none;
+                font-size:.875rem;color:#065f46">
+      <svg data-lucide="check-circle"
+           style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+      </svg>
+      Votre plan actuel :
+      <strong>{{ abonnement_actif.get_plan_display }}</strong>
+      — expire le {{ abonnement_actif.fin|date:"d/m/Y" }}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    {% for plan in plans %}
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden"
+           style="{% if plan.recommande %}
+                    border:2px solid var(--primary) !important;
+                    transform:scale(1.03);
+                    box-shadow:0 20px 60px rgba(99,102,241,.2) !important;
+                  {% endif %}">
+
+        {% if plan.recommande %}
+        <div style="background:linear-gradient(135deg,var(--primary),var(--secondary));
+                    color:white;text-align:center;padding:.4rem;
+                    font-size:.75rem;font-weight:700;letter-spacing:.5px">
+          ⭐ RECOMMANDÉ
+        </div>
+        {% endif %}
+
+        <div class="card-body p-4 d-flex flex-column">
+
+          <!-- Nom plan -->
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div style="width:36px;height:36px;
+                        background:{{ plan.couleur }}20;
+                        border-radius:10px;
+                        display:flex;align-items:center;
+                        justify-content:center">
+              <svg data-lucide="{% if plan.code == 'BASIC' %}box{% elif plan.code == 'STARTER' %}zap{% elif plan.code == 'PRO' %}star{% else %}crown{% endif %}"
+                   style="width:18px;height:18px;color:{{ plan.couleur }}">
+              </svg>
+            </div>
+            <div>
+              <div class="fw-bold">{{ plan.nom }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted)">
+                {{ plan.annonces }} annonces max
+              </div>
+            </div>
+          </div>
+
+          <!-- Prix -->
+          <div class="mb-4">
+            <div style="font-size:1.8rem;font-weight:900;color:{{ plan.couleur }}">
+              {% if plan.prix == 0 %}
+              Gratuit
+              {% else %}
+              {{ plan.prix|intcomma }}
+              <span style="font-size:.9rem;font-weight:400;
+                           color:var(--text-muted)">
+                FCFA/mois
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Avantages -->
+          <ul class="list-unstyled mb-4 flex-grow-1">
+            {% for av in plan.avantages %}
+            <li class="d-flex align-items-start gap-2 mb-2"
+                style="font-size:.85rem">
+              <svg data-lucide="check"
+                   style="width:16px;height:16px;
+                          color:#10b981;flex-shrink:0;margin-top:1px">
+              </svg>
+              {{ av }}
+            </li>
+            {% endfor %}
+          </ul>
+
+          <!-- Bouton -->
+          {% if plan.prix == 0 %}
+          <button class="btn btn-outline-secondary w-100" disabled>
+            Plan de base (gratuit)
+          </button>
+          {% elif abonnement_actif and abonnement_actif.plan == plan.code %}
+          <button class="btn w-100" disabled
+                  style="background:{{ plan.couleur }}20;
+                         color:{{ plan.couleur }};border:2px solid {{ plan.couleur }}">
+            Plan actuel
+          </button>
+          {% else %}
+          <button class="btn w-100 fw-bold text-white"
+                  style="background:{{ plan.couleur }};
+                         border:none;border-radius:var(--radius-sm)"
+                  onclick="ouvrirModalAbonnement('{{ plan.code }}',
+                           '{{ plan.nom }}', {{ plan.prix }})">
+            Souscrire — {{ plan.prix|intcomma }} FCFA
+          </button>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- Modal paiement abonnement -->
+<div class="modal fade" id="modalAbonnement" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div style="height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary));
+                  border-radius:12px 12px 0 0">
+      </div>
+      <div class="modal-body p-4">
+        <h5 class="fw-bold mb-1" id="modalPlanNom">Souscrire au plan</h5>
+        <div class="text-muted small mb-4" id="modalPlanPrix"></div>
+
+        <form method="post" action="{% url 'paiements:souscrire_abonnement' %}">
+          {% csrf_token %}
+          <input type="hidden" name="plan" id="modalPlanCode">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Méthode de paiement</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <label style="cursor:pointer;display:block">
+                  <input type="radio" name="methode"
+                         value="MTN_MOMO" class="d-none" checked>
+                  <div class="p-2 border rounded-3 text-center"
+                       style="border-color:var(--primary) !important;
+                              background:var(--primary-light)">
+                    <div style="font-size:1.5rem">📱</div>
+                    <div style="font-size:.72rem;font-weight:700">MTN MoMo</div>
+                  </div>
+                </label>
+              </div>
+              <div class="col-6">
+                <label style="cursor:pointer;display:block">
+                  <input type="radio" name="methode"
+                         value="ORANGE_MONEY" class="d-none">
+                  <div class="p-2 border rounded-3 text-center">
+                    <div style="font-size:1.5rem">🔶</div>
+                    <div style="font-size:.72rem;font-weight:700">Orange Money</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Numéro Mobile Money</label>
+            <div class="input-group">
+              <span class="input-group-text"
+                    style="background:var(--gray-50);font-size:.85rem;font-weight:600">
+                +237
+              </span>
+              <input type="tel" name="telephone"
+                     class="form-control"
+                     placeholder="6XX XXX XXX"
+                     required maxlength="15">
+            </div>
+          </div>
+
+          <button type="submit"
+                  class="btn btn-primary w-100 fw-bold py-2">
+            <svg data-lucide="credit-card"
+                 style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
+            </svg>
+            Payer maintenant
+          </button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function ouvrirModalAbonnement(code, nom, prix) {
+  document.getElementById('modalPlanCode').value = code;
+  document.getElementById('modalPlanNom').textContent = 'Plan ' + nom;
+  document.getElementById('modalPlanPrix').textContent =
+    new Intl.NumberFormat('fr-FR').format(prix) + ' FCFA / mois';
+  const modal = new bootstrap.Modal(
+    document.getElementById('modalAbonnement')
+  );
+  modal.show();
+}
+</script>
+{% endblock %}

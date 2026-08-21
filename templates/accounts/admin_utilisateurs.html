@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Gestion utilisateurs{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="mb-4">
+    <a href="{% url 'accounts:dashboard_admin' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Administration
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="users"
+           style="width:24px;height:24px;color:var(--primary)">
+      </svg>
+      Gestion des utilisateurs
+    </h2>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+    <form method="get" class="d-flex gap-3 flex-wrap align-items-end">
+      <div>
+        <label class="filter-label">Rechercher</label>
+        <input type="text"
+               name="q"
+               value="{{ search }}"
+               class="form-control form-control-sm"
+               placeholder="Nom, email..."
+               style="width:220px">
+      </div>
+      <div>
+        <label class="filter-label">Rôle</label>
+        <select name="role" class="form-select form-select-sm" style="width:160px">
+          <option value="">Tous les rôles</option>
+          <option value="LOCATAIRE" {% if role_actuel == 'LOCATAIRE' %}selected{% endif %}>
+            Locataires
+          </option>
+          <option value="BAILLEUR" {% if role_actuel == 'BAILLEUR' %}selected{% endif %}>
+            Bailleurs
+          </option>
+          <option value="ADMIN" {% if role_actuel == 'ADMIN' %}selected{% endif %}>
+            Admins
+          </option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <svg data-lucide="search"
+             style="width:14px;height:14px;margin-right:4px;vertical-align:-2px">
+        </svg>
+        Filtrer
+      </button>
+      <a href="{% url 'accounts:admin_utilisateurs' %}"
+         class="btn btn-outline-secondary btn-sm">
+        Réinitialiser
+      </a>
+    </form>
+  </div>
+
+  <!-- Table utilisateurs -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Rôle</th>
+              <th>Ville</th>
+              <th>Inscription</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ u.get_avatar_url }}"
+                       class="rounded-circle flex-shrink-0"
+                       width="38" height="38"
+                       style="object-fit:cover"
+                       alt="{{ u.get_full_name }}">
+                  <div>
+                    <div class="fw-semibold small">
+                      {{ u.get_full_name }}
+                    </div>
+                    <div class="text-muted" style="font-size:.72rem">
+                      {{ u.email }}
+                    </div>
+                    {% if u.telephone %}
+                    <div class="text-muted" style="font-size:.72rem">
+                      {{ u.telephone }}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span style="font-size:.72rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px;
+                             {% if u.role == 'BAILLEUR' %}background:#dbeafe;color:#1e40af
+                             {% elif u.role == 'ADMIN' %}background:#fee2e2;color:#991b1b
+                             {% elif u.role == 'SUPER_ADMIN' %}background:#f5f3ff;color:#6d28d9
+                             {% else %}background:var(--primary-light);color:var(--primary){% endif %}">
+                  {{ u.get_role_display }}
+                </span>
+              </td>
+              <td class="small text-muted">
+                {{ u.ville|default:"—" }}
+              </td>
+              <td class="small text-muted">
+                {{ u.date_inscription|date:"d/m/Y" }}
+              </td>
+              <td>
+                {% if u.is_active %}
+                <span style="background:#d1fae5;color:#065f46;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  Actif
+                </span>
+                {% else %}
+                <span style="background:#fee2e2;color:#991b1b;
+                             font-size:.7rem;font-weight:700;
+                             padding:3px 10px;border-radius:50px">
+                  Inactif
+                </span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <form method="post"
+                        action="{% url 'accounts:admin_toggle_user' u.pk %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-sm"
+                            style="font-size:.72rem;padding:.25rem .65rem;
+                                   border:none;border-radius:var(--radius-sm);
+                                   {% if u.is_active %}
+                                     background:#fee2e2;color:#991b1b
+                                   {% else %}
+                                     background:#d1fae5;color:#065f46
+                                   {% endif %}">
+                      {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                    </button>
+                  </form>
+                  <a href="mailto:{{ u.email }}"
+                     class="btn btn-sm btn-outline-secondary"
+                     style="font-size:.72rem;padding:.25rem .5rem">
+                    <svg data-lucide="mail" style="width:13px;height:13px"></svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                Aucun utilisateur trouvé.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if users.has_other_pages %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if users.has_previous %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ users.previous_page_number }}&role={{ role_actuel }}&q={{ search }}">
+          <svg data-lucide="chevron-left" style="width:16px;height:16px"></svg>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in users.paginator.page_range %}
+      {% if users.number == num %}
+      <li class="page-item active">
+        <span class="page-link">{{ num }}</span>
+      </li>
+      {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ num }}&role={{ role_actuel }}&q={{ search }}">
+          {{ num }}
+        </a>
+      </li>
+      {% endif %}
+      {% endfor %}
+      {% if users.has_next %}
+      <li class="page-item">
+        <a class="page-link"
+           href="?page={{ users.next_page_number }}&role={{ role_actuel }}&q={{ search }}">
+          <svg data-lucide="chevron-right" style="width:16px;height:16px"></svg>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

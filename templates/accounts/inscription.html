@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ─── Cacher header et footer ─────────────────────────── */
+  header, 
+  footer,
+  .navbar,
+  .site-footer,
+  .footer,
+  #footer {
+    display: none !important;
+  }
+
+  /* ─── Page d'inscription avec background ─────────────── */
+  .page-inscription {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    overflow: hidden;
+    isolation: isolate;
+    background: #0F0A3C;
+  }
+
+  /* Background Image */
+  .page-inscription .bg-image {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url("{% static 'images/aceuil.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .page-inscription .bg-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+      rgba(15, 10, 60, 0.85) 0%,
+     
+    );
+    z-index: 1;
+  }
+
+  .page-inscription .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ─── Auth Card améliorée ────────────────────────────── */
+  .auth-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 3;
+  }
+
+  @media (max-width: 576px) {
+    .auth-card {
+      padding: 1.75rem 1.25rem;
+      margin: 0 12px;
+    }
+  }
+
+  /* ─── Correction pour le scroll ───────────────────────── */
+  body {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  html {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+</style>
+
+<!-- ─── Page avec background ────────────────────────────── -->
+<section class="page-inscription">
+  <!-- Background Image -->
+  <div class="bg-image"></div>
+
+  <div class="container">
+    <div class="auth-card">
+
+      <!-- En-tête -->
+      <div class="text-center mb-4">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                    border-radius:16px;display:flex;align-items:center;justify-content:center;
+                    margin:0 auto 1rem;box-shadow:0 8px 25px rgba(99,102,241,.3)">
+          <svg data-lucide="user-plus" style="width:28px;height:28px;color:white"></svg>
+        </div>
+        <h2 class="fw-bold mb-1">Créer un compte</h2>
+        <p class="text-muted small">Rejoignez LogementCM gratuitement</p>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label">Prénom *</label>
+            {{ form.prenom }}
+            {% if form.prenom.errors %}
+            <div class="text-danger small mt-1">
+              <svg data-lucide="alert-circle" style="width:13px;height:13px"></svg>
+              {{ form.prenom.errors.0 }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-6">
+            <label class="form-label">Nom *</label>
+            {{ form.nom }}
+            {% if form.nom.errors %}
+            <div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <svg data-lucide="mail" style="width:14px;height:14px;margin-right:5px"></svg>
+            Email *
+          </label>
+          {{ form.email }}
+          {% if form.email.errors %}
+          <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <svg data-lucide="phone" style="width:14px;height:14px;margin-right:5px"></svg>
+            Téléphone
+          </label>
+          {{ form.telephone }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <svg data-lucide="users" style="width:14px;height:14px;margin-right:5px"></svg>
+            Je suis *
+          </label>
+          {{ form.role }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            <svg data-lucide="map-pin" style="width:14px;height:14px;margin-right:5px"></svg>
+            Ville
+          </label>
+          {{ form.ville }}
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label">
+              <svg data-lucide="lock" style="width:14px;height:14px;margin-right:5px"></svg>
+              Mot de passe *
+            </label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-6">
+            <label class="form-label">
+              <svg data-lucide="lock" style="width:14px;height:14px;margin-right:5px"></svg>
+              Confirmer *
+            </label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger small">
+          <svg data-lucide="alert-triangle" style="width:15px;height:15px;margin-right:6px"></svg>
+          {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3 form-check">
+          {{ form.accepter_cgu }}
+          <label class="form-check-label small">
+            J'accepte les <a href="#" class="text-primary">conditions d'utilisation</a>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+          <svg data-lucide="user-plus" style="width:17px;height:17px;margin-right:7px;vertical-align:-3px"></svg>
+          Créer mon compte
+        </button>
+
+      </form>
+
+      <hr class="my-3">
+      <p class="text-center text-muted small mb-0">
+        Déjà inscrit ?
+        <a href="{% url 'accounts:connexion' %}" class="text-primary fw-semibold">
+          Se connecter
+          <svg data-lucide="arrow-right" style="width:14px;height:14px;margin-left:3px"></svg>
+        </a>
+      </p>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

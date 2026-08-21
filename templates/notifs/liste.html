@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:720px">
+
+  <!-- En-tête -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <svg data-lucide="bell"
+             style="width:24px;height:24px;color:var(--primary)">
+        </svg>
+        Notifications
+        {% if nb_non_lues > 0 %}
+        <span style="background:var(--primary-light);color:var(--primary);
+                     font-size:.8rem;font-weight:700;
+                     padding:3px 12px;border-radius:50px">
+          {{ nb_non_lues }} nouvelle{{ nb_non_lues|pluralize }}
+        </span>
+        {% endif %}
+      </h2>
+    </div>
+    {% if nb_non_lues > 0 %}
+    <a href="?tout_lire=1"
+       class="btn btn-outline-secondary btn-sm">
+      <svg data-lucide="check-check"
+           style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
+      </svg>
+      Tout marquer comme lu
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Notifications non lues -->
+  {% if notifs_non_lues %}
+  <div class="mb-2">
+    <p class="text-muted small fw-semibold text-uppercase mb-2"
+       style="letter-spacing:.5px">
+      Nouvelles
+    </p>
+    <div class="d-flex flex-column gap-2">
+      {% for notif in notifs_non_lues %}
+      {% include 'notifs/includes/notif_item.html' with notif=notif non_lue=True %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Notifications lues -->
+  {% if notifs_lues %}
+  <div class="mt-4">
+    <p class="text-muted small fw-semibold text-uppercase mb-2"
+       style="letter-spacing:.5px">
+      Précédentes
+    </p>
+    <div class="d-flex flex-column gap-2">
+      {% for notif in notifs_lues %}
+      {% include 'notifs/includes/notif_item.html' with notif=notif non_lue=False %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- État vide -->
+  {% if not notifs_non_lues and not notifs_lues %}
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:var(--gray-100);
+                border-radius:50%;display:flex;align-items:center;
+                justify-content:center;margin:0 auto 1.5rem">
+      <svg data-lucide="bell-off"
+           style="width:36px;height:36px;color:var(--gray-300)">
+      </svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucune notification</h4>
+    <p class="text-muted">
+      Vous n'avez pas encore de notifications.
+    </p>
+    <a href="{% url 'logements:accueil' %}"
+       class="btn btn-primary mt-2">
+      Explorer les logements
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

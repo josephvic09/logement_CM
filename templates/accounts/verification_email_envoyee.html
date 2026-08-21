@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Email envoyé{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="fs-1 mb-3">📧</div>
+  <h2 class="fw-bold mb-3">Vérifiez votre boîte mail !</h2>
+  <p class="text-muted mb-4 fs-5">
+    Un email de vérification vient d'être envoyé.<br>
+    Cliquez sur le lien pour activer votre compte.
+  </p>
+  <div class="alert alert-info d-inline-block">
+    <i class="bi bi-info-circle me-2"></i>
+    Lien valable 24 heures. Vérifiez aussi vos spams.
+  </div>
+  <br><br>
+  <a href="{% url 'accounts:connexion' %}" class="btn btn-outline-primary">
+    Retour à la connexion
+  </a>
+</div>
+{% endblock %}

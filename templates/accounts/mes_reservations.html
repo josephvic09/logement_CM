@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Mes réservations{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:900px">
+
+  <div class="mb-4">
+    <a href="{% url 'accounts:tableau_de_bord' %}"
+       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Retour au tableau de bord
+    </a>
+    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
+      <svg data-lucide="calendar-check" style="width:24px;height:24px;color:var(--primary)"></svg>
+      Mes réservations
+    </h2>
+  </div>
+
+  {% if reservations %}
+
+  <div class="d-flex flex-column gap-3">
+    {% for res in reservations %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="card-body p-0">
+        <div class="row g-0">
+
+          <!-- Image logement -->
+          <div class="col-md-3">
+            {% with photo=res.logement.get_photo_principale %}
+            {% if photo %}
+            <img src="{{ photo.image.url }}"
+                 style="width:100%;height:140px;object-fit:cover">
+            {% else %}
+            <div style="height:140px;background:var(--gray-100);
+                        display:flex;align-items:center;justify-content:center">
+              <svg data-lucide="home" style="width:32px;height:32px;color:var(--gray-300)"></svg>
+            </div>
+            {% endif %}
+            {% endwith %}
+          </div>
+
+          <!-- Infos -->
+          <div class="col-md-6 p-3">
+            <div class="fw-bold mb-1">{{ res.logement.titre|truncatechars:50 }}</div>
+            <div class="text-muted small d-flex align-items-center gap-1 mb-2">
+              <svg data-lucide="map-pin" style="width:12px;height:12px;color:var(--primary)"></svg>
+              {% if res.logement.quartier %}{{ res.logement.quartier.nom }}, {% endif %}
+              {{ res.logement.ville.nom }}
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 small">
+              <span class="d-flex align-items-center gap-1">
+                <svg data-lucide="calendar" style="width:13px;height:13px;color:var(--primary)"></svg>
+                <strong>Du :</strong> {{ res.date_debut|date:"d/m/Y" }}
+              </span>
+              {% if res.date_fin %}
+              <span class="d-flex align-items-center gap-1">
+                <svg data-lucide="calendar" style="width:13px;height:13px;color:var(--primary)"></svg>
+                <strong>Au :</strong> {{ res.date_fin|date:"d/m/Y" }}
+              </span>
+              {% endif %}
+              <span class="d-flex align-items-center gap-1">
+                <svg data-lucide="tag" style="width:13px;height:13px;color:var(--primary)"></svg>
+                {{ res.get_type_demande_display }}
+              </span>
+            </div>
+
+            {% if res.message %}
+            <p class="text-muted small mt-2 mb-0"
+               style="background:var(--gray-50);padding:.5rem .75rem;
+                      border-radius:var(--radius-sm);border-left:3px solid var(--primary)">
+              "{{ res.message|truncatechars:100 }}"
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- Statut et actions -->
+          <div class="col-md-3 p-3 d-flex flex-column justify-content-between border-start">
+            <div>
+              <span class="badge rounded-pill w-100 text-center py-2"
+                    style="font-size:.78rem;
+                    {% if res.statut == 'CONFIRME' %}background:#d1fae5;color:#065f46
+                    {% elif res.statut == 'EN_ATTENTE' %}background:#fef3c7;color:#92400e
+                    {% elif res.statut == 'REFUSE' %}background:#fee2e2;color:#991b1b
+                    {% elif res.statut == 'ANNULE' %}background:var(--gray-100);color:var(--gray-500)
+                    {% else %}background:var(--primary-light);color:var(--primary){% endif %}">
+                {% if res.statut == 'CONFIRME' %}✅
+                {% elif res.statut == 'EN_ATTENTE' %}⏳
+                {% elif res.statut == 'REFUSE' %}❌
+                {% else %}📋{% endif %}
+                {{ res.get_statut_display }}
+              </span>
+
+              <div class="text-muted text-center mt-2" style="font-size:.75rem">
+                Demande le {{ res.cree_le|date:"d/m/Y" }}
+              </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2 mt-3">
+              <a href="{% url 'logements:detail' res.logement.slug %}"
+                 class="btn btn-outline-primary btn-sm"
+                 style="font-size:.78rem">
+                Voir l'annonce
+              </a>
+              <a href="{% url 'chat:demarrer' res.logement.pk %}"
+                 class="btn btn-outline-secondary btn-sm"
+                 style="font-size:.78rem">
+                <svg data-lucide="message-circle" style="width:13px;height:13px;margin-right:4px"></svg>
+                Contacter
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="width:80px;height:80px;background:var(--gray-100);border-radius:50%;
+                display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg data-lucide="calendar" style="width:36px;height:36px;color:var(--gray-300)"></svg>
+    </div>
+    <h4 class="fw-bold mb-2">Aucune réservation</h4>
+    <p class="text-muted mb-4">
+      Vous n'avez pas encore fait de demande de visite ou réservation.
+    </p>
+    <a href="{% url 'logements:recherche' %}" class="btn btn-primary px-4">
+      Trouver un logement
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

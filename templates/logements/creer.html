@@ -1,0 +1,845 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Publier une annonce{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  .step-header {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: .85rem 1.25rem;
+    border-radius: var(--radius) var(--radius) 0 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .step-body { padding: 1.5rem; }
+  .step-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .equip-check {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .85rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+  }
+  .equip-check:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .equip-check input:checked ~ * { color: var(--primary); font-weight: 600; }
+  .equip-check:has(input:checked) {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  /* Zone upload photos */
+  .upload-zone {
+    border: 2.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--gray-50);
+  }
+  .upload-zone:hover,
+  .upload-zone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .photo-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: .75rem;
+    margin-top: 1rem;
+  }
+  .photo-preview-item {
+    position: relative;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    border: 2px solid var(--border);
+    transition: var(--transition);
+  }
+  .photo-preview-item.principale {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+  }
+  .photo-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-preview-badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: var(--primary);
+    color: white;
+    font-size: .6rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 50px;
+    text-transform: uppercase;
+  }
+  .photo-preview-remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 22px;
+    height: 22px;
+    background: rgba(239,68,68,.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: .75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+  .photo-preview-remove:hover { background: #dc2626; transform: scale(1.1); }
+
+  /* Barre de progression */
+  .progress-steps {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .85rem;
+    border-radius: 50px;
+    font-size: .78rem;
+    font-weight: 600;
+    background: var(--gray-100);
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+  }
+  .progress-step.done {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #10b981;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      <!-- En-tête -->
+      <div class="mb-4">
+        <a href="{% url 'accounts:dashboard_bailleur' %}"
+           class="text-muted small d-flex align-items-center gap-1 mb-2 text-decoration-none">
+          <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+          Mon tableau de bord
+        </a>
+        <h2 class="fw-bold mb-1">📝 Publier une annonce</h2>
+        <p class="text-muted small">
+          Remplissez tous les champs. Votre annonce sera vérifiée sous 24h.
+        </p>
+      </div>
+
+      <!-- Indicateur étapes -->
+      <div class="progress-steps">
+        <div class="progress-step">
+          <svg data-lucide="info" style="width:14px;height:14px"></svg>
+          Informations
+        </div>
+        <div class="progress-step">
+          <svg data-lucide="map-pin" style="width:14px;height:14px"></svg>
+          Localisation
+        </div>
+        <div class="progress-step">
+          <svg data-lucide="list-checks" style="width:14px;height:14px"></svg>
+          Caractéristiques
+        </div>
+        <div class="progress-step">
+          <svg data-lucide="dollar-sign" style="width:14px;height:14px"></svg>
+          Prix
+        </div>
+        <div class="progress-step">
+          <svg data-lucide="images" style="width:14px;height:14px"></svg>
+          Photos
+        </div>
+      </div>
+      <!-- Indicateur étapes -->
+      <div class="progress-steps">
+        ...
+        <div class="progress-step">
+          <svg data-lucide="images" style="width:14px;height:14px"></svg>
+          Photos
+        </div>
+      </div>
+
+      <!-- ▼▼▼ BALISE MANQUANTE À AJOUTER ▼▼▼ -->
+      <form method="post" enctype="multipart/form-data" id="annonce-form">
+        {% csrf_token %}
+      
+    
+
+      <!-- Afficher les erreurs globales -->
+      {% if form.errors %}
+<div class="alert mb-4"
+     style="background:#fee2e2;border-left:4px solid #ef4444;
+            border-right:none;border-top:none;border-bottom:none;
+            color:#991b1b">
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <svg data-lucide="alert-circle" style="width:18px;height:18px"></svg>
+    <strong>Veuillez corriger les erreurs suivantes :</strong>
+  </div>
+  <ul class="mb-0 ps-4 small">
+    {% for field in form %}
+      {% if field.errors %}
+        {% for error in field.errors %}
+        <li>
+          <strong>{{ field.label }} :</strong> {{ error }}
+        </li>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+        <!-- ─── BLOC 1 : Informations générales ─────── -->
+        <div class="step-card">
+          <div class="step-header">
+            <svg data-lucide="info" style="width:18px;height:18px"></svg>
+            1. Informations générales
+          </div>
+          <div class="step-body">
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                Titre de l'annonce *
+              </label>
+              {{ form.titre }}
+              {% if form.titre.errors %}
+              <div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted">
+                Soyez précis et accrocheur. Ex: "Bel appartement F3 meublé à Bastos"
+              </small>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Type de logement *</label>
+                {{ form.type_logement }}
+                {% if form.type_logement.errors %}
+                <div class="text-danger small mt-1">{{ form.type_logement.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Type d'offre *</label>
+                {{ form.type_offre }}
+                {% if form.type_offre.errors %}
+                <div class="text-danger small mt-1">{{ form.type_offre.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Standing</label>
+                {{ form.standing }}
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                Description détaillée *
+                <span class="text-muted fw-normal" id="charCount">(0/1000)</span>
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+              <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted">
+                Décrivez l'état, l'environnement, l'accès, les points forts...
+              </small>
+            </div>
+
+            <div>
+              <label class="form-label fw-semibold">Meublé ?</label>
+              {{ form.meuble }}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ─── BLOC 2 : Localisation ────────────────── -->
+        <div class="step-card">
+          <div class="step-header"
+               style="background:linear-gradient(135deg,#10b981,#059669)">
+            <svg data-lucide="map-pin" style="width:18px;height:18px"></svg>
+            2. Localisation
+          </div>
+          <div class="step-body">
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Ville *</label>
+                {{ form.ville }}
+                {% if form.ville.errors %}
+                <div class="text-danger small mt-1">{{ form.ville.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Quartier
+                  <span class="text-muted fw-normal small">(optionnel)</span>
+                </label>
+                {{ form.quartier }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Adresse complète *</label>
+              {{ form.adresse }}
+              {% if form.adresse.errors %}
+              <div class="text-danger small mt-1">{{ form.adresse.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted">
+                Ex: Rue Bastos, en face du supermarché, 2ème maison à droite
+              </small>
+            </div>
+
+            <!-- Carte Leaflet -->
+            <div class="mb-2">
+              <label class="form-label fw-semibold">
+                Positionner sur la carte
+                <span class="text-muted fw-normal small">
+                  (cliquez sur la carte pour marquer la position exacte)
+                </span>
+              </label>
+              <div id="map-creer"
+                   style="height:300px;border-radius:var(--radius);
+                          border:1.5px solid var(--border)">
+              </div>
+              <small class="text-muted mt-1 d-block">
+                <svg data-lucide="info"
+                     style="width:12px;height:12px;margin-right:3px">
+                </svg>
+                La géolocalisation permet aux locataires de vous trouver sur la carte
+              </small>
+            </div>
+
+            {{ form.latitude }}
+            {{ form.longitude }}
+
+          </div>
+        </div>
+
+        <!-- ─── BLOC 3 : Caractéristiques ────────────── -->
+        <div class="step-card">
+          <div class="step-header"
+               style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+            <svg data-lucide="list-checks" style="width:18px;height:18px"></svg>
+            3. Caractéristiques
+          </div>
+          <div class="step-body">
+            <div class="row g-3">
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">
+                  Chambres *
+                </label>
+                {{ form.nb_chambres }}
+                {% if form.nb_chambres.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.nb_chambres.errors.0 }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Salles de bain</label>
+                {{ form.nb_salles_bain }}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Toilettes</label>
+                {{ form.nb_toilettes }}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Surface (m²)</label>
+                {{ form.surface }}
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="form-label fw-semibold">Étage</label>
+                {{ form.etage }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── BLOC 4 : Prix et conditions ──────────── -->
+        <div class="step-card">
+          <div class="step-header"
+               style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+            <svg data-lucide="dollar-sign" style="width:18px;height:18px"></svg>
+            4. Prix et conditions
+          </div>
+          <div class="step-body">
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Prix (FCFA) *</label>
+                {{ form.prix }}
+                {% if form.prix.errors %}
+                <div class="text-danger small mt-1">{{ form.prix.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                  Charges mensuelles
+                  <span class="text-muted fw-normal">(FCFA)</span>
+                </label>
+                {{ form.charges }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">
+                  Caution
+                  <span class="text-muted fw-normal">(FCFA)</span>
+                </label>
+                {{ form.caution }}
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-4 mb-3">
+              <label class="d-flex align-items-center gap-2"
+                     style="cursor:pointer">
+                {{ form.prix_negociable }}
+                <span class="small fw-semibold">Prix négociable</span>
+              </label>
+              <label class="d-flex align-items-center gap-2"
+                     style="cursor:pointer">
+                {{ form.disponible }}
+                <span class="small fw-semibold">Disponible maintenant</span>
+              </label>
+            </div>
+
+            <div>
+              <label class="form-label fw-semibold">
+                Date de disponibilité
+                <span class="text-muted fw-normal small">
+                  (si pas immédiatement disponible)
+                </span>
+              </label>
+              {{ form.date_disponibilite }}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ─── BLOC 5 : Équipements ──────────────────── -->
+        <div class="step-card">
+          <div class="step-header"
+               style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+            <svg data-lucide="wrench" style="width:18px;height:18px"></svg>
+            5. Équipements disponibles
+          </div>
+          <div class="step-body">
+            <div class="row g-2">
+
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.eau_courante }}
+                  <svg data-lucide="droplets" style="width:15px;height:15px;color:var(--primary)"></svg>
+                  <span class="small">Eau courante</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.electricite }}
+                  <svg data-lucide="zap" style="width:15px;height:15px;color:#f59e0b"></svg>
+                  <span class="small">Électricité</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.internet }}
+                  <svg data-lucide="wifi" style="width:15px;height:15px;color:var(--primary)"></svg>
+                  <span class="small">WiFi / Internet</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.climatisation }}
+                  <svg data-lucide="snowflake" style="width:15px;height:15px;color:#0ea5e9"></svg>
+                  <span class="small">Climatisation</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.parking }}
+                  <svg data-lucide="car" style="width:15px;height:15px;color:var(--gray-500)"></svg>
+                  <span class="small">Parking</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.gardien }}
+                  <svg data-lucide="shield-check" style="width:15px;height:15px;color:#10b981"></svg>
+                  <span class="small">Gardien</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.generateur }}
+                  <svg data-lucide="fuel" style="width:15px;height:15px;color:#f59e0b"></svg>
+                  <span class="small">Groupe électrogène</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.piscine }}
+                  <svg data-lucide="waves" style="width:15px;height:15px;color:#0ea5e9"></svg>
+                  <span class="small">Piscine</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.cuisine_equipee }}
+                  <svg data-lucide="utensils" style="width:15px;height:15px;color:#f59e0b"></svg>
+                  <span class="small">Cuisine équipée</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.balcon }}
+                  <svg data-lucide="home" style="width:15px;height:15px;color:var(--primary)"></svg>
+                  <span class="small">Balcon / Terrasse</span>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label class="equip-check">
+                  {{ form.securite }}
+                  <svg data-lucide="lock" style="width:15px;height:15px;color:#ef4444"></svg>
+                  <span class="small">Clôture / Sécurité</span>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── BLOC 6 : Photos ───────────────────────── -->
+        <div class="step-card">
+          <div class="step-header"
+               style="background:linear-gradient(135deg,#0f172a,#1e293b)">
+            <svg data-lucide="images" style="width:18px;height:18px"></svg>
+            6. Photos du logement
+            <span style="font-size:.75rem;opacity:.8;font-weight:400;margin-left:auto">
+              Recommandé : 5 à 10 photos
+            </span>
+          </div>
+          <div class="step-body">
+
+            <!-- Zone de dépôt -->
+            <div class="upload-zone" id="uploadZone">
+              <svg data-lucide="upload-cloud"
+                   style="width:48px;height:48px;color:var(--primary);
+                          margin:0 auto 1rem;display:block">
+              </svg>
+              <div class="fw-bold mb-1">
+                Cliquez ou glissez vos photos ici
+              </div>
+              <div class="text-muted small mb-3">
+                JPG, PNG, WebP · Max 5MB par photo · Max 10 photos
+              </div>
+              <input type="file"
+                     name="photos"
+                     id="photosInput"
+                     multiple
+                     accept="image/jpeg,image/png,image/webp"
+                     style="display:none">
+              <button type="button"
+                      class="btn btn-outline-primary btn-sm px-4"
+                      onclick="document.getElementById('photosInput').click()">
+                <svg data-lucide="folder-open"
+                     style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
+                </svg>
+                Choisir des photos
+              </button>
+            </div>
+
+            <!-- Prévisualisation -->
+            <div id="photosPreview" class="photo-preview-grid"></div>
+
+            <!-- Compteur et infos -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <small id="photoCount" class="text-muted">
+                0 photo sélectionnée
+              </small>
+              <small class="text-muted">
+                La 1ère photo = photo principale de l'annonce
+              </small>
+            </div>
+
+            <!-- Conseils -->
+            <div class="mt-3 p-3 rounded-3"
+                 style="background:linear-gradient(135deg,var(--primary-light),#f0fdf4);
+                        border:1px solid var(--primary);border-opacity:.3">
+              <div class="fw-semibold small mb-2 d-flex align-items-center gap-2">
+                <svg data-lucide="lightbulb"
+                     style="width:15px;height:15px;color:var(--warning)">
+                </svg>
+                Conseils pour de meilleures photos
+              </div>
+              <ul class="mb-0 small text-muted ps-3">
+                <li>Prenez des photos en bonne luminosité (lumière naturelle)</li>
+                <li>Montrez toutes les pièces : salon, chambres, cuisine, salle de bain</li>
+                <li>Incluez une photo de la façade et de l'environnement</li>
+                <li>Les annonces avec photos reçoivent <strong>5× plus de contacts</strong></li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ─── Boutons ────────────────────────────────── -->
+        <div class="d-flex gap-3 justify-content-between align-items-center">
+          <a href="{% url 'accounts:dashboard_bailleur' %}"
+             class="btn btn-outline-secondary px-4">
+            <svg data-lucide="arrow-left"
+                 style="width:16px;height:16px;margin-right:5px;vertical-align:-2px">
+            </svg>
+            Annuler
+          </a>
+          <button type="submit"
+                  class="btn btn-primary px-5 fw-bold"
+                  id="submitBtn"
+                  style="font-size:1rem">
+            <svg data-lucide="send"
+                 style="width:17px;height:17px;margin-right:7px;vertical-align:-3px">
+            </svg>
+            Soumettre l'annonce
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─── Compteur caractères description ─────────────────
+const descField = document.getElementById('id_description');
+const charCount = document.getElementById('charCount');
+if (descField && charCount) {
+  descField.addEventListener('input', function() {
+    charCount.textContent = `(${this.value.length}/1000)`;
+  });
+}
+
+// ─── Carte Leaflet ────────────────────────────────────
+const mapCreer = L.map('map-creer').setView([3.848, 11.502], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 19,
+}).addTo(mapCreer);
+
+let marker;
+mapCreer.on('click', function(e) {
+  if (marker) mapCreer.removeLayer(marker);
+  const icon = L.divIcon({
+    html: `<div style="background:var(--primary);color:white;
+                       width:36px;height:36px;border-radius:50%;
+                       display:flex;align-items:center;justify-content:center;
+                       font-size:1.1rem;box-shadow:0 3px 10px rgba(99,102,241,.5);
+                       border:3px solid white">📍</div>`,
+    className: '',
+    iconAnchor: [18, 18],
+  });
+  marker = L.marker(e.latlng, { icon })
+    .addTo(mapCreer)
+    .bindPopup('<strong>Position du logement</strong>')
+    .openPopup();
+  document.getElementById('id_latitude').value  = e.latlng.lat.toFixed(6);
+  document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
+});
+
+// Géolocalisation navigateur
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => mapCreer.setView([pos.coords.latitude, pos.coords.longitude], 15),
+    () => {}
+  );
+}
+
+// ─── Chargement quartiers par ville (AJAX) ────────────
+const villeSelect    = document.getElementById('id_ville');
+const quartierSelect = document.getElementById('id_quartier');
+
+if (villeSelect) {
+  villeSelect.addEventListener('change', function() {
+    const villeId = this.value;
+    quartierSelect.innerHTML = '<option value="">Chargement...</option>';
+
+    if (!villeId) {
+      quartierSelect.innerHTML = '<option value="">-- Sélectionnez une ville d\'abord --</option>';
+      return;
+    }
+
+    fetch(`/logements/api/quartiers/?ville_id=${villeId}`)
+      .then(res => res.json())
+      .then(data => {
+        quartierSelect.innerHTML = '<option value="">-- Sélectionnez un quartier --</option>';
+        data.quartiers.forEach(q => {
+          const opt = document.createElement('option');
+          opt.value       = q.id;
+          opt.textContent = q.nom;
+          quartierSelect.appendChild(opt);
+        });
+      })
+      .catch(() => {
+        quartierSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+      });
+  });
+}
+
+// ─── Gestion photos ───────────────────────────────────
+let selectedFiles = [];
+const input      = document.getElementById('photosInput');
+const preview    = document.getElementById('photosPreview');
+const countEl    = document.getElementById('photoCount');
+const uploadZone = document.getElementById('uploadZone');
+
+// Drag & Drop
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('dragover');
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+uploadZone.addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON') {
+    input.click();
+  }
+});
+
+input.addEventListener('change', function() {
+  handleFiles(this.files);
+});
+
+function handleFiles(files) {
+  const newFiles = Array.from(files).filter(f => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) {
+      LCM.showToast(`${f.name} : format non supporté`, 'error');
+      return false;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      LCM.showToast(`${f.name} : trop volumineux (max 5MB)`, 'error');
+      return false;
+    }
+    return true;
+  });
+
+  const total = selectedFiles.length + newFiles.length;
+  if (total > 10) {
+    LCM.showToast('Maximum 10 photos autorisées', 'warning');
+    const available = 10 - selectedFiles.length;
+    selectedFiles = [...selectedFiles, ...newFiles.slice(0, available)];
+  } else {
+    selectedFiles = [...selectedFiles, ...newFiles];
+  }
+
+  updatePreview();
+  updateInput();
+}
+
+function removePhoto(index) {
+  selectedFiles.splice(index, 1);
+  updatePreview();
+  updateInput();
+}
+
+function updatePreview() {
+  preview.innerHTML = '';
+  countEl.textContent = `${selectedFiles.length} photo${selectedFiles.length > 1 ? 's' : ''} sélectionnée${selectedFiles.length > 1 ? 's' : ''}`;
+
+  selectedFiles.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const item = document.createElement('div');
+      item.className = `photo-preview-item${index === 0 ? ' principale' : ''}`;
+      item.innerHTML = `
+        <img src="${e.target.result}" alt="Photo ${index + 1}">
+        ${index === 0 ? '<span class="photo-preview-badge">Principale</span>' : ''}
+        <button type="button"
+                class="photo-preview-remove"
+                onclick="removePhoto(${index})"
+                title="Supprimer">
+          ✕
+        </button>`;
+      preview.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function updateInput() {
+  // Recréer le DataTransfer avec les fichiers sélectionnés
+  const dt = new DataTransfer();
+  selectedFiles.forEach(f => dt.items.add(f));
+  input.files = dt.files;
+}
+
+// ─── Validation avant soumission ─────────────────────
+document.getElementById('annonce-form').addEventListener('submit', function(e) {
+  const btn   = document.getElementById('submitBtn');
+  const titre = document.getElementById('id_titre').value.trim();
+  const prix  = document.getElementById('id_prix').value.trim();
+  const ville = document.getElementById('id_ville').value;
+
+  if (!titre || !prix || !ville) {
+    e.preventDefault();
+    LCM.showToast('Remplissez tous les champs obligatoires (*)', 'error');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  // Afficher loading
+  btn.innerHTML = `
+    <div style="width:18px;height:18px;border:2px solid white;
+                border-top-color:transparent;border-radius:50%;
+                animation:spin .6s linear infinite;
+                display:inline-block;margin-right:8px;vertical-align:-3px">
+    </div>
+    Envoi en cours...`;
+  btn.disabled = true;
+});
+</script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
