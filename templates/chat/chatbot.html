@@ -4,32 +4,50 @@
 {% block extra_css %}
 <style>
   /* ════════════════════════════════════════════════════════════
-     CHATGPT INTERFACE REPLICA
-     Design fidèle à l'interface de ChatGPT
+     CHATBOT - Harmonisé avec LogementCM
+     Utilise le dégradé violet/indigo de la marque
      ════════════════════════════════════════════════════════════ */
 
   :root {
     --bg-primary: #ffffff;
-    --bg-secondary: #f7f7f8;
-    --bg-sidebar: #f9f9f9;
-    --bg-hover: #ececf1;
+    --bg-secondary: #f8fafc;
+    --bg-sidebar: #f9fafb;
+    --bg-hover: #f3f4f6;
     --bg-input: #ffffff;
-    --text-primary: #202123;
-    --text-secondary: #6e6e80;
-    --text-muted: #8e8ea0;
-    --border: #e5e5e5;
-    --border-light: #ececf1;
-    --accent: #10a37f;
-    --accent-hover: #0d8a6a;
-    --user-bg: #f7f7f8;
-    --bot-bg: #f7f7f8;
-    --shadow-sm: 0 0 15px rgba(0,0,0,0.1);
-    --shadow-md: 0 0 15px rgba(0,0,0,0.1);
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 12px;
+    --text-primary: #1e1b3a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-light: #eef2ff;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 15px rgba(99,102,241,0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
     --radius-full: 9999px;
-    --transition: all 0.2s ease;
+    --transition: all 0.25s ease;
+  }
+
+  /* Mode sombre harmonisé */
+  [data-theme="dark"] {
+    --bg-primary: #0f0f13;
+    --bg-secondary: #13131a;
+    --bg-sidebar: #0a0a0f;
+    --bg-hover: #1e1e2a;
+    --bg-input: #1a1a24;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #2d2d3d;
+    --border-light: #2d2d3d;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --accent-light: #1e1b3a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.4);
   }
 
   main {
@@ -42,17 +60,20 @@
     height: 100%;
     width: 100%;
     background: var(--bg-primary);
+    transition: background-color 0.3s ease;
   }
 
-  /* ─── Sidebar (style ChatGPT) ─────────────────────────────── */
+  /* ─── Sidebar ─────────────────────────────────────────────── */
   .chatbot-sidebar {
     width: 260px;
     min-width: 260px;
     background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     padding: 8px;
     overflow-y: auto;
+    transition: background-color 0.3s ease;
   }
 
   .sidebar-new-chat {
@@ -61,33 +82,30 @@
     gap: 12px;
     padding: 12px;
     margin-bottom: 8px;
-    background: transparent;
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
     border-radius: var(--radius-md);
-    color: var(--text-primary);
+    color: white;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
     width: 100%;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
   }
 
   .sidebar-new-chat:hover {
-    background: var(--bg-hover);
-  }
-
-  .sidebar-new-chat i {
-    font-size: 16px;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
   }
 
   .chatbot-sidebar-title {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     color: var(--text-muted);
-    padding: 8px 12px;
-    margin-bottom: 4px;
+    padding: 12px 12px 8px;
   }
 
   .sidebar-chat-item {
@@ -97,7 +115,7 @@
     padding: 10px 12px;
     margin: 2px 0;
     border-radius: var(--radius-md);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 14px;
     cursor: pointer;
     transition: var(--transition);
@@ -109,12 +127,7 @@
 
   .sidebar-chat-item:hover {
     background: var(--bg-hover);
-  }
-
-  .sidebar-chat-item i {
-    font-size: 14px;
-    color: var(--text-muted);
-    flex-shrink: 0;
+    color: var(--text-primary);
   }
 
   .sidebar-user-section {
@@ -124,17 +137,17 @@
   }
 
   .sidebar-user-avatar {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    background: #10a37f;
+    border: 2px solid #6366f1;
   }
 
   .sidebar-user-name {
     color: var(--text-primary);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -143,15 +156,6 @@
   .sidebar-user-role {
     color: var(--text-muted);
     font-size: 12px;
-  }
-
-  /* ─── Main Area ───────────────────────────────────────────── */
-  .chatbot-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-primary);
-    position: relative;
   }
 
   /* ─── Messages Area ───────────────────────────────────────── */
@@ -172,15 +176,15 @@
   }
 
   .chatbot-messages::-webkit-scrollbar-thumb {
-    background: #d9d9e3;
+    background: #d1d5db;
     border-radius: 10px;
   }
 
-  .chatbot-messages::-webkit-scrollbar-thumb:hover {
-    background: #c5c5d2;
+  [data-theme="dark"] .chatbot-messages::-webkit-scrollbar-thumb {
+    background: #3d3d4d;
   }
 
-  /* ─── Message Rows (style ChatGPT) ────────────────────────── */
+  /* ─── Message Rows ────────────────────────────────────────── */
   .msg-row {
     display: flex;
     gap: 16px;
@@ -191,39 +195,36 @@
 
   .msg-row.user {
     background: var(--bg-primary);
+    transition: background-color 0.3s ease;
   }
 
   .msg-row.bot {
     background: var(--bg-secondary);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    transition: background-color 0.3s ease;
+    border-bottom: 1px solid var(--border-light);
   }
 
   .msg-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 18px;
-    margin-top: 4px;
+    font-size: 16px;
+    margin-top: 2px;
   }
 
   .msg-avatar.bot {
-    background: #10a37f;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
-    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
   }
 
   .msg-avatar.user {
-    background: #5436da;
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
     color: white;
-    font-size: 14px;
   }
 
   .msg-content {
@@ -231,40 +232,21 @@
     max-width: 768px;
     margin: 0 auto;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
   }
 
   .msg-bubble {
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.7;
     color: var(--text-primary);
     word-wrap: break-word;
   }
 
-  .msg-bubble p {
-    margin-bottom: 12px;
-  }
-
-  .msg-bubble p:last-child {
-    margin-bottom: 0;
-  }
-
   .msg-bubble strong {
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--accent);
   }
 
-<<<<<<< HEAD
-  .msg-time {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
-
-=======
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
-  /* ─── Welcome Message (style ChatGPT) ─────────────────────── */
+  /* ─── Welcome Message ─────────────────────────────────────── */
   .welcome-section {
     flex: 1;
     display: flex;
@@ -273,27 +255,37 @@
     justify-content: center;
     padding: 40px 20px;
     text-align: center;
-    animation: fadeIn 0.5s ease;
     max-width: 768px;
     margin: 0 auto;
+    animation: fadeIn 0.5s ease;
   }
 
   .welcome-icon {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    background: #10a37f;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 32px;
     margin-bottom: 24px;
+    box-shadow: 0 8px 25px rgba(99,102,241,0.4);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
 
   .welcome-title {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 16px;
   }
 
@@ -305,10 +297,10 @@
     margin-bottom: 32px;
   }
 
-  /* ─── Example Cards (style ChatGPT) ───────────────────────── */
+  /* ─── Example Cards ───────────────────────────────────────── */
   .examples-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 12px;
     max-width: 768px;
     width: 100%;
@@ -329,8 +321,9 @@
   }
 
   .example-card:hover {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-sm);
+    border-color: #6366f1;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.15);
+    transform: translateY(-2px);
   }
 
   .example-icon {
@@ -348,10 +341,11 @@
     color: var(--text-muted);
   }
 
-  /* ─── Input Area (style ChatGPT) ──────────────────────────── */
+  /* ─── Input Area ──────────────────────────────────────────── */
   .chatbot-input-area {
     padding: 16px 24px 24px;
     background: var(--bg-primary);
+    transition: background-color 0.3s ease;
   }
 
   .chatbot-input-wrapper {
@@ -362,28 +356,19 @@
 
   .chatbot-input-row {
     display: flex;
-<<<<<<< HEAD
-    align-items: flex-end;
-    gap: 8px;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 8px 12px;
-=======
     align-items: center;
     gap: 8px;
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 24px;
     padding: 8px 8px 8px 16px;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
     transition: var(--transition);
     box-shadow: var(--shadow-sm);
   }
 
   .chatbot-input-row:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   }
 
   .chatbot-textarea {
@@ -392,24 +377,20 @@
     border: none;
     outline: none;
     resize: none;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--text-primary);
     line-height: 1.5;
     max-height: 200px;
     min-height: 24px;
-<<<<<<< HEAD
-    padding: 8px 4px;
-=======
     padding: 8px 0;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
     font-family: inherit;
   }
 
   .chatbot-textarea::placeholder {
-    color: #8e8ea0;
+    color: var(--text-muted);
   }
 
-  /* ─── Boutons dans la barre (style ChatGPT) ───────────────── */
+  /* ─── Boutons ─────────────────────────────────────────────── */
   .input-actions {
     display: flex;
     align-items: center;
@@ -418,32 +399,24 @@
   }
 
   .btn-input-action {
-<<<<<<< HEAD
-    width: 36px;
-    height: 36px;
-=======
-    width: 40px;
-    height: 40px;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
     background: transparent;
-    color: #6e6e80;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: var(--transition);
     position: relative;
-<<<<<<< HEAD
-=======
     flex-shrink: 0;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
   }
 
   .btn-input-action:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+    background: var(--accent-light);
+    color: var(--accent);
   }
 
   .btn-input-action.active {
@@ -457,24 +430,16 @@
   }
 
   .btn-input-action i {
-    font-size: 20px;
-<<<<<<< HEAD
-  }
-
-  .chatbot-send-btn {
-    width: 36px;
-    height: 36px;
-=======
+    font-size: 18px;
     line-height: 1;
   }
 
   .chatbot-send-btn {
-    width: 40px;
-    height: 40px;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
-    background: #202123;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
     display: flex;
     align-items: center;
@@ -482,34 +447,33 @@
     cursor: pointer;
     transition: var(--transition);
     flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
   }
 
   .chatbot-send-btn:hover:not(:disabled) {
-    background: #000000;
     transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
   }
 
   .chatbot-send-btn:disabled {
-    background: #e5e5e5;
-    color: #8e8ea0;
+    background: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
+    box-shadow: none;
   }
 
-<<<<<<< HEAD
-=======
   .chatbot-send-btn i {
     font-size: 18px;
     line-height: 1;
   }
 
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
-  /* Tooltip */
+  /* ─── Tooltip ─────────────────────────────────────────────── */
   .btn-input-action .tooltip {
     position: absolute;
     bottom: 120%;
     left: 50%;
     transform: translateX(-50%);
-    background: #202123;
+    background: #1e1b3a;
     color: white;
     padding: 6px 10px;
     border-radius: 6px;
@@ -528,28 +492,19 @@
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top-color: #202123;
+    border-top-color: #1e1b3a;
   }
 
   .btn-input-action:hover .tooltip {
     opacity: 1;
   }
 
-  .input-footer {
-    text-align: center;
-    margin-top: 12px;
-  }
-
   .input-footer small {
-    color: #8e8ea0;
+    color: var(--text-muted);
     font-size: 12px;
   }
 
-<<<<<<< HEAD
-  /* ─── Typing Indicator (style ChatGPT) ────────────────────── */
-=======
   /* ─── Typing Indicator ────────────────────────────────────── */
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
   .typing-row {
     background: var(--bg-secondary) !important;
   }
@@ -564,9 +519,10 @@
   .typing-dot {
     width: 8px;
     height: 8px;
-    background: #8e8ea0;
+    background: #6366f1;
     border-radius: 50%;
     animation: typingBounce 1.4s ease-in-out infinite;
+    opacity: 0.5;
   }
 
   .typing-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -598,8 +554,8 @@
   }
 
   .chat-logement-card:hover {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-sm);
+    border-color: #6366f1;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.15);
     transform: translateY(-2px);
   }
 
@@ -629,7 +585,10 @@
   .chat-logement-prix {
     font-weight: 700;
     font-size: 16px;
-    color: var(--accent);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 4px;
   }
 
@@ -647,7 +606,7 @@
     margin-top: 4px;
   }
 
-  /* ─── Scroll to bottom ────────────────────────────────────── */
+  /* ─── Scroll button ───────────────────────────────────────── */
   .scroll-bottom-btn {
     position: absolute;
     bottom: 120px;
@@ -675,20 +634,20 @@
   }
 
   .scroll-bottom-btn:hover {
-    background: var(--bg-hover);
+    background: var(--accent-light);
+    color: var(--accent);
   }
 
-  /* ─── Animation microphone ────────────────────────────────── */
+  /* ─── Animations ──────────────────────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   @keyframes pulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-    }
-    70% {
-      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-    }
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
   }
 
   /* ─── Responsive ─────────────────────────────────────────── */
@@ -766,12 +725,7 @@
       <!-- Écran d'accueil -->
       <div id="welcomeScreen">
         <div class="welcome-section">
-          <div class="welcome-icon">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
+          <div class="welcome-icon">🤖</div>
           <div class="welcome-title">
             Comment puis-je vous aider ?
           </div>
@@ -863,11 +817,7 @@
                       class="chatbot-send-btn"
                       id="sendBtn"
                       disabled>
-<<<<<<< HEAD
-                <i class="bi bi-arrow-up" style="font-size:18px"></i>
-=======
                 <i class="bi bi-arrow-up"></i>
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
               </button>
             </div>
           </div>
@@ -1149,9 +1099,7 @@ function addBotMsg(html) {
   const div = document.createElement('div');
   div.className = 'msg-row bot';
   div.innerHTML = `
-    <div class="msg-avatar bot">
-      <i class="bi bi-stars" style="font-size:14px"></i>
-    </div>
+    <div class="msg-avatar bot">🤖</div>
     <div class="msg-content">
       <div class="msg-bubble bot">${html}</div>
     </div>`;
@@ -1165,9 +1113,7 @@ function addTyping() {
   div.className = 'msg-row bot typing-row';
   div.id = 'typingRow';
   div.innerHTML = `
-    <div class="msg-avatar bot">
-      <i class="bi bi-stars" style="font-size:14px"></i>
-    </div>
+    <div class="msg-avatar bot">🤖</div>
     <div class="msg-content">
       <div class="typing-bubble">
         <div class="typing-dot"></div>
@@ -1210,13 +1156,7 @@ function addLogements(logements) {
   
   const wrapper = document.createElement('div');
   wrapper.className = 'msg-row bot';
-<<<<<<< HEAD
-  wrapper.innerHTML = `<div class="msg-avatar bot" style="visibility:hidden">
-    <i class="bi bi-stars" style="font-size:14px"></i>
-  </div>`;
-=======
   wrapper.innerHTML = `<div class="msg-avatar bot" style="visibility:hidden">🤖</div>`;
->>>>>>> 3d5e6e8 (modifications_20_aout_2026)
   wrapper.appendChild(grid);
   messagesEl.appendChild(wrapper);
   scrollBottom();

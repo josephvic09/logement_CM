@@ -146,7 +146,318 @@
     .icon-moon { display: block; }
     [data-theme="dark"] .icon-sun  { display: block; }
     [data-theme="dark"] .icon-moon { display: none; }
-  </style>
+  
+
+  
+  /* ═══════════════════════════════════════════════════════════════
+     DARK MODE GLOBAL - S'applique à TOUS les templates automatiquement
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* ─── Application des variables à tous les éléments Bootstrap ─── */
+  [data-theme="dark"] body,
+  [data-theme="dark"] main {
+    background-color: #0f0f13 !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Toutes les cartes ──────────────────────────────────────── */
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .card-body,
+  [data-theme="dark"] .card-header,
+  [data-theme="dark"] .card-footer {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Tous les conteneurs blancs ─────────────────────────────── */
+  [data-theme="dark"] .bg-white,
+  [data-theme="dark"] .bg-light,
+  [data-theme="dark"] .rounded-3,
+  [data-theme="dark"] .rounded-4,
+  [data-theme="dark"] .shadow-sm,
+  [data-theme="dark"] .shadow,
+  [data-theme="dark"] .border {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Tous les formulaires ───────────────────────────────────── */
+  [data-theme="dark"] .form-control,
+  [data-theme="dark"] .form-select,
+  [data-theme="dark"] input[type="text"],
+  [data-theme="dark"] input[type="email"],
+  [data-theme="dark"] input[type="password"],
+  [data-theme="dark"] input[type="number"],
+  [data-theme="dark"] input[type="search"],
+  [data-theme="dark"] input[type="tel"],
+  [data-theme="dark"] input[type="url"],
+  [data-theme="dark"] textarea,
+  [data-theme="dark"] select {
+    background-color: #1e1e2a !important;
+    color: #f1f5f9 !important;
+    border-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .form-control::placeholder,
+  [data-theme="dark"] textarea::placeholder {
+    color: #64748b !important;
+  }
+
+  [data-theme="dark"] .form-control:focus,
+  [data-theme="dark"] .form-select:focus {
+    background-color: #1e1e2a !important;
+    color: #f1f5f9 !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  }
+
+  /* ─── Tous les textes ────────────────────────────────────────── */
+  [data-theme="dark"] h1,
+  [data-theme="dark"] h2,
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] h6,
+  [data-theme="dark"] p,
+  [data-theme="dark"] span,
+  [data-theme="dark"] div,
+  [data-theme="dark"] label {
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Liens ──────────────────────────────────────────────────── */
+  [data-theme="dark"] a {
+    color: #94a3b8 !important;
+  }
+
+  [data-theme="dark"] a:hover {
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Boutons outline ────────────────────────────────────────── */
+  [data-theme="dark"] .btn-outline-secondary,
+  [data-theme="dark"] .btn-outline-primary,
+  [data-theme="dark"] .btn-outline-danger,
+  [data-theme="dark"] .btn-outline-success {
+    color: #94a3b8 !important;
+    border-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .btn-outline-secondary:hover,
+  [data-theme="dark"] .btn-outline-primary:hover {
+    background-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Tables ─────────────────────────────────────────────────── */
+  [data-theme="dark"] .table {
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .table-hover > tbody > tr:hover {
+    background-color: rgba(255, 255, 255, 0.075) !important;
+  }
+
+  [data-theme="dark"] .table thead th {
+    border-bottom-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .table td,
+  [data-theme="dark"] .table th {
+    border-color: #2d2d3d !important;
+  }
+
+  /* ─── Modals ─────────────────────────────────────────────────── */
+  [data-theme="dark"] .modal-content {
+    background-color: #1a1a24 !important;
+    color: #f1f5f9 !important;
+    border-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .modal-header,
+  [data-theme="dark"] .modal-footer {
+    border-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .modal-title {
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Dropdowns ──────────────────────────────────────────────── */
+  [data-theme="dark"] .dropdown-menu {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  [data-theme="dark"] .dropdown-item {
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .dropdown-item:hover {
+    background-color: #1e1e2a !important;
+  }
+
+  [data-theme="dark"] .dropdown-header {
+    color: #64748b !important;
+  }
+
+  [data-theme="dark"] .dropdown-divider {
+    border-color: #2d2d3d !important;
+  }
+
+  /* ─── Listes ─────────────────────────────────────────────────── */
+  [data-theme="dark"] .list-group-item {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .list-group-item:hover {
+    background-color: #1e1e2a !important;
+  }
+
+  /* ─── Alertes ────────────────────────────────────────────────── */
+  [data-theme="dark"] .alert {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .alert-success {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #34d399 !important;
+  }
+
+  [data-theme="dark"] .alert-danger {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #f87171 !important;
+  }
+
+  /* ─── Badges ─────────────────────────────────────────────────── */
+  [data-theme="dark"] .badge {
+    border: 1px solid #2d2d3d !important;
+  }
+
+  /* ─── Pagination ─────────────────────────────────────────────── */
+  [data-theme="dark"] .pagination .page-link {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #94a3b8 !important;
+  }
+
+  [data-theme="dark"] .pagination .page-link:hover {
+    background-color: #1e1e2a !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: #6366f1 !important;
+    border-color: #6366f1 !important;
+    color: white !important;
+  }
+
+  /* ─── Breadcrumbs ────────────────────────────────────────────── */
+  [data-theme="dark"] .breadcrumb {
+    background-color: transparent !important;
+  }
+
+  [data-theme="dark"] .breadcrumb-item {
+    color: #64748b !important;
+  }
+
+  [data-theme="dark"] .breadcrumb-item.active {
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Nav tabs ───────────────────────────────────────────────── */
+  [data-theme="dark"] .nav-tabs {
+    border-bottom-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .nav-tabs .nav-link {
+    color: #94a3b8 !important;
+  }
+
+  [data-theme="dark"] .nav-tabs .nav-link:hover {
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  [data-theme="dark"] .nav-tabs .nav-link.active {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Progress bars ──────────────────────────────────────────── */
+  [data-theme="dark"] .progress {
+    background-color: #1e1e2a !important;
+  }
+
+  /* ─── Tooltips ───────────────────────────────────────────────── */
+  [data-theme="dark"] .tooltip-inner {
+    background-color: #1e1e2a !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Popovers ───────────────────────────────────────────────── */
+  [data-theme="dark"] .popover {
+    background-color: #1a1a24 !important;
+    border-color: #2d2d3d !important;
+  }
+
+  [data-theme="dark"] .popover-body {
+    color: #f1f5f9 !important;
+  }
+
+  /* ─── Images et contraste ────────────────────────────────────── */
+  [data-theme="dark"] img {
+    filter: brightness(0.9);
+  }
+
+  [data-theme="dark"] .navbar-brand img,
+  [data-theme="dark"] .sidebar-user-avatar,
+  [data-theme="dark"] .rounded-circle {
+    filter: none !important;
+  }
+
+  /* ─── Transitions fluides ────────────────────────────────────── */
+  body, main, .card, .card-body, .modal-content, .dropdown-menu,
+  .form-control, .table, .list-group-item, .alert, .navbar,
+  .chatbot-page, .chatbot-sidebar, .msg-row {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+  }
+
+  /* ─── Scrollbars ─────────────────────────────────────────────── */
+  [data-theme="dark"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="dark"] ::-webkit-scrollbar-track {
+    background: #0f0f13;
+  }
+
+  [data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #2d2d3d;
+    border-radius: 5px;
+  }
+
+  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #3d3d4d;
+  }
+</style>
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -471,6 +782,309 @@
     </div>
   </div>
 </footer>
+<!-- Bouton flottant Chatbot IA déplaçable -->
+{% if request.resolver_match.url_name != 'chatbot' %}
+<div id="chatbotFloatingBtn"
+     style="position:fixed;
+            bottom:100px;
+            right:20px;
+            width:60px;
+            height:60px;
+            cursor:grab;
+            z-index:998;
+            user-select:none;
+            transition:transform .2s ease"
+     onmousedown="startDrag(event)"
+     ontouchstart="startDragTouch(event)"
+     title="Assistant IA LogementCM - Déplacez-moi !">
+  
+  <!-- Image du logo -->
+  <img src="{% static 'images/chatbot.jpg' %}"
+       alt="Chatbot IA"
+       style="width:100%;
+              height:100%;
+              border-radius:50%;
+              object-fit:cover;
+              box-shadow:0 4px 20px rgba(16,163,127,.4);
+              pointer-events:none;
+              animation:chatbotFloat 3s ease-in-out infinite"
+       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2310a37f%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22%3E🤖%3C/text%3E%3C/svg%3E'">
+  
+  <!-- Badge IA -->
+  <span style="position:absolute;
+               top:-5px;
+               right:-5px;
+               width:22px;
+               height:22px;
+               background:#ef4444;
+               color:white;
+               border-radius:50%;
+               font-size:10px;
+               font-weight:800;
+               display:flex;
+               align-items:center;
+               justify-content:center;
+               border:2px solid white;
+               pointer-events:none">
+    IA
+  </span>
+</div>
+
+<!-- Tooltip -->
+<div id="chatbotTooltip"
+     style="position:fixed;
+            background:#202123;
+            color:white;
+            padding:8px 12px;
+            border-radius:8px;
+            font-size:13px;
+            font-weight:500;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .3s ease;
+            z-index:999;
+            white-space:nowrap">
+  💬 Parler à l'IA
+</div>
+{% endif %}
+
+<style>
+  @keyframes chatbotFloat {
+    0%, 100% {
+      transform: translateY(0);
+      filter: drop-shadow(0 4px 15px rgba(16,163,127,.4));
+    }
+    50% {
+      transform: translateY(-8px);
+      filter: drop-shadow(0 8px 25px rgba(16,163,127,.6));
+    }
+  }
+  
+  #chatbotFloatingBtn:hover {
+    transform: scale(1.1) !important;
+    cursor: grab;
+  }
+  
+  #chatbotFloatingBtn:active {
+    cursor: grabbing;
+    animation: none;
+  }
+  
+  #chatbotFloatingBtn.dragging {
+    cursor: grabbing;
+    animation: none;
+    transition: none;
+  }
+</style>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  // Bouton chatbot déplaçable
+  // ═══════════════════════════════════════════════════════════════
+  
+  {% if request.resolver_match.url_name != 'chatbot' %}
+  
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let clickStartTime = 0;
+  let clickStartX = 0;
+  let clickStartY = 0;
+  
+  const chatbotBtn = document.getElementById('chatbotFloatingBtn');
+  const chatbotTooltip = document.getElementById('chatbotTooltip');
+  
+  if (chatbotBtn && chatbotTooltip) {
+    
+    // Charger la position sauvegardée
+    function loadChatbotPosition() {
+      const saved = localStorage.getItem('chatbot_position');
+      if (saved) {
+        try {
+          const pos = JSON.parse(saved);
+          chatbotBtn.style.left = 'auto';
+          chatbotBtn.style.right = pos.right + 'px';
+          chatbotBtn.style.bottom = pos.bottom + 'px';
+          chatbotBtn.style.top = 'auto';
+        } catch(e) {
+          console.error('Erreur position chatbot:', e);
+        }
+      }
+    }
+    
+    // Sauvegarder la position
+    function saveChatbotPosition() {
+      const rect = chatbotBtn.getBoundingClientRect();
+      const pos = {
+        right: window.innerWidth - rect.right,
+        bottom: window.innerHeight - rect.bottom
+      };
+      localStorage.setItem('chatbot_position', JSON.stringify(pos));
+    }
+    
+    // Démarrer le drag (souris)
+    function startDrag(e) {
+      if (e.button === 2) return;
+      e.preventDefault();
+      
+      const rect = chatbotBtn.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      
+      clickStartTime = Date.now();
+      clickStartX = e.clientX;
+      clickStartY = e.clientY;
+      
+      isDragging = false;
+      chatbotBtn.classList.add('dragging');
+      
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', stopDrag);
+    }
+    
+    // Démarrer le drag (tactile)
+    function startDragTouch(e) {
+      const touch = e.touches[0];
+      const rect = chatbotBtn.getBoundingClientRect();
+      
+      dragOffsetX = touch.clientX - rect.left;
+      dragOffsetY = touch.clientY - rect.top;
+      
+      clickStartTime = Date.now();
+      clickStartX = touch.clientX;
+      clickStartY = touch.clientY;
+      
+      isDragging = false;
+      chatbotBtn.classList.add('dragging');
+      
+      document.addEventListener('touchmove', onDragTouch, { passive: false });
+      document.addEventListener('touchend', stopDragTouch);
+    }
+    
+    // Pendant le drag (souris)
+    function onDrag(e) {
+      e.preventDefault();
+      
+      const deltaX = Math.abs(e.clientX - clickStartX);
+      const deltaY = Math.abs(e.clientY - clickStartY);
+      
+      if (deltaX > 5 || deltaY > 5) {
+        isDragging = true;
+      }
+      
+      if (isDragging) {
+        chatbotBtn.style.left = (e.clientX - dragOffsetX) + 'px';
+        chatbotBtn.style.top = (e.clientY - dragOffsetY) + 'px';
+        chatbotBtn.style.right = 'auto';
+        chatbotBtn.style.bottom = 'auto';
+        
+        chatbotTooltip.style.opacity = '0';
+        chatbotBtn.dataset.dragged = 'true';
+      }
+    }
+    
+    // Pendant le drag (tactile)
+    function onDragTouch(e) {
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const deltaX = Math.abs(touch.clientX - clickStartX);
+      const deltaY = Math.abs(touch.clientY - clickStartY);
+      
+      if (deltaX > 5 || deltaY > 5) {
+        isDragging = true;
+      }
+      
+      if (isDragging) {
+        chatbotBtn.style.left = (touch.clientX - dragOffsetX) + 'px';
+        chatbotBtn.style.top = (touch.clientY - dragOffsetY) + 'px';
+        chatbotBtn.style.right = 'auto';
+        chatbotBtn.style.bottom = 'auto';
+        
+        chatbotTooltip.style.opacity = '0';
+        chatbotBtn.dataset.dragged = 'true';
+      }
+    }
+    
+    // Arrêter le drag (souris)
+    function stopDrag(e) {
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      
+      chatbotBtn.classList.remove('dragging');
+      
+      if (isDragging) {
+        saveChatbotPosition();
+        setTimeout(() => {
+          delete chatbotBtn.dataset.dragged;
+        }, 100);
+      }
+      
+      isDragging = false;
+    }
+    
+    // Arrêter le drag (tactile)
+    function stopDragTouch(e) {
+      document.removeEventListener('touchmove', onDragTouch);
+      document.removeEventListener('touchend', stopDragTouch);
+      
+      chatbotBtn.classList.remove('dragging');
+      
+      if (isDragging) {
+        saveChatbotPosition();
+        setTimeout(() => {
+          delete chatbotBtn.dataset.dragged;
+        }, 100);
+      }
+      
+      isDragging = false;
+    }
+    
+    // Gérer le clic sur le bouton
+    chatbotBtn.addEventListener('click', function(e) {
+      if (chatbotBtn.dataset.dragged === 'true') {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      
+      window.location.href = '{% url 'chat:chatbot' %}';
+    });
+    
+    // Afficher le tooltip au survol
+    chatbotBtn.addEventListener('mouseenter', function() {
+      if (!isDragging) {
+        updateTooltipPosition();
+        chatbotTooltip.style.opacity = '1';
+      }
+    });
+    
+    chatbotBtn.addEventListener('mouseleave', function() {
+      chatbotTooltip.style.opacity = '0';
+    });
+    
+    // Mettre à jour la position du tooltip
+    function updateTooltipPosition() {
+      const rect = chatbotBtn.getBoundingClientRect();
+      chatbotTooltip.style.left = (rect.left - 40) + 'px';
+      chatbotTooltip.style.top = (rect.top - 50) + 'px';
+      chatbotTooltip.style.right = 'auto';
+      chatbotTooltip.style.bottom = 'auto';
+    }
+    
+    // Charger la position au démarrage
+    loadChatbotPosition();
+    
+    // Ajuster la position lors du redimensionnement
+    window.addEventListener('resize', function() {
+      if (!isDragging) {
+        loadChatbotPosition();
+      }
+    });
+  }
+  
+  {% endif %}
+</script>
 
 <!-- Bouton retour en haut -->
 <button id="btnTop"

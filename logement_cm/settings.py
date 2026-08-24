@@ -195,3 +195,5 @@ ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 # Email (console pour le développement)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+GROQ_MODEL   = "openai/gpt-oss-120b"
