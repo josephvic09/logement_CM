@@ -14,6 +14,11 @@ from pathlib import Path
 from decouple import config          # ← ajouter cette ligne
 from datetime import timedelta       # ← ajouter cette ligne
 from django.utils.translation import gettext_lazy as _
+import os
+import dj_database_url
+from pathlib import Path
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,18 +105,19 @@ WSGI_APPLICATION = 'logement_cm.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='logement_cm'),
-        'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default='Amandinevic12'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+    )
 }
+
+# Configuration SSL spécifique à Aiven pour la production
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default']['OPTIONS'] = {
+        'ssl': {
+            'ca': os.path.join(BASE_DIR, 'ca.pem'),
+        }
+    }
 
 
 # Password validation
