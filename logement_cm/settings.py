@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from decouple import config          # ← ajouter cette ligne
 from datetime import timedelta       # ← ajouter cette ligne
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -57,6 +58,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',       # ← ajouter
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware', 
     'corsheaders.middleware.CorsMiddleware',            # ← ajouter
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -197,3 +199,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 GROQ_MODEL   = "openai/gpt-oss-120b"
+
+
+ 

@@ -1,0 +1,49 @@
+{
+  "name": "LogementCM",
+  "short_name": "LogementCM",
+  "description": "Trouvez votre logement idéal au Cameroun",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0a3c",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Rechercher",
+      "short_name": "Recherche",
+      "description": "Rechercher un logement",
+      "url": "/recherche/",
+      "icons": [{ "src": "/static/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Chatbot IA",
+      "short_name": "Chatbot",
+      "description": "Assistant immobilier IA",
+      "url": "/chat/chatbot/",
+      "icons": [{ "src": "/static/images/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
+
 
 urlpatterns = [
     # Administration Django
@@ -25,6 +27,17 @@ urlpatterns = [
     # API REST
     path('api/v1/', include('api.urls', namespace='api')),
     path('api/', include('api.urls')),
+    # PWA — Service Worker à la racine
+    path('sw.js', TemplateView.as_view(
+        template_name='sw.js',
+        content_type='application/javascript'
+    ), name='sw'),
+
+    # PWA — Manifest
+    path('manifest.json', TemplateView.as_view(
+        template_name='manifest.json',
+        content_type='application/json'
+    ), name='manifest'),
 ]
 
 # Servir les fichiers médias en développement
@@ -36,3 +49,6 @@ if settings.DEBUG:
 admin.site.site_header  = "LogementCM Administration"
 admin.site.site_title   = "LogementCM"
 admin.site.index_title  = "Panneau d'administration"
+
+
+ 

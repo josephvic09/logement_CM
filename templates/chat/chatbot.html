@@ -1,667 +1,540 @@
-{% extends 'base.html' %}
-{% block title %}Assistant IA{% endblock %}
+ {% extends 'base.html' %}
+{% block title %}Assistant IA — LogementCM{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* ════════════════════════════════════════════════════════════
-     CHATBOT - Harmonisé avec LogementCM
-     Utilise le dégradé violet/indigo de la marque
-     ════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════
+     CHATBOT — Design moderne adapté au dark/light mode de base.html
+  ═══════════════════════════════════════════════════════════════ */
 
-  :root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-sidebar: #f9fafb;
-    --bg-hover: #f3f4f6;
-    --bg-input: #ffffff;
-    --text-primary: #1e1b3a;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --accent-light: #eef2ff;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md: 0 4px 15px rgba(99,102,241,0.15);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-full: 9999px;
-    --transition: all 0.25s ease;
-  }
-
-  /* Mode sombre harmonisé */
-  [data-theme="dark"] {
-    --bg-primary: #0f0f13;
-    --bg-secondary: #13131a;
-    --bg-sidebar: #0a0a0f;
-    --bg-hover: #1e1e2a;
-    --bg-input: #1a1a24;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --border: #2d2d3d;
-    --border-light: #2d2d3d;
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-light: #1e1b3a;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 15px rgba(0,0,0,0.4);
-  }
-
-  main {
-    height: calc(100vh - 65px);
-    overflow: hidden;
-  }
+  main { overflow: hidden; }
 
   .chatbot-page {
     display: flex;
-    height: 100%;
-    width: 100%;
-    background: var(--bg-primary);
-    transition: background-color 0.3s ease;
+    height: calc(100vh - 65px);
+    background: var(--bg);
+    font-family: 'Inter', -apple-system, sans-serif;
   }
 
-  /* ─── Sidebar ─────────────────────────────────────────────── */
+  /* ── Sidebar ─────────────────────────────────────────────────── */
   .chatbot-sidebar {
     width: 260px;
     min-width: 260px;
-    background: var(--bg-sidebar);
-    border-right: 1px solid var(--border-light);
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 8px;
+    padding: .6rem;
     overflow-y: auto;
-    transition: background-color 0.3s ease;
+    gap: .15rem;
   }
 
   .sidebar-new-chat {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border: none;
-    border-radius: var(--radius-md);
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
+    gap: .6rem;
+    padding: .65rem .9rem;
+    margin-bottom: .7rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-2);
+    font-size: .84rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all .15s;
     width: 100%;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+    text-align: left;
   }
-
   .sidebar-new-chat:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
-  .chatbot-sidebar-title {
-    font-size: 11px;
+  .sidebar-section-label {
+    font-size: .68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    padding: 12px 12px 8px;
+    letter-spacing: .07em;
+    color: var(--text-3);
+    padding: .3rem .7rem;
+    margin-top: .4rem;
   }
 
   .sidebar-chat-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    margin: 2px 0;
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-size: 14px;
+    gap: .6rem;
+    padding: .5rem .85rem;
+    border-radius: 8px;
+    color: var(--text-2);
+    font-size: .82rem;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all .15s;
     border: none;
     background: transparent;
     width: 100%;
     text-align: left;
+    overflow: hidden;
   }
-
   .sidebar-chat-item:hover {
     background: var(--bg-hover);
-    color: var(--text-primary);
+    color: var(--text-1);
   }
-
-  .sidebar-user-section {
-    margin-top: auto;
-    padding: 12px 8px;
-    border-top: 1px solid var(--border-light);
+  .sidebar-chat-item svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: var(--text-3);
   }
-
-  .sidebar-user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #6366f1;
-  }
-
-  .sidebar-user-name {
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
+  .sidebar-chat-item span {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  /* Promo card IA dans sidebar */
+  .sidebar-ia-card {
+    margin: .8rem .3rem;
+    padding: .9rem 1rem;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 12px;
+    color: white;
+  }
+  .sidebar-ia-card-title {
+    font-weight: 700; font-size: .84rem; margin-bottom: .25rem;
+  }
+  .sidebar-ia-card-desc {
+    font-size: .72rem; opacity: .85; line-height: 1.45; margin-bottom: .7rem;
+  }
+  .sidebar-ia-card-link {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .38rem .7rem;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 99px;
+    color: white; font-size: .76rem; font-weight: 600;
+    text-decoration: none; transition: .15s;
+  }
+  .sidebar-ia-card-link:hover { background: rgba(255,255,255,.28); color: white; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding: .6rem .4rem .2rem;
+  }
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .5rem .6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: .15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .sidebar-user:hover { background: var(--bg-hover); }
+  .sidebar-user img {
+    width: 30px; height: 30px;
+    border-radius: 50%; object-fit: cover;
+    flex-shrink: 0;
+  }
+  .sidebar-user-name {
+    font-size: .81rem; font-weight: 600;
+    color: var(--text-1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .sidebar-user-role {
-    color: var(--text-muted);
-    font-size: 12px;
+    font-size: .7rem; color: var(--text-3);
   }
 
-  /* ─── Messages Area ───────────────────────────────────────── */
+  /* ── Zone principale ─────────────────────────────────────────── */
+  .chatbot-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+  }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  .chatbot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .7rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    z-index: 5;
+    min-height: 52px;
+  }
+  .chatbot-header-left {
+    display: flex; align-items: center; gap: .65rem;
+  }
+  .chatbot-bot-avatar {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #1a1a2e;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .chatbot-bot-avatar svg { color: #a5b4fc; width: 16px; height: 16px; }
+  .chatbot-header-name {
+    font-size: .9rem; font-weight: 700; color: var(--text-1);
+  }
+  .chatbot-header-status {
+    font-size: .72rem; color: var(--text-3);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e; flex-shrink: 0;
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .5; }
+  }
+  .btn-search-link {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .38rem .85rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-2);
+    font-size: .78rem; font-weight: 500;
+    text-decoration: none; transition: .15s;
+  }
+  .btn-search-link:hover {
+    background: var(--bg-hover);
+    color: var(--text-1);
+    border-color: var(--accent);
+  }
+  .btn-search-link svg { width: 13px; height: 13px; }
+
+  /* ── Messages ────────────────────────────────────────────────── */
   .chatbot-messages {
     flex: 1;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
     scroll-behavior: smooth;
   }
+  .chatbot-messages::-webkit-scrollbar { width: 5px; }
+  .chatbot-messages::-webkit-scrollbar-track { background: transparent; }
+  .chatbot-messages::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; }
+  .chatbot-messages:hover::-webkit-scrollbar-thumb { background: var(--border); }
 
-  .chatbot-messages::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .chatbot-messages::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .chatbot-messages::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 10px;
-  }
-
-  [data-theme="dark"] .chatbot-messages::-webkit-scrollbar-thumb {
-    background: #3d3d4d;
-  }
-
-  /* ─── Message Rows ────────────────────────────────────────── */
   .msg-row {
     display: flex;
-    gap: 16px;
-    padding: 24px;
-    animation: fadeIn 0.3s ease;
-    width: 100%;
+    gap: .85rem;
+    padding: 1.1rem 1.5rem;
+    animation: fadeIn .22s ease;
   }
+  .msg-row.bot-row { background: var(--bg-surface); }
+  .msg-row.user-row { background: var(--bg); }
 
-  .msg-row.user {
-    background: var(--bg-primary);
-    transition: background-color 0.3s ease;
-  }
-
-  .msg-row.bot {
-    background: var(--bg-secondary);
-    transition: background-color 0.3s ease;
-    border-bottom: 1px solid var(--border-light);
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .msg-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 16px;
-    margin-top: 2px;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
   }
+  .msg-avatar.bot { background: #1a1a2e; }
+  .msg-avatar.bot svg { color: #a5b4fc; width: 14px; height: 14px; }
+  .msg-avatar.user { background: var(--accent); }
+  .msg-avatar.user svg { color: white; width: 14px; height: 14px; }
 
-  .msg-avatar.bot {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
-  }
-
-  .msg-avatar.user {
-    background: linear-gradient(135deg, #8b5cf6, #a855f7);
-    color: white;
-  }
-
-  .msg-content {
-    flex: 1;
-    max-width: 768px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .msg-bubble {
-    font-size: 15px;
+  .msg-body { flex: 1; max-width: 700px; }
+  .msg-text {
+    font-size: .92rem;
     line-height: 1.7;
-    color: var(--text-primary);
-    word-wrap: break-word;
+    color: var(--text-1);
+  }
+  .msg-text p { margin: 0 0 .6rem; }
+  .msg-text p:last-child { margin-bottom: 0; }
+  .msg-text strong { font-weight: 600; color: var(--text-1); }
+  .msg-time {
+    font-size: .67rem;
+    color: var(--text-3);
+    margin-top: .3rem;
   }
 
-  .msg-bubble strong {
-    font-weight: 700;
-    color: var(--accent);
+  /* ── Typing ──────────────────────────────────────────────────── */
+  .typing-bubble {
+    display: flex; align-items: center; gap: 4px;
+    padding: .5rem 0;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--text-3);
+    border-radius: 50%;
+    animation: typingBounce 1.3s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingBounce {
+    0%,60%,100% { transform: translateY(0); }
+    30%          { transform: translateY(-6px); }
   }
 
-  /* ─── Welcome Message ─────────────────────────────────────── */
+  /* ── Welcome screen ──────────────────────────────────────────── */
   .welcome-section {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    min-height: 60vh;
+    padding: 2.5rem 1.5rem;
     text-align: center;
-    max-width: 768px;
-    margin: 0 auto;
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn .35s ease;
   }
-
-  .welcome-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 25px rgba(99,102,241,0.4);
-    animation: float 3s ease-in-out infinite;
+  .welcome-orb {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: #1a1a2e;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.4rem;
+    box-shadow: 0 4px 20px rgba(99,102,241,.25);
   }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-
+  .welcome-orb svg { color: #a5b4fc; width: 28px; height: 28px; }
   .welcome-title {
-    font-size: 28px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 16px;
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-1);
+    margin-bottom: .5rem;
+    letter-spacing: -.02em;
   }
-
   .welcome-subtitle {
-    font-size: 16px;
-    color: var(--text-secondary);
-    max-width: 480px;
-    line-height: 1.6;
-    margin-bottom: 32px;
+    font-size: .92rem;
+    color: var(--text-2);
+    max-width: 440px;
+    line-height: 1.65;
+    margin-bottom: 2rem;
   }
-
-  /* ─── Example Cards ───────────────────────────────────────── */
   .examples-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
-    max-width: 768px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .65rem;
+    max-width: 560px;
     width: 100%;
   }
-
   .example-card {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px;
-    background: var(--bg-primary);
+    display: flex; align-items: center; gap: .75rem;
+    padding: .8rem 1rem;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all .15s;
     text-align: left;
-    width: 100%;
   }
-
   .example-card:hover {
-    border-color: #6366f1;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.15);
-    transform: translateY(-2px);
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99,102,241,.12);
+  }
+  .example-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .example-title { font-size: .83rem; font-weight: 600; color: var(--text-1); }
+  .example-desc  { font-size: .74rem; color: var(--text-3); margin-top: .1rem; }
+
+  /* ── Suggestions rapides ─────────────────────────────────────── */
+  .suggestions-bar {
+    display: flex; gap: .4rem; flex-wrap: wrap;
+    padding: .6rem 1.5rem .2rem;
+    justify-content: center;
+  }
+  .sug-pill {
+    padding: .3rem .8rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    color: var(--text-2);
+    font-size: .76rem;
+    cursor: pointer; transition: .15s;
+    white-space: nowrap;
+  }
+  .sug-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
   }
 
-  .example-icon {
-    font-size: 24px;
+  /* ── Logement cards (artifact) ───────────────────────────────── */
+  .artifact-wrap {
+    margin: .4rem 0 .4rem 44px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    max-width: 700px;
   }
-
-  .example-title {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
+  .artifact-header {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .55rem .9rem;
+    background: var(--accent-light);
+    border-bottom: 1px solid var(--border);
+    font-size: .76rem; font-weight: 700;
+    color: var(--accent);
   }
-
-  .example-desc {
-    font-size: 13px;
-    color: var(--text-muted);
+  .artifact-header svg { width: 13px; height: 13px; }
+  .artifact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    background: var(--bg);
   }
+  .lg-card {
+    display: block; text-decoration: none;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transition: .15s;
+  }
+  .lg-card:last-child { border-right: none; }
+  .lg-card:hover { background: var(--bg-hover); }
+  .lg-card img {
+    width: 100%; height: 120px;
+    object-fit: cover; display: block;
+    border-bottom: 1px solid var(--border);
+  }
+  .lg-info { padding: .7rem .8rem; }
+  .lg-titre {
+    font-size: .81rem; font-weight: 600;
+    color: var(--text-1);
+    margin-bottom: .2rem; line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .lg-prix {
+    font-size: .86rem; font-weight: 700;
+    color: var(--accent); margin-bottom: .18rem;
+  }
+  .lg-loc {
+    font-size: .72rem; color: var(--text-2);
+    display: flex; align-items: center; gap: 3px;
+  }
+  .lg-loc svg { width: 10px; height: 10px; color: var(--accent); }
+  .lg-meta { font-size: .69rem; color: var(--text-3); margin-top: 3px; }
 
-  /* ─── Input Area ──────────────────────────────────────────── */
+  /* ── Scroll button ───────────────────────────────────────────── */
+  .scroll-bottom-btn {
+    position: absolute;
+    bottom: 130px; right: 1.5rem;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    opacity: 0; transform: translateY(8px);
+    transition: all .2s; z-index: 5;
+  }
+  .scroll-bottom-btn.visible { opacity: 1; transform: translateY(0); }
+  .scroll-bottom-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .scroll-bottom-btn svg { width: 15px; height: 15px; }
+
+  /* ── Input area ──────────────────────────────────────────────── */
   .chatbot-input-area {
-    padding: 16px 24px 24px;
-    background: var(--bg-primary);
-    transition: background-color 0.3s ease;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: .75rem 1.5rem 1.2rem;
   }
-
-  .chatbot-input-wrapper {
-    max-width: 768px;
-    margin: 0 auto;
-    position: relative;
-  }
-
-  .chatbot-input-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .chatbot-input-wrapper { max-width: 700px; margin: 0 auto; }
+  .chatbot-input-box {
+    display: flex; align-items: flex-end; gap: .5rem;
     background: var(--bg-input);
     border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 8px 8px 8px 16px;
-    transition: var(--transition);
+    border-radius: 14px;
+    padding: .55rem .65rem;
+    transition: all .18s;
     box-shadow: var(--shadow-sm);
   }
-
-  .chatbot-input-row:focus-within {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  .chatbot-input-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
   }
-
   .chatbot-textarea {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    resize: none;
-    font-size: 15px;
-    color: var(--text-primary);
-    line-height: 1.5;
-    max-height: 200px;
-    min-height: 24px;
-    padding: 8px 0;
-    font-family: inherit;
+    flex: 1; background: transparent; border: none; outline: none;
+    resize: none; font-size: .91rem;
+    color: var(--text-1) !important;
+    line-height: 1.5; max-height: 160px; min-height: 22px;
+    padding: .3rem 0;
+    font-family: 'Inter', -apple-system, sans-serif;
   }
+  .chatbot-textarea::placeholder { color: var(--text-3); }
 
-  .chatbot-textarea::placeholder {
-    color: var(--text-muted);
-  }
-
-  /* ─── Boutons ─────────────────────────────────────────────── */
   .input-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    display: flex; align-items: center; gap: .25rem;
+    margin-bottom: 1px; flex-shrink: 0;
   }
-
   .btn-input-action {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    width: 30px; height: 30px;
+    border-radius: 8px;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
+    color: var(--text-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: .15s;
     position: relative;
-    flex-shrink: 0;
   }
-
-  .btn-input-action:hover {
-    background: var(--accent-light);
-    color: var(--accent);
-  }
-
-  .btn-input-action.active {
-    color: var(--accent);
-  }
-
-  .btn-input-action.listening {
-    color: #ef4444;
-    background: #fee2e2;
-    animation: pulse 1.5s infinite;
-  }
-
-  .btn-input-action i {
-    font-size: 18px;
-    line-height: 1;
+  .btn-input-action:hover { background: var(--bg-hover); color: var(--text-1); }
+  .btn-input-action.active { color: var(--accent); }
+  .btn-input-action.listening { color: #ef4444; animation: pulse-red 1s infinite; }
+  .btn-input-action svg { width: 16px; height: 16px; }
+  @keyframes pulse-red {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .5; }
   }
 
   .chatbot-send-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    width: 30px; height: 30px;
+    border-radius: 8px;
     border: none;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--accent);
     color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-    flex-shrink: 0;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: .15s; flex-shrink: 0;
+  }
+  .chatbot-send-btn:hover:not(:disabled) { background: var(--accent-hover, #4f46e5); }
+  .chatbot-send-btn:disabled { background: var(--border); color: var(--text-3); cursor: not-allowed; }
+  .chatbot-send-btn svg { width: 15px; height: 15px; }
+
+  .input-footer {
+    text-align: center;
+    margin-top: .5rem;
+    font-size: .67rem;
+    color: var(--text-3);
   }
 
-  .chatbot-send-btn:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(99,102,241,0.4);
-  }
-
-  .chatbot-send-btn:disabled {
-    background: var(--border);
-    color: var(--text-muted);
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-
-  .chatbot-send-btn i {
-    font-size: 18px;
-    line-height: 1;
-  }
-
-  /* ─── Tooltip ─────────────────────────────────────────────── */
-  .btn-input-action .tooltip {
-    position: absolute;
-    bottom: 120%;
-    left: 50%;
+  /* ── Voice tooltip ───────────────────────────────────────────── */
+  .btn-input-action .tip {
+    position: absolute; bottom: 120%; left: 50%;
     transform: translateX(-50%);
-    background: #1e1b3a;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: var(--transition);
-    z-index: 100;
+    background: var(--bg-surface-2, #2a2a2a);
+    color: var(--text-1);
+    padding: 3px 8px;
+    border-radius: 5px; font-size: .68rem;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity .15s;
+    z-index: 10;
   }
+  .btn-input-action:hover .tip { opacity: 1; }
 
-  .btn-input-action .tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: #1e1b3a;
-  }
-
-  .btn-input-action:hover .tooltip {
-    opacity: 1;
-  }
-
-  .input-footer small {
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-
-  /* ─── Typing Indicator ────────────────────────────────────── */
-  .typing-row {
-    background: var(--bg-secondary) !important;
-  }
-
-  .typing-bubble {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 0;
-  }
-
-  .typing-dot {
-    width: 8px;
-    height: 8px;
-    background: #6366f1;
-    border-radius: 50%;
-    animation: typingBounce 1.4s ease-in-out infinite;
-    opacity: 0.5;
-  }
-
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-  @keyframes typingBounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-6px); }
-  }
-
-  /* ─── Logement Cards ──────────────────────────────────────── */
-  .chat-logements-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-    max-width: 768px;
-    margin: 16px auto 0;
-    width: 100%;
-  }
-
-  .chat-logement-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    text-decoration: none;
-    transition: var(--transition);
-    display: block;
-  }
-
-  .chat-logement-card:hover {
-    border-color: #6366f1;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.15);
-    transform: translateY(-2px);
-  }
-
-  .chat-logement-card img {
-    width: 100%;
-    height: 140px;
-    object-fit: cover;
-    display: block;
-  }
-
-  .chat-logement-info {
-    padding: 12px;
-  }
-
-  .chat-logement-titre {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-    margin-bottom: 6px;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .chat-logement-prix {
-    font-weight: 700;
-    font-size: 16px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 4px;
-  }
-
-  .chat-logement-loc {
-    font-size: 13px;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .chat-logement-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
-
-  /* ─── Scroll button ───────────────────────────────────────── */
-  .scroll-bottom-btn {
-    position: absolute;
-    bottom: 120px;
-    right: 32px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: var(--transition);
-    z-index: 5;
-  }
-
-  .scroll-bottom-btn.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .scroll-bottom-btn:hover {
-    background: var(--accent-light);
-    color: var(--accent);
-  }
-
-  /* ─── Animations ──────────────────────────────────────────── */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-  }
-
-  /* ─── Responsive ─────────────────────────────────────────── */
+  /* ── Responsive ──────────────────────────────────────────────── */
   @media (max-width: 768px) {
     .chatbot-sidebar { display: none; }
-    .msg-content { padding: 0 8px; }
-    .chat-logements-grid { grid-template-columns: 1fr; }
+    .msg-row { padding: .9rem .85rem; }
+    .chatbot-input-area { padding: .6rem .85rem 1rem; }
+    .artifact-wrap { margin-left: 0; }
+    .artifact-grid { grid-template-columns: 1fr 1fr; }
     .examples-container { grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 640px) {
-    .msg-row { padding: 16px; }
-    .chatbot-input-area { padding: 12px 16px 16px; }
-    .welcome-title { font-size: 24px; }
   }
 </style>
 {% endblock %}
@@ -669,69 +542,105 @@
 {% block content %}
 <div class="chatbot-page">
 
-  <!-- ─── Sidebar ─────────────────────────────────────────────── -->
-  <div class="chatbot-sidebar">
+  <!-- ══ SIDEBAR ════════════════════════════════════════════════ -->
+  <aside class="chatbot-sidebar">
+
     <button class="sidebar-new-chat" onclick="newChat()">
-      <i class="bi bi-plus-lg"></i>
+      <svg data-lucide="plus" style="width:15px;height:15px"></svg>
       <span>Nouvelle conversation</span>
     </button>
 
-    <div class="chatbot-sidebar-title">Historique</div>
+    <div class="sidebar-section-label">Historique</div>
 
-    <button class="sidebar-chat-item">
-      <i class="bi bi-chat"></i>
-      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        Studio meublé Bastos
-      </span>
-    </button>
-    <button class="sidebar-chat-item">
-      <i class="bi bi-chat"></i>
-      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        Villa avec piscine Douala
-      </span>
-    </button>
-    <button class="sidebar-chat-item">
-      <i class="bi bi-chat"></i>
-      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        Appartement F3 Yaoundé
-      </span>
-    </button>
+    {% if conversations %}
+      {% for conv in conversations %}
+      <button class="sidebar-chat-item">
+        <svg data-lucide="message-circle"></svg>
+        <span>{{ conv.titre|default:"Recherche"|truncatechars:30 }}</span>
+      </button>
+      {% endfor %}
+    {% else %}
+      <button class="sidebar-chat-item">
+        <svg data-lucide="message-circle"></svg>
+        <span>Studio meublé Bastos</span>
+      </button>
+      <button class="sidebar-chat-item">
+        <svg data-lucide="message-circle"></svg>
+        <span>Villa avec piscine Douala</span>
+      </button>
+      <button class="sidebar-chat-item">
+        <svg data-lucide="message-circle"></svg>
+        <span>Appartement F3 Yaoundé</span>
+      </button>
+    {% endif %}
 
-    <div class="sidebar-user-section">
+    <div class="sidebar-ia-card">
+      <div style="width:30px;height:30px;background:rgba(255,255,255,.18);
+                  border-radius:8px;display:flex;align-items:center;
+                  justify-content:center;margin-bottom:.6rem">
+        <svg data-lucide="bot" style="width:16px;height:16px;color:white"></svg>
+      </div>
+      <div class="sidebar-ia-card-title">Recherche intelligente</div>
+      <div class="sidebar-ia-card-desc">Trouvez le logement idéal avec notre assistant IA</div>
+      <a href="{% url 'logements:recherche' %}" class="sidebar-ia-card-link">
+        Recherche classique
+        <svg data-lucide="arrow-right" style="width:12px;height:12px"></svg>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
       {% if user.is_authenticated %}
-      <div class="d-flex align-items-center gap-2" style="padding: 8px;">
-        <img src="{{ user.get_avatar_url }}"
-             class="sidebar-user-avatar"
-             alt="Avatar">
-        <div style="overflow:hidden; flex:1;">
-          <div class="sidebar-user-name">
-            {{ user.get_full_name }}
-          </div>
-          <div class="sidebar-user-role">
-            {{ user.get_role_display }}
+      <a href="{% url 'accounts:profil' %}" class="sidebar-user">
+        <img src="{{ user.get_avatar_url }}" alt="avatar">
+        <div style="flex:1;overflow:hidden">
+          <div class="sidebar-user-name">{{ user.get_full_name }}</div>
+          <div class="sidebar-user-role">{{ user.get_role_display }}</div>
+        </div>
+      </a>
+      {% endif %}
+    </div>
+
+  </aside>
+
+  <!-- ══ ZONE PRINCIPALE ════════════════════════════════════════ -->
+  <div class="chatbot-main">
+
+    <!-- Header -->
+    <div class="chatbot-header">
+      <div class="chatbot-header-left">
+        <div class="chatbot-bot-avatar">
+          <svg data-lucide="home"></svg>
+        </div>
+        <div>
+          <div class="chatbot-header-name">Assistant LogementCM</div>
+          <div class="chatbot-header-status">
+            <span class="status-dot"></span>
+            En ligne · Propulsé par Groq AI
           </div>
         </div>
       </div>
-      {% endif %}
+      <a href="{% url 'logements:recherche' %}" class="btn-search-link">
+        <svg data-lucide="search"></svg>
+        Recherche classique
+      </a>
     </div>
-  </div>
-
-  <!-- ─── Zone principale ─────────────────────────────────────── -->
-  <div class="chatbot-main">
 
     <!-- Messages -->
     <div class="chatbot-messages" id="chatMessages">
 
-      <!-- Écran d'accueil -->
       <div id="welcomeScreen">
         <div class="welcome-section">
-          <div class="welcome-icon">🤖</div>
+          <div class="welcome-orb">
+            <svg data-lucide="home"></svg>
+          </div>
           <div class="welcome-title">
             Comment puis-je vous aider ?
+            {% if user.is_authenticated %} {{ user.prenom }}{% endif %}
           </div>
           <div class="welcome-subtitle">
-            Je suis votre assistant immobilier. Je peux vous aider à trouver
-            le logement idéal au Cameroun. Décrivez simplement ce que vous cherchez.
+            Je suis votre assistant immobilier LogementCM. Décrivez le logement
+            que vous cherchez — ville, budget, équipements — je trouve les meilleures
+            options disponibles.
           </div>
 
           <div class="examples-container">
@@ -743,7 +652,6 @@
                 <div class="example-desc">80K–120K FCFA/mois</div>
               </div>
             </div>
-
             <div class="example-card" onclick="useExample(this)"
                  data-text="Villa avec piscine et gardien à Douala Bonapriso">
               <span class="example-icon">🏡</span>
@@ -752,7 +660,6 @@
                 <div class="example-desc">Avec piscine & gardien</div>
               </div>
             </div>
-
             <div class="example-card" onclick="useExample(this)"
                  data-text="Appartement 2 chambres meublé climatisé à Biyem-Assi max 100 000 FCFA">
               <span class="example-icon">🏢</span>
@@ -761,7 +668,6 @@
                 <div class="example-desc">Biyem-Assi, max 100K</div>
               </div>
             </div>
-
             <div class="example-card" onclick="useExample(this)"
                  data-text="Maison familiale 3 chambres avec parking à Yaoundé moins de 150 000 FCFA">
               <span class="example-icon">🏘️</span>
@@ -774,503 +680,307 @@
         </div>
       </div>
 
-    </div>
+    </div><!-- /chatMessages -->
 
-    <!-- Scroll to bottom -->
+    <!-- Scroll button -->
     <button class="scroll-bottom-btn" id="scrollBottomBtn" onclick="scrollBottom()">
-      <i class="bi bi-arrow-down" style="font-size:18px"></i>
+      <svg data-lucide="arrow-down"></svg>
     </button>
 
-    <!-- Zone de saisie -->
+    <!-- Suggestions rapides -->
+    <div class="suggestions-bar" id="suggestionsBar">
+      <button class="sug-pill" onclick="sug(this)">Studio Yaoundé</button>
+      <button class="sug-pill" onclick="sug(this)">Villa Bastos</button>
+      <button class="sug-pill" onclick="sug(this)">Appartement Douala</button>
+      <button class="sug-pill" onclick="sug(this)">Moins de 50 000 FCFA</button>
+      <button class="sug-pill" onclick="sug(this)">WiFi + Parking</button>
+    </div>
+
+    <!-- Input -->
     <div class="chatbot-input-area">
       <div class="chatbot-input-wrapper">
         <form id="chatForm">
           {% csrf_token %}
-          <div class="chatbot-input-row">
+          <div class="chatbot-input-box">
             <textarea id="chatInput"
                       class="chatbot-textarea"
-                      placeholder="Envoyer un message..."
+                      placeholder="Décrivez le logement que vous cherchez…"
                       rows="1"
                       maxlength="2000"></textarea>
-            
             <div class="input-actions">
-              <!-- Bouton microphone -->
-              <button type="button"
-                      class="btn-input-action"
-                      id="micBtn"
+              <button type="button" class="btn-input-action" id="micBtn"
                       onclick="toggleMicrophone()">
-                <i class="bi bi-mic" id="micIcon"></i>
-                <span class="tooltip">Dicter un message</span>
+                <svg data-lucide="mic" id="micIcon"></svg>
+                <span class="tip">Dicter</span>
               </button>
-
-              <!-- Bouton volume -->
-              <button type="button"
-                      class="btn-input-action active"
-                      id="voiceBtn"
+              <button type="button" class="btn-input-action active" id="voiceBtn"
                       onclick="toggleVoice()">
-                <i class="bi bi-volume-up" id="voiceIcon"></i>
-                <span class="tooltip">Activer/désactiver la voix</span>
+                <svg data-lucide="volume-2" id="voiceIcon"></svg>
+                <span class="tip">Voix</span>
               </button>
-
-              <!-- Bouton envoyer -->
-              <button type="submit"
-                      class="chatbot-send-btn"
-                      id="sendBtn"
-                      disabled>
-                <i class="bi bi-arrow-up"></i>
+              <button type="submit" class="chatbot-send-btn" id="sendBtn" disabled>
+                <svg data-lucide="arrow-up"></svg>
               </button>
             </div>
           </div>
         </form>
-
         <div class="input-footer">
-          <small>
-            L'assistant peut produire des informations inexactes. Vérifiez les annonces.
-          </small>
+          L'assistant peut produire des informations inexactes. Vérifiez les annonces avant de vous engager.
         </div>
       </div>
     </div>
 
-  </div>
+  </div><!-- /chatbot-main -->
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let convId = null;
-let hasStartedChat = false;
+let convId = null, hasStarted = false;
+let voiceEnabled = true, isSpeaking = false;
+let selectedVoice = null, recognition = null, isListening = false;
 
-// ═══════════════════════════════════════════════════════════════
-// Configuration vocale
-// ═══════════════════════════════════════════════════════════════
-let voiceEnabled = true;
-let isSpeaking = false;
-let selectedVoice = null;
-let recognition = null;
-let isListening = false;
+const messagesEl   = document.getElementById('chatMessages');
+const inputEl      = document.getElementById('chatInput');
+const sendBtn      = document.getElementById('sendBtn');
+const chatForm     = document.getElementById('chatForm');
+const scrollBtn    = document.getElementById('scrollBottomBtn');
+const welcomeEl    = document.getElementById('welcomeScreen');
+const sugBar       = document.getElementById('suggestionsBar');
+const micBtn       = document.getElementById('micBtn');
+const voiceBtn     = document.getElementById('voiceBtn');
 
-function getCsrf() {
-  const c = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+function csrf() {
+  const c = document.cookie.split(';').find(x => x.trim().startsWith('csrftoken='));
   return c ? c.trim().split('=')[1] : '';
 }
-
-const messagesEl = document.getElementById('chatMessages');
-const inputEl    = document.getElementById('chatInput');
-const sendBtn    = document.getElementById('sendBtn');
-const chatForm   = document.getElementById('chatForm');
-const scrollBtn  = document.getElementById('scrollBottomBtn');
-const welcomeScreen = document.getElementById('welcomeScreen');
-const micBtn     = document.getElementById('micBtn');
-const voiceBtn   = document.getElementById('voiceBtn');
-const micIcon    = document.getElementById('micIcon');
-const voiceIcon  = document.getElementById('voiceIcon');
-
-// ═══════════════════════════════════════════════════════════════
-// Initialisation des voix
-// ═══════════════════════════════════════════════════════════════
-function initVoices() {
-  const voices = window.speechSynthesis.getVoices();
-  selectedVoice = voices.find(voice => 
-    voice.lang.startsWith('fr') && voice.name.includes('Google')
-  ) || voices.find(voice => 
-    voice.lang.startsWith('fr')
-  ) || voices[0];
-  
-  console.log('Voix sélectionnée:', selectedVoice ? selectedVoice.name : 'Aucune');
+function now() {
+  return new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function scrollBottom() { messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' }); }
+function isNearBottom() {
+  return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 80;
 }
 
-if (window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = initVoices;
-  initVoices();
-}
+// ── Scroll button visibility ──
+messagesEl.addEventListener('scroll', function () {
+  scrollBtn.classList.toggle('visible', !isNearBottom());
+});
 
-// ═══════════════════════════════════════════════════════════════
-// Fonctions de synthèse vocale
-// ═══════════════════════════════════════════════════════════════
-function speak(text) {
-  if (!voiceEnabled || !window.speechSynthesis) return;
-  
-  window.speechSynthesis.cancel();
-  
-  let cleanText = text
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    .replace(/[#\[\]()]/g, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/\n+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  if (!cleanText) return;
-  
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = 'fr-FR';
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
-  utterance.volume = 1.0;
-  
-  if (selectedVoice) {
-    utterance.voice = selectedVoice;
-  }
-  
-  utterance.onstart = function() {
-    isSpeaking = true;
-    updateVoiceButton();
-  };
-  
-  utterance.onend = function() {
-    isSpeaking = false;
-    updateVoiceButton();
-  };
-  
-  utterance.onerror = function() {
-    isSpeaking = false;
-    updateVoiceButton();
-  };
-  
-  window.speechSynthesis.speak(utterance);
-}
-
-function stopSpeaking() {
-  if (window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-    isSpeaking = false;
-    updateVoiceButton();
-  }
-}
-
-function toggleVoice() {
-  voiceEnabled = !voiceEnabled;
-  if (!voiceEnabled) {
-    stopSpeaking();
-  }
-  updateVoiceButton();
-}
-
-function updateVoiceButton() {
-  if (!voiceEnabled) {
-    voiceIcon.className = 'bi bi-volume-mute';
-    voiceBtn.classList.remove('active');
-  } else {
-    voiceIcon.className = 'bi bi-volume-up';
-    voiceBtn.classList.add('active');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Configuration de la reconnaissance vocale
-// ═══════════════════════════════════════════════════════════════
-function initRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  
-  if (!SpeechRecognition) {
-    console.log('Reconnaissance vocale non supportée');
-    micBtn.style.display = 'none';
-    return;
-  }
-  
-  recognition = new SpeechRecognition();
-  recognition.lang = 'fr-FR';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  
-  recognition.onstart = function() {
-    isListening = true;
-    updateMicButton();
-    inputEl.placeholder = "Écoute en cours... Parlez maintenant";
-  };
-  
-  recognition.onresult = function(event) {
-    const transcript = event.results[0][0].transcript;
-    inputEl.value = transcript;
-    inputEl.dispatchEvent(new Event('input'));
-    
-    if (transcript.trim()) {
-      sendMessage();
-    }
-  };
-  
-  recognition.onerror = function(event) {
-    console.error('Erreur de reconnaissance:', event.error);
-    isListening = false;
-    updateMicButton();
-    resetMicUI();
-    
-    let errorMsg = '';
-    switch(event.error) {
-      case 'not-allowed':
-        errorMsg = 'Microphone non autorisé. Veuillez autoriser l\'accès au microphone.';
-        break;
-      case 'no-speech':
-        errorMsg = 'Aucune parole détectée. Réessayez.';
-        break;
-      case 'network':
-        errorMsg = 'Erreur réseau. Vérifiez votre connexion.';
-        break;
-      default:
-        errorMsg = 'Erreur de reconnaissance vocale.';
-    }
-    
-    addBotMsg(`<p class="mb-0">⚠️ ${errorMsg}</p>`);
-  };
-  
-  recognition.onend = function() {
-    isListening = false;
-    updateMicButton();
-    resetMicUI();
-  };
-}
-
-function toggleMicrophone() {
-  if (!recognition) {
-    initRecognition();
-  }
-  
-  if (isListening) {
-    recognition.stop();
-  } else {
-    try {
-      recognition.start();
-    } catch(e) {
-      console.error('Erreur démarrage micro:', e);
-    }
-  }
-}
-
-function updateMicButton() {
-  if (isListening) {
-    micIcon.className = 'bi bi-mic-fill';
-    micBtn.classList.add('listening');
-  } else {
-    micIcon.className = 'bi bi-mic';
-    micBtn.classList.remove('listening');
-  }
-}
-
-function resetMicUI() {
-  inputEl.placeholder = "Envoyer un message...";
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Auto-resize textarea
-// ═══════════════════════════════════════════════════════════════
-inputEl.addEventListener('input', function() {
+// ── Auto-resize textarea ──
+inputEl.addEventListener('input', function () {
   this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
   sendBtn.disabled = !this.value.trim();
 });
-
-// Enter = envoyer, Shift+Enter = nouvelle ligne
-inputEl.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    if (!sendBtn.disabled) sendMessage();
-  }
+inputEl.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) send(); }
 });
+chatForm.addEventListener('submit', function (e) { e.preventDefault(); if (!sendBtn.disabled) send(); });
 
-// Envoyer via formulaire
-chatForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  if (!sendBtn.disabled) sendMessage();
-});
+// ── Suggestions / examples ──
+function sug(btn) { inputEl.value = btn.textContent.trim(); sendBtn.disabled = false; send(); }
+function useExample(el) { inputEl.value = el.dataset.text; sendBtn.disabled = false; send(); }
 
-function useExample(card) {
-  inputEl.value = card.dataset.text;
-  sendBtn.disabled = false;
-  sendMessage();
+// ── New chat ──
+function newChat() {
+  convId = null; hasStarted = false;
+  messagesEl.innerHTML = '';
+  messagesEl.appendChild(welcomeEl);
+  welcomeEl.style.display = '';
+  sugBar.style.display = '';
+  inputEl.focus();
 }
 
-function addUserMsg(text) {
-  const div = document.createElement('div');
-  div.className = 'msg-row user';
-  div.innerHTML = `
+// ── Add messages ──
+function addUser(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row user-row';
+  row.innerHTML = `
     <div class="msg-avatar user">
-      <i class="bi bi-person-fill" style="font-size:14px"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
     </div>
-    <div class="msg-content">
-      <div class="msg-bubble user">${escapeHtml(text)}</div>
+    <div class="msg-body">
+      <div class="msg-text"><p>${esc(text)}</p></div>
+      <div class="msg-time">${now()}</div>
     </div>`;
-  messagesEl.appendChild(div);
+  messagesEl.appendChild(row);
   scrollBottom();
 }
 
-function addBotMsg(html) {
-  const div = document.createElement('div');
-  div.className = 'msg-row bot';
-  div.innerHTML = `
-    <div class="msg-avatar bot">🤖</div>
-    <div class="msg-content">
-      <div class="msg-bubble bot">${html}</div>
+function addBot(html) {
+  const row = document.createElement('div');
+  row.className = 'msg-row bot-row';
+  row.innerHTML = `
+    <div class="msg-avatar bot">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="msg-body">
+      <div class="msg-text">${html}</div>
+      <div class="msg-time">${now()}</div>
     </div>`;
-  messagesEl.appendChild(div);
-  scrollBottom();
-  return div;
+  messagesEl.appendChild(row);
+  if (isNearBottom()) scrollBottom();
 }
 
 function addTyping() {
-  const div = document.createElement('div');
-  div.className = 'msg-row bot typing-row';
-  div.id = 'typingRow';
-  div.innerHTML = `
-    <div class="msg-avatar bot">🤖</div>
-    <div class="msg-content">
+  const row = document.createElement('div');
+  row.className = 'msg-row bot-row'; row.id = 'typingRow';
+  row.innerHTML = `
+    <div class="msg-avatar bot">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </div>
+    <div class="msg-body">
       <div class="typing-bubble">
         <div class="typing-dot"></div>
         <div class="typing-dot"></div>
         <div class="typing-dot"></div>
       </div>
     </div>`;
-  messagesEl.appendChild(div);
+  messagesEl.appendChild(row);
   scrollBottom();
 }
+function removeTyping() { const el = document.getElementById('typingRow'); if (el) el.remove(); }
 
-function removeTyping() {
-  const el = document.getElementById('typingRow');
-  if (el) el.remove();
-}
-
-function addLogements(logements) {
-  const grid = document.createElement('div');
-  grid.className = 'chat-logements-grid';
-  logements.forEach(l => {
+function addLogements(list) {
+  const wrap = document.createElement('div');
+  wrap.className = 'artifact-wrap';
+  wrap.innerHTML = `
+    <div class="artifact-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      ${list.length} logement${list.length > 1 ? 's' : ''} trouvé${list.length > 1 ? 's' : ''}
+    </div>
+    <div class="artifact-grid" id="artGrid"></div>`;
+  const grid = wrap.querySelector('#artGrid');
+  list.forEach(l => {
     const a = document.createElement('a');
-    a.href      = l.url;
-    a.className = 'chat-logement-card';
-    a.target    = '_blank';
+    a.href = l.url; a.className = 'lg-card'; a.target = '_blank';
     a.innerHTML = `
-      <img src="${l.photo}" alt="${escapeHtml(l.titre)}" loading="lazy">
-      <div class="chat-logement-info">
-        <div class="chat-logement-titre">${escapeHtml(l.titre)}</div>
-        <div class="chat-logement-prix">${l.prix}</div>
-        <div class="chat-logement-loc">
-          <i class="bi bi-geo-alt-fill" style="color:var(--accent); font-size:12px"></i>
-          ${l.quartier ? escapeHtml(l.quartier) + ' · ' : ''}${escapeHtml(l.ville)}
+      <img src="${esc(l.photo)}" alt="${esc(l.titre)}" loading="lazy"
+           onerror="this.src='/static/images/no-image.jpg'">
+      <div class="lg-info">
+        <div class="lg-titre">${esc(l.titre)}</div>
+        <div class="lg-prix">${esc(l.prix)}</div>
+        <div class="lg-loc">
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          ${l.quartier ? esc(l.quartier) + ' · ' : ''}${esc(l.ville)}
         </div>
-        <div class="chat-logement-meta">
-          🛏 ${l.chambres} chambre(s) · ${escapeHtml(l.type)}
-        </div>
+        <div class="lg-meta">🛏 ${l.chambres} ch. · ${esc(l.type)}</div>
       </div>`;
     grid.appendChild(a);
   });
-  
-  const wrapper = document.createElement('div');
-  wrapper.className = 'msg-row bot';
-  wrapper.innerHTML = `<div class="msg-avatar bot" style="visibility:hidden">🤖</div>`;
-  wrapper.appendChild(grid);
-  messagesEl.appendChild(wrapper);
-  scrollBottom();
+  messagesEl.appendChild(wrap);
+  if (isNearBottom()) scrollBottom();
 }
 
-function scrollBottom() {
-  messagesEl.scrollTo({
-    top: messagesEl.scrollHeight,
-    behavior: 'smooth'
-  });
-}
-
-// Scroll button visibility
-messagesEl.addEventListener('scroll', function() {
-  const isNearBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 150;
-  scrollBtn.classList.toggle('visible', !isNearBottom);
-});
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-async function sendMessage() {
+// ── Send ──
+async function send() {
   const text = inputEl.value.trim();
   if (!text) return;
-
-  stopSpeaking();
-
-  if (!hasStartedChat) {
-    welcomeScreen.style.display = 'none';
-    hasStartedChat = true;
+  if (!hasStarted) {
+    welcomeEl.style.display = 'none';
+    sugBar.style.display = 'none';
+    hasStarted = true;
   }
-
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-  sendBtn.disabled = true;
-
-  addUserMsg(text);
-  addTyping();
-
+  inputEl.value = ''; inputEl.style.height = 'auto'; sendBtn.disabled = true;
+  addUser(text); addTyping();
   try {
-    const res = await fetch('/chat/chatbot/message/', {
-      method:  'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken':  getCsrf(),
-      },
+    const res  = await fetch('/chat/chatbot/message/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
       body: JSON.stringify({ message: text, conv_id: convId }),
     });
-
     const data = await res.json();
     removeTyping();
-
-    if (data.error) {
-      addBotMsg('<p class="mb-0">Désolé, une erreur s\'est produite. Réessayez.</p>');
-      return;
-    }
-
+    if (data.error) { addBot('<p>Désolé, une erreur est survenue. Réessayez.</p>'); return; }
     convId = data.conv_id;
-
-    const formattedHtml = data.reponse
+    const html = (data.reponse || '')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-
-    addBotMsg(`<p class="mb-0">${formattedHtml}</p>`);
-
-    if (voiceEnabled) {
-      speak(data.reponse);
-    }
-
-    if (data.logements && data.logements.length > 0) {
-      addLogements(data.logements);
-      
-      if (voiceEnabled) {
-        setTimeout(() => {
-          const logementAnnounce = `J'ai trouvé ${data.logements.length} logement(s) correspondant à votre recherche.`;
-          speak(logementAnnounce);
-        }, 500);
-      }
-    }
-
-  } catch(e) {
+      .replace(/\*(.*?)\*/g,     '<em>$1</em>')
+      .replace(/\n\n/g,          '</p><p>')
+      .replace(/\n/g,            '<br>');
+    addBot(`<p>${html}</p>`);
+    if (data.logements && data.logements.length) addLogements(data.logements);
+    if (voiceEnabled) speak(data.reponse || '');
+  } catch {
     removeTyping();
-    addBotMsg('<p class="mb-0">Connexion impossible. Vérifiez votre réseau.</p>');
+    addBot('<p>Connexion impossible. Vérifiez votre réseau.</p>');
   }
 }
 
-function newChat() {
-  stopSpeaking();
-  
-  convId = null;
-  hasStartedChat = false;
-  messagesEl.innerHTML = '';
-  
-  welcomeScreen.style.display = 'block';
-  messagesEl.appendChild(welcomeScreen);
-  
-  inputEl.focus();
+// ── Voice synthesis ──
+function initVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  selectedVoice = voices.find(v => v.lang.startsWith('fr') && v.name.includes('Google'))
+    || voices.find(v => v.lang.startsWith('fr'))
+    || voices[0];
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = initVoices;
+  initVoices();
+}
+function speak(text) {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/\*\*/g,'').replace(/\*/g,'').replace(/<[^>]*>/g,'').trim();
+  if (!clean) return;
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'fr-FR'; u.rate = 1.0;
+  if (selectedVoice) u.voice = selectedVoice;
+  window.speechSynthesis.speak(u);
+}
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  if (!voiceEnabled) window.speechSynthesis && window.speechSynthesis.cancel();
+  voiceBtn.classList.toggle('active', voiceEnabled);
+  if (window.lucide) lucide.createIcons();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Initialisation
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
-  initRecognition();
-  updateVoiceButton();
-  updateMicButton();
-});
+// ── Voice recognition ──
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { micBtn.style.display = 'none'; return; }
+  recognition = new SR();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); };
+  recognition.onend   = () => { isListening = false; micBtn.classList.remove('listening'); };
+  recognition.onresult = e => {
+    const t = e.results[0][0].transcript;
+    inputEl.value = t; sendBtn.disabled = false;
+    send();
+  };
+  recognition.onerror = () => { isListening = false; micBtn.classList.remove('listening'); };
+}
+initRecognition();
+function toggleMicrophone() {
+  if (!recognition) return;
+  if (isListening) { recognition.stop(); }
+  else { recognition.start(); }
+}
 
-// Focus auto sur l'input
 inputEl.focus();
 </script>
 {% endblock %}
+ 
