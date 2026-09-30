@@ -8,3 +8,5 @@ media/
 staticfiles/
 *.log
 .vscode/
+# Sauvegardes de base de données (données personnelles)
+*.sql

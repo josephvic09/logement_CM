@@ -1,935 +1,452 @@
-{% extends 'base.html' %}
-{% load static humanize %}
+﻿{% extends 'base.html' %}
+{% load static humanize logements_tags %}
 {% block title %}Mon espace — LogementCM{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* ═══════════════════════════════════════════════════════════════
-     Dashboard Locataire — design fidèle à la maquette
-  ═══════════════════════════════════════════════════════════════ */
+  /* ═══════════ Dashboard locataire — même identité que l'admin et le bailleur ═══════════ */
   :root {
-    --db-bg:       #f4f6fb;
-    --db-sidebar:  #ffffff;
-    --db-card:     #ffffff;
-    --db-border:   #e8eaf0;
-    --db-primary:  #6366f1;
-    --db-pri-bg:   #eef2ff;
-    --db-text:     #1a1a2e;
-    --db-muted:    #6b7280;
-    --db-red:      #ef4444;
-    --db-red-bg:   #fff0f0;
-    --db-green:    #10b981;
-    --db-green-bg: #ecfdf5;
-    --db-orange:   #f59e0b;
-    --db-orange-bg:#fffbeb;
-    --db-indigo:   #6366f1;
-    --db-ind-bg:   #eef2ff;
-    --r:           14px;
+    --lc-bg: #f4f5fb; --lc-card: #ffffff; --lc-line: #e8eaf3;
+    --lc-violet: #6d3fe8; --lc-violet-2: #7c4dff; --lc-soft: rgba(109,63,232,.1);
+    --lc-side-w: 255px;
+    --lc-ok: #065f46;   --lc-ok-bg: #d1fae5;
+    --lc-warn: #92400e; --lc-warn-bg: #fef3c7;
+    --lc-ko: #991b1b;   --lc-ko-bg: #fee2e2;
+    --lc-info: #1e40af; --lc-info-bg: #dbeafe;
+  }
+  [data-theme="dark"] {
+    --lc-bg: #0f0f13; --lc-card: #1a1a24; --lc-line: #2d2d3d; --lc-soft: rgba(124,77,255,.16);
+    --lc-ok: #6ee7b7;   --lc-ok-bg: rgba(16,185,129,.16);
+    --lc-warn: #fcd34d; --lc-warn-bg: rgba(245,158,11,.16);
+    --lc-ko: #fca5a5;   --lc-ko-bg: rgba(239,68,68,.16);
+    --lc-info: #93c5fd; --lc-info-bg: rgba(59,130,246,.16);
   }
 
-  body { background: var(--db-bg) !important; }
-  main { display: block; height: auto; overflow: visible; }
+  footer { display: none !important; }
 
-  /* ─── Shell ──────────────────────────────────────────────────── */
-  .db-shell {
-    display: flex;
-    min-height: calc(100vh - 65px);
-  }
+  .lc-wrap { display: flex; align-items: flex-start; background: var(--lc-bg); min-height: calc(100vh - 70px); }
 
-  /* ─── Sidebar gauche ─────────────────────────────────────────── */
-  .db-sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--db-sidebar);
-    border-right: 1px solid var(--db-border);
-    display: flex;
-    flex-direction: column;
-    padding: 1.25rem .75rem;
-    position: sticky;
-    top: 65px;
-    height: calc(100vh - 65px);
-    overflow-y: auto;
+  /* ── Sidebar ── */
+  .lc-side {
+    width: var(--lc-side-w); flex-shrink: 0; position: sticky; top: 70px; align-self: flex-start;
+    height: calc(100vh - 70px); overflow-y: auto; background: var(--lc-card);
+    border-right: 1px solid var(--lc-line); padding: 1.1rem .9rem 1.5rem; z-index: 1030;
+    display: flex; flex-direction: column;
   }
+  .lc-label { align-self: flex-start; font-size: .72rem; font-weight: 700; letter-spacing: .02em; color: var(--lc-violet); background: var(--lc-soft); padding: 4px 14px; border-radius: 50px; margin: .4rem 0 .7rem; }
+  .lc-link { display: flex; align-items: center; gap: .7rem; padding: .62rem .85rem; margin-bottom: 4px; border-radius: 10px; text-decoration: none; font-size: .86rem; font-weight: 500; color: var(--text-secondary); transition: .15s; }
+  .lc-link svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .lc-link:hover { background: var(--lc-soft); color: var(--lc-violet); }
+  .lc-link.active { background: linear-gradient(135deg, var(--lc-violet), var(--lc-violet-2)); color: #fff; box-shadow: 0 6px 16px rgba(109,63,232,.3); }
+  .lc-link.logout:hover { background: var(--lc-ko-bg); color: #ef4444; }
+  .lc-count { margin-left: auto; font-size: .68rem; font-weight: 700; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; background: var(--lc-violet); color: #fff; }
+  .lc-overlay { display: none; }
 
-  .db-brand {
-    display: flex; align-items: center; gap: .5rem;
-    padding: .4rem .6rem 1.2rem;
-    text-decoration: none;
-  }
-  .db-brand-icon {
-    width: 28px; height: 28px;
-    background: var(--db-pri-bg);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .db-brand-icon svg { color: var(--db-primary); width: 16px; height: 16px; }
-  .db-brand-name {
-    font-size: .95rem; font-weight: 800; color: var(--db-text);
-    letter-spacing: -.01em;
-  }
-  .db-brand-name span { color: var(--db-primary); }
+  /* ── Zone principale ── */
+  .lc-main { flex: 1; min-width: 0; padding: 1.5rem 1.5rem 3rem; }
 
-  .nav-item-db {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: .6rem .85rem;
-    border-radius: var(--r);
-    color: var(--db-muted);
-    font-size: .84rem; font-weight: 500;
-    text-decoration: none;
-    transition: all .15s;
-    margin-bottom: .1rem;
-  }
-  .nav-item-db:hover {
-    background: var(--db-bg);
-    color: var(--db-text);
-    text-decoration: none;
-  }
-  .nav-item-db.active {
-    background: var(--db-pri-bg);
-    color: var(--db-primary);
-    font-weight: 600;
-  }
-  .nav-item-db .nav-left {
-    display: flex; align-items: center; gap: .65rem;
-  }
-  .nav-item-db svg { width: 16px; height: 16px; }
-  .nav-badge {
-    background: var(--db-primary);
-    color: white;
-    font-size: .65rem; font-weight: 700;
-    padding: .1rem .42rem;
-    border-radius: 999px;
-    min-width: 18px; text-align: center;
-  }
+  /* ── Bannière ── */
+  .lc-hero { background: linear-gradient(120deg, #6d3fe8 0%, #7c4dff 60%, #8b5cf6 100%); border-radius: 18px; color: #fff; padding: 1.4rem 1.6rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; position: relative; overflow: hidden; }
+  .lc-hero::after { content: ""; position: absolute; right: -60px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.07); pointer-events: none; }
+  .lc-hero-user { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; min-width: 0; }
+  .lc-hero-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,.85); background: rgba(255,255,255,.2); flex-shrink: 0; }
+  .lc-hero h1 { font-size: 1.35rem; font-weight: 800; margin: 0; color: #fff; }
+  .lc-hero p { margin: 0; font-size: .82rem; opacity: .85; }
+  .lc-hero-cta { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .5rem; background: #fff; color: var(--lc-violet); font-size: .85rem; font-weight: 700; padding: .65rem 1.15rem; border-radius: 12px; text-decoration: none; transition: .15s; }
+  .lc-hero-cta:hover { transform: translateY(-1px); color: var(--lc-violet); }
+  .lc-hero-cta svg { width: 16px; height: 16px; }
 
-  /* Bloc IA sidebar */
-  .sidebar-ia {
-    margin: 1.2rem .2rem .2rem;
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
-    border-radius: var(--r);
-    padding: 1rem .9rem;
-    color: white;
-  }
-  .sidebar-ia-icon {
-    width: 34px; height: 34px;
-    background: rgba(255,255,255,.18);
-    border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: .7rem;
-  }
-  .sidebar-ia-icon svg { width: 18px; height: 18px; color: white; }
-  .sidebar-ia-title { font-size: .83rem; font-weight: 700; margin-bottom: .25rem; }
-  .sidebar-ia-desc  { font-size: .74rem; opacity: .85; line-height: 1.45; margin-bottom: .75rem; }
-  .sidebar-ia-btn {
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(255,255,255,.2);
-    border: 1px solid rgba(255,255,255,.25);
-    border-radius: 8px;
-    padding: .45rem .75rem;
-    color: white; font-size: .78rem; font-weight: 600;
-    text-decoration: none; transition: .15s;
-  }
-  .sidebar-ia-btn:hover { background: rgba(255,255,255,.3); color: white; text-decoration: none; }
-  .sidebar-ia-btn svg { width: 13px; height: 13px; }
+  /* ── Cartes statistiques ── */
+  .lc-stat { display: block; border-radius: 14px; color: #fff; padding: 1.15rem 1.3rem; position: relative; overflow: hidden; height: 100%; box-shadow: 0 8px 22px rgba(0,0,0,.08); text-decoration: none; transition: .2s; }
+  .lc-stat:hover { color: #fff; transform: translateY(-3px); }
+  .lc-stat.c1 { background: linear-gradient(135deg, #c84fbd, #d5559f); }
+  .lc-stat.c2 { background: linear-gradient(135deg, #9b59d6, #8f5ad0); }
+  .lc-stat.c3 { background: linear-gradient(135deg, #5b8def, #6b86ee); }
+  .lc-stat.c4 { background: linear-gradient(135deg, #17a2b8, #1cb5c4); }
+  .lc-stat-top { display: flex; justify-content: space-between; align-items: center; }
+  .lc-stat-val { font-size: 2rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .lc-stat-lbl { font-size: .8rem; opacity: .9; }
+  .lc-stat-ico { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; }
+  .lc-stat-ico svg { width: 22px; height: 22px; }
 
-  /* User bas sidebar */
-  .sidebar-user {
-    margin-top: auto;
-    padding: .75rem .5rem .2rem;
-    border-top: 1px solid var(--db-border);
-  }
-  .sidebar-user-inner {
-    display: flex; align-items: center; gap: .7rem;
-    padding: .5rem .6rem;
-    border-radius: var(--r);
-    cursor: pointer;
-    transition: .15s;
-  }
-  .sidebar-user-inner:hover { background: var(--db-bg); }
-  .sidebar-user-inner img {
-    width: 34px; height: 34px;
-    border-radius: 50%; object-fit: cover; flex-shrink: 0;
-  }
-  .sidebar-user-name  { font-size: .81rem; font-weight: 600; color: var(--db-text); }
-  .sidebar-user-role  { font-size: .71rem; color: var(--db-muted); }
+  /* ── Cartes génériques ── */
+  .lc-card { background: var(--lc-card); border: 1px solid var(--lc-line); border-radius: 14px; overflow: hidden; }
+  .lc-card-head { padding: .95rem 1.2rem; border-bottom: 1px solid var(--lc-line); display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .lc-card-head h2 { margin: 0; font-weight: 700; font-size: .98rem; color: var(--text-primary); display: flex; align-items: center; gap: .5rem; }
+  .lc-card-head h2 svg { width: 18px; height: 18px; }
+  .lc-card-head a { font-size: .78rem; font-weight: 600; color: var(--lc-violet); text-decoration: none; }
+  .lc-card-body { padding: 1.1rem 1.2rem; }
+  .lc-violet { color: var(--lc-violet); }
+  .lc-amber { color: #f59e0b; }
+  .lc-row { padding: .85rem 1.2rem; border-bottom: 1px solid var(--lc-line); display: flex; align-items: center; gap: .8rem; }
+  .lc-row:last-child { border-bottom: 0; }
+  .lc-thumb { width: 54px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--lc-soft); }
+  .lc-name { font-weight: 600; font-size: .86rem; color: var(--text-primary); }
+  .lc-meta { font-size: .74rem; color: var(--text-muted); display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+  .lc-meta svg { width: 11px; height: 11px; }
+  .lc-badge { font-size: .66rem; font-weight: 700; padding: 3px 10px; border-radius: 50px; white-space: nowrap; display: inline-block; }
+  .lc-badge.ok { background: var(--lc-ok-bg); color: var(--lc-ok); }
+  .lc-badge.warn { background: var(--lc-warn-bg); color: var(--lc-warn); }
+  .lc-badge.ko { background: var(--lc-ko-bg); color: var(--lc-ko); }
+  .lc-badge.info { background: var(--lc-info-bg); color: var(--lc-info); }
+  .lc-badge.neutral { background: rgba(148,163,184,.18); color: var(--text-secondary); }
+  .lc-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: .86rem; }
+  .lc-empty svg { display: block; width: 34px; height: 34px; margin: 0 auto .6rem; color: var(--lc-violet); }
+  .lc-btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; padding: .55rem 1rem; border-radius: 10px; font-size: .8rem; font-weight: 700; text-decoration: none; border: 1.5px solid transparent; transition: .15s; }
+  .lc-btn svg { width: 14px; height: 14px; }
+  .lc-btn.primary { background: linear-gradient(135deg, var(--lc-violet), var(--lc-violet-2)); color: #fff; }
+  .lc-btn.primary:hover { color: #fff; opacity: .92; }
+  .lc-btn.ghost { border-color: var(--lc-line); color: var(--text-secondary); }
+  .lc-btn.ghost:hover { border-color: var(--lc-violet); color: var(--lc-violet); }
 
-  /* ─── Contenu principal ──────────────────────────────────────── */
-  .db-main {
-    flex: 1;
-    padding: 1.75rem 2rem;
-    overflow-x: hidden;
-    min-width: 0;
-  }
+  /* ── Prochaine visite ── */
+  .lc-visit { display: grid; grid-template-columns: 170px minmax(0, 1fr); }
+  .lc-visit-img { width: 100%; height: 100%; min-height: 150px; object-fit: cover; background: var(--lc-soft); }
+  .lc-visit-body { padding: 1.1rem 1.3rem; display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+  .lc-visit-when { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .lc-visit-date { font-size: 1.35rem; font-weight: 800; color: var(--lc-violet); }
+  .lc-visit-hour { font-size: 1rem; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .lc-visit-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
 
-  /* ─── Header ─────────────────────────────────────────────────── */
-  .db-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
-  }
-  .db-header-label {
-    font-size: .75rem; font-weight: 600; color: var(--db-muted);
-    text-transform: uppercase; letter-spacing: .06em; margin-bottom: .25rem;
-  }
-  .db-header-title {
-    font-size: 1.75rem; font-weight: 800; color: var(--db-text);
-    letter-spacing: -.02em; line-height: 1.2;
-  }
-  .db-header-sub {
-    font-size: .85rem; color: var(--db-muted); margin-top: .25rem;
-  }
-  .btn-ia {
-    display: inline-flex; align-items: center; gap: .5rem;
-    background: var(--db-primary);
-    color: white; border: none;
-    padding: .6rem 1.1rem;
-    border-radius: 10px;
-    font-size: .84rem; font-weight: 600;
-    text-decoration: none; transition: .15s;
-    white-space: nowrap;
-  }
-  .btn-ia:hover { background: #4f46e5; color: white; text-decoration: none; }
-  .btn-ia svg { width: 16px; height: 16px; }
+  /* ── Grilles de logements ── */
+  .lc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1rem; padding: 1.1rem 1.2rem 1.3rem; }
+  .lc-home { position: relative; display: flex; flex-direction: column; border: 1px solid var(--lc-line); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; background: var(--lc-card); transition: .2s; }
+  .lc-home:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.08); color: inherit; }
+  .lc-home-img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--lc-soft); display: block; }
+  .lc-home-body { padding: .75rem .9rem .9rem; display: flex; flex-direction: column; gap: .2rem; }
+  .lc-home-titre { font-weight: 600; font-size: .86rem; color: var(--text-primary); }
+  .lc-home-prix { font-weight: 800; font-size: .95rem; color: var(--lc-violet); font-variant-numeric: tabular-nums; }
+  .lc-home-prix small { font-weight: 500; color: var(--text-muted); font-size: .72rem; }
+  .lc-home-meta { display: flex; gap: .7rem; font-size: .72rem; color: var(--text-muted); margin-top: .2rem; }
+  .lc-fav { position: absolute; top: .55rem; right: .55rem; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: #6b7280; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .15s; }
+  .lc-fav svg { width: 16px; height: 16px; }
+  .lc-fav.on { color: #ef4444; }
+  .lc-fav.on svg { fill: #ef4444; }
+  .lc-fav:focus-visible { outline: 2px solid var(--lc-violet); outline-offset: 2px; }
 
-  /* ─── Stats cards ────────────────────────────────────────────── */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: .9rem;
-    margin-bottom: 1.5rem;
-  }
-  .stat-card {
-    background: var(--db-card);
-    border: 1px solid var(--db-border);
-    border-radius: var(--r);
-    padding: 1.1rem 1.2rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-icon {
-    width: 38px; height: 38px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: .7rem;
-  }
-  .stat-icon.red    { background: var(--db-red-bg); }
-  .stat-icon.indigo { background: var(--db-ind-bg); }
-  .stat-icon.green  { background: var(--db-green-bg); }
-  .stat-icon.orange { background: var(--db-orange-bg); }
-  .stat-icon svg { width: 20px; height: 20px; }
-  .stat-val {
-    font-size: 1.65rem; font-weight: 800; color: var(--db-text);
-    line-height: 1; margin-bottom: .2rem;
-  }
-  .stat-lbl {
-    font-size: .82rem; font-weight: 600; color: var(--db-text);
-    margin-bottom: .15rem;
-  }
-  .stat-sub { font-size: .74rem; color: var(--db-muted); }
-  /* Mini sparkline SVG */
-  .stat-sparkline {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 38px; pointer-events: none;
-  }
+  /* ── Assistant IA ── */
+  .lc-ia { background: linear-gradient(135deg, #1e1b4b, #4c1d95); color: #fff; border-radius: 14px; padding: 1.3rem; }
+  .lc-ia h3 { font-size: 1rem; font-weight: 800; margin: .7rem 0 .3rem; color: #fff; }
+  .lc-ia p { font-size: .8rem; opacity: .8; margin-bottom: 1rem; }
+  .lc-ia-ico { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; }
+  .lc-ia-ico svg { width: 20px; height: 20px; }
+  .lc-ia .lc-btn { background: #fff; color: #4c1d95; width: 100%; }
 
-  /* ─── Section title row ──────────────────────────────────────── */
-  .section-row {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1rem;
-  }
-  .section-title {
-    font-size: 1rem; font-weight: 700; color: var(--db-text);
-    display: flex; align-items: center; gap: .5rem;
-  }
-  .section-title svg { width: 17px; height: 17px; }
-  .see-all {
-    display: flex; align-items: center; gap: .3rem;
-    font-size: .81rem; font-weight: 600; color: var(--db-primary);
-    text-decoration: none; transition: .15s;
-  }
-  .see-all:hover { color: #4f46e5; text-decoration: none; }
-  .see-all svg { width: 13px; height: 13px; }
+  .lc-avatar { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
-  /* ─── Actions rapides ────────────────────────────────────────── */
-  .actions-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: .75rem;
-    margin-bottom: 1.75rem;
+  /* ── Mobile : sidebar en tiroir ── */
+  @media (max-width: 991.98px) {
+    .lc-side { position: fixed; top: 0; left: 0; height: 100vh; padding-top: 1.5rem; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 0 0 40px rgba(0,0,0,.2); }
+    .lc-side.open { transform: translateX(0); }
+    .lc-overlay.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1025; }
+    .lc-main { padding: 1rem 1rem 5.5rem; }
+    .lc-hero { padding: 1.1rem; }
   }
-  .action-card {
-    background: var(--db-card);
-    border: 1px solid var(--db-border);
-    border-radius: var(--r);
-    padding: 1.1rem .75rem .9rem;
-    text-align: center;
-    text-decoration: none;
-    transition: all .18s;
-    cursor: pointer;
+  @media (max-width: 575.98px) {
+    .lc-visit { grid-template-columns: 1fr; }
+    .lc-visit-img { height: 160px; }
   }
-  .action-card:hover {
-    border-color: var(--db-primary);
-    background: var(--db-pri-bg);
-    text-decoration: none;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(99,102,241,.12);
-  }
-  .action-icon {
-    width: 42px; height: 42px;
-    border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto .65rem;
-  }
-  .action-icon svg { width: 22px; height: 22px; }
-  .action-name { font-size: .82rem; font-weight: 600; color: var(--db-text); margin-bottom: .2rem; }
-  .action-desc { font-size: .72rem; color: var(--db-muted); line-height: 1.3; }
-
-  /* ─── Two-col layout ─────────────────────────────────────────── */
-  .db-two-col {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 1.25rem;
-    margin-bottom: 1.75rem;
-  }
-
-  /* ─── Favoris grid ───────────────────────────────────────────── */
-  .fav-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: .9rem;
-  }
-  .fav-card {
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--db-border);
-    text-decoration: none; color: inherit;
-    transition: .18s;
-    display: block;
-  }
-  .fav-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,.09);
-    border-color: #d0d5f0;
-    text-decoration: none; color: inherit;
-  }
-  .fav-img-wrap { position: relative; }
-  .fav-card img {
-    width: 100%; height: 145px; object-fit: cover; display: block;
-  }
-  .fav-heart {
-    position: absolute; top: 8px; right: 8px;
-    width: 28px; height: 28px;
-    background: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,.15);
-  }
-  .fav-heart svg { width: 15px; height: 15px; color: var(--db-red); fill: var(--db-red); }
-  .fav-info { padding: .75rem; }
-  .fav-titre { font-size: .84rem; font-weight: 600; color: var(--db-text); margin-bottom: .3rem; line-height: 1.3; }
-  .fav-loc   { font-size: .74rem; color: var(--db-muted); display: flex; align-items: center; gap: 3px; margin-bottom: .4rem; }
-  .fav-loc svg { width: 11px; height: 11px; color: var(--db-primary); flex-shrink: 0; }
-  .fav-prix  { font-size: .9rem; font-weight: 800; color: var(--db-primary); }
-
-  /* ─── Colonne droite ─────────────────────────────────────────── */
-  .db-right { display: flex; flex-direction: column; gap: 1rem; }
-
-  /* Profil card */
-  .profil-card {
-    background: var(--db-card);
-    border: 1px solid var(--db-border);
-    border-radius: var(--r);
-    padding: 1.2rem;
-  }
-  .profil-card-header {
-    display: flex; align-items: center; gap: .5rem;
-    font-size: .82rem; font-weight: 700; color: var(--db-muted);
-    margin-bottom: .9rem;
-  }
-  .profil-card-header svg { width: 15px; height: 15px; }
-  .profil-user-row {
-    display: flex; align-items: center; gap: .85rem; margin-bottom: 1rem;
-  }
-  .profil-av-wrap { position: relative; flex-shrink: 0; }
-  .profil-av-wrap img {
-    width: 54px; height: 54px; border-radius: 50%; object-fit: cover;
-  }
-  .profil-av-edit {
-    position: absolute; bottom: 0; right: 0;
-    width: 18px; height: 18px;
-    background: var(--db-primary); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .profil-av-edit svg { width: 9px; height: 9px; color: white; }
-  .profil-name  { font-size: .98rem; font-weight: 700; color: var(--db-text); margin-bottom: .15rem; }
-  .profil-email { font-size: .76rem; color: var(--db-muted); margin-bottom: .35rem; }
-  .profil-badge {
-    background: var(--db-pri-bg);
-    color: var(--db-primary);
-    font-size: .68rem; font-weight: 600;
-    padding: .18rem .6rem;
-    border-radius: 999px;
-    display: inline-block;
-  }
-  .profil-pct-row { display: flex; justify-content: space-between; margin-bottom: .4rem; }
-  .profil-pct-lbl { font-size: .76rem; font-weight: 600; color: var(--db-text); }
-  .profil-pct-val { font-size: .76rem; font-weight: 700; color: var(--db-primary); }
-  .profil-progress {
-    height: 6px; background: #e8eaf0; border-radius: 999px; overflow: hidden; margin-bottom: .9rem;
-  }
-  .profil-progress-bar {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--db-primary), #818cf8);
-  }
-  .profil-btn {
-    display: flex; align-items: center; justify-content: center; gap: .45rem;
-    width: 100%; padding: .55rem;
-    border: 1.5px solid var(--db-border);
-    border-radius: 9px;
-    color: var(--db-muted); font-size: .81rem; font-weight: 500;
-    text-decoration: none; transition: .15s;
-  }
-  .profil-btn:hover { border-color: var(--db-primary); color: var(--db-primary); text-decoration: none; }
-  .profil-btn svg { width: 14px; height: 14px; }
-
-  /* Réservations récentes */
-  .reserv-card {
-    background: var(--db-card);
-    border: 1px solid var(--db-border);
-    border-radius: var(--r);
-    overflow: hidden;
-  }
-  .reserv-header {
-    padding: .85rem 1rem;
-    border-bottom: 1px solid var(--db-border);
-    display: flex; align-items: center; gap: .5rem;
-    font-size: .84rem; font-weight: 700; color: var(--db-text);
-  }
-  .reserv-header svg { width: 15px; height: 15px; color: var(--db-primary); }
-  .reserv-item {
-    display: flex; align-items: center; gap: .7rem;
-    padding: .65rem .9rem;
-    border-bottom: 1px solid var(--db-border);
-  }
-  .reserv-item:last-child { border-bottom: none; }
-  .reserv-img {
-    width: 42px; height: 38px; border-radius: 7px;
-    object-fit: cover; flex-shrink: 0;
-  }
-  .reserv-titre { font-size: .79rem; font-weight: 600; color: var(--db-text); margin-bottom: .1rem; }
-  .reserv-date  { font-size: .7rem; color: var(--db-muted); }
-  .reserv-status {
-    margin-left: auto; flex-shrink: 0;
-    font-size: .66rem; font-weight: 700;
-    padding: .22rem .55rem; border-radius: 6px;
-    text-transform: uppercase; letter-spacing: .03em;
-  }
-  .status-confirme   { background: #d1fae5; color: #065f46; }
-  .status-en_attente { background: #fef3c7; color: #92400e; }
-  .status-refuse     { background: #fee2e2; color: #991b1b; }
-  .status-autre      { background: #f3f4f6; color: #4b5563; }
-  .reserv-footer {
-    padding: .6rem; text-align: center;
-    border-top: 1px solid var(--db-border);
-  }
-  .reserv-footer a {
-    font-size: .78rem; font-weight: 600; color: var(--db-primary);
-    text-decoration: none;
-  }
-  .reserv-footer a:hover { color: #4f46e5; }
-
-  /* ─── Logements recommandés ──────────────────────────────────── */
-  .reco-section { margin-bottom: 2rem; }
-  .reco-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: .9rem;
-  }
-  .reco-card {
-    background: var(--db-card);
-    border: 1px solid var(--db-border);
-    border-radius: var(--r);
-    overflow: hidden;
-    text-decoration: none; color: inherit;
-    transition: .18s;
-    display: block;
-  }
-  .reco-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,.09);
-    text-decoration: none; color: inherit;
-  }
-  .reco-img-wrap { position: relative; }
-  .reco-card img { width: 100%; height: 130px; object-fit: cover; display: block; }
-  .reco-fav-btn {
-    position: absolute; top: 8px; right: 8px;
-    width: 28px; height: 28px; background: white;
-    border-radius: 50%; border: none;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,.15); cursor: pointer;
-  }
-  .reco-fav-btn svg { width: 14px; height: 14px; color: #9ca3af; }
-  .reco-info { padding: .75rem .85rem; }
-  .reco-titre { font-size: .82rem; font-weight: 600; color: var(--db-text); margin-bottom: .25rem; }
-  .reco-loc   { font-size: .72rem; color: var(--db-muted); margin-bottom: .35rem; display: flex; align-items: center; gap: 3px; }
-  .reco-loc svg { width: 11px; height: 11px; color: var(--db-primary); }
-  .reco-prix  { font-size: .88rem; font-weight: 800; color: var(--db-primary); margin-bottom: .4rem; }
-  .reco-meta  { display: flex; gap: .75rem; }
-  .reco-meta span {
-    font-size: .7rem; color: var(--db-muted);
-    display: flex; align-items: center; gap: 3px;
-  }
-  .reco-meta svg { width: 11px; height: 11px; color: var(--db-muted); }
-
-  /* ─── Responsive ─────────────────────────────────────────────── */
-  @media (max-width: 1200px) {
-    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-    .actions-grid { grid-template-columns: repeat(3, 1fr); }
-    .reco-grid   { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 992px) {
-    .db-sidebar  { display: none; }
-    .db-two-col  { grid-template-columns: 1fr; }
-    .db-main     { padding: 1.25rem 1rem; }
-  }
-  @media (max-width: 640px) {
-    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-    .actions-grid { grid-template-columns: repeat(2, 1fr); }
-    .fav-grid    { grid-template-columns: 1fr; }
-    .reco-grid   { grid-template-columns: 1fr; }
-  }
+  @media (prefers-reduced-motion: reduce) { .lc-home, .lc-stat, .lc-hero-cta { transition: none; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="db-shell">
+<div class="lc-wrap">
 
-  <!-- ══ SIDEBAR GAUCHE ═══════════════════════════════════════════ -->
-  <aside class="db-sidebar">
+  <!-- ═════════════ SIDEBAR ═════════════ -->
+  <div class="lc-overlay" id="lcOverlay"></div>
+  <aside class="lc-side" id="lcSide">
 
-    <a href="{% url 'logements:accueil' %}" class="db-brand">
-      <div class="db-brand-icon">
-        <svg data-lucide="home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-      </div>
-      <div class="db-brand-name">Logement<span>CM</span></div>
+    <span class="lc-label">Tableau de bord</span>
+    <a href="{{ request.path }}" class="lc-link active"><svg data-lucide="layout-dashboard"></svg> Vue d'ensemble</a>
+
+    <span class="lc-label mt-3">Trouver un logement</span>
+    <a href="{% url 'logements:recherche' %}" class="lc-link"><svg data-lucide="search"></svg> Rechercher</a>
+    <a href="{% url 'chat:chatbot' %}" class="lc-link"><svg data-lucide="bot"></svg> Assistant IA</a>
+    <a href="{% url 'accounts:mes_favoris' %}" class="lc-link">
+      <svg data-lucide="heart"></svg> Mes favoris
+      {% if nb_favoris > 0 %}<span class="lc-count">{{ nb_favoris }}</span>{% endif %}
     </a>
 
-    <a href="{% url 'accounts:dashboard_locataire' %}" class="nav-item-db active">
-      <div class="nav-left">
-        <svg data-lucide="layout-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Mon espace
-      </div>
+    <span class="lc-label mt-3">Mes démarches</span>
+    <a href="{% url 'accounts:mes_reservations' %}" class="lc-link">
+      <svg data-lucide="calendar-check"></svg> Visites et réservations
+      {% if nb_en_cours > 0 %}<span class="lc-count">{{ nb_en_cours }}</span>{% endif %}
     </a>
-
-    <a href="{% url 'logements:recherche' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Rechercher
-      </div>
+    <a href="{% url 'chat:conversations' %}" class="lc-link">
+      <svg data-lucide="message-circle"></svg> Conversations
+      {% if nb_messages > 0 %}<span class="lc-count">{{ nb_messages }}</span>{% endif %}
     </a>
+    <a href="{% url 'paiements:historique' %}" class="lc-link"><svg data-lucide="credit-card"></svg> Paiements</a>
 
-    <a href="{% url 'chat:chatbot' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Chatbot IA
-      </div>
-    </a>
-
-    <a href="{% url 'accounts:mes_favoris' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Mes favoris
-      </div>
-      {% if nb_favoris > 0 %}<span class="nav-badge">{{ nb_favoris }}</span>{% endif %}
-    </a>
-
-    <a href="{% url 'accounts:mes_reservations' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="calendar-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Réservations
-      </div>
-      {% if nb_reservations > 0 %}<span class="nav-badge">{{ nb_reservations }}</span>{% endif %}
-    </a>
-
-    <a href="{% url 'chat:conversations' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="message-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Conversations
-      </div>
-      {% if nb_messages > 0 %}<span class="nav-badge">{{ nb_messages }}</span>{% endif %}
-    </a>
-
-    <a href="{% url 'paiements:historique' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="credit-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Paiements
-      </div>
-    </a>
-
-    <a href="{% url 'accounts:profil' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Profil
-      </div>
-    </a>
-
-    <a href="#" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Paramètres
-      </div>
-    </a>
-
-    <a href="{% url 'accounts:deconnexion' %}" class="nav-item-db">
-      <div class="nav-left">
-        <svg data-lucide="log-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Déconnexion
-      </div>
-    </a>
-
-    <!-- Bloc IA -->
-    <div class="sidebar-ia">
-      <div class="sidebar-ia-icon">
-        <svg data-lucide="bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-      </div>
-      <div class="sidebar-ia-title">Recherche intelligente</div>
-      <div class="sidebar-ia-desc">Trouver le logement idéal avec notre assistant IA</div>
-      <a href="{% url 'chat:chatbot' %}" class="sidebar-ia-btn">
-        Discuter avec l'IA
-        <svg data-lucide="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></svg>
-      </a>
-    </div>
-
-    <!-- Utilisateur -->
-    <div class="sidebar-user">
-      <div class="sidebar-user-inner">
-        <img src="{{ user.get_avatar_url }}" alt="{{ user.get_full_name }}">
-        <div style="flex:1;overflow:hidden">
-          <div class="sidebar-user-name">{{ user.get_full_name }}</div>
-          <div class="sidebar-user-role">{{ user.get_role_display }}</div>
-        </div>
-        <svg data-lucide="chevron-down" style="width:14px;height:14px;color:#9ca3af;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-      </div>
-    </div>
-
+    <span class="lc-label mt-3">Compte</span>
+    <a href="{% url 'accounts:profil' %}" class="lc-link"><svg data-lucide="user"></svg> Profil</a>
+    <a href="{% url 'accounts:deconnexion' %}" class="lc-link logout"><svg data-lucide="log-out"></svg> Déconnexion</a>
   </aside>
 
-  <!-- ══ CONTENU PRINCIPAL ════════════════════════════════════════ -->
-  <main class="db-main">
+  <!-- ═════════════ CONTENU ═════════════ -->
+  <main class="lc-main">
 
-    <!-- Header -->
-    <div class="db-header">
-      <div>
-        <div class="db-header-label">Tableau de bord</div>
-        <div class="db-header-title">Bonjour, {{ user.prenom }} ! 👋</div>
-        <div class="db-header-sub">Voici un aperçu de votre activité sur LogementCM</div>
-      </div>
-      <a href="{% url 'chat:chatbot' %}" class="btn-ia">
-        <svg data-lucide="bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        Rechercher avec l'IA
-      </a>
-    </div>
+    <button type="button" id="lcToggle" class="lc-btn primary mb-3 d-lg-none">
+      <svg data-lucide="menu"></svg> Menu
+    </button>
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon red">
-          <svg data-lucide="heart" style="color:#ef4444" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="stat-val">{{ nb_favoris }}</div>
-        <div class="stat-lbl">Favoris</div>
-        <div class="stat-sub">Logements sauvegardés</div>
-        <svg class="stat-sparkline" viewBox="0 0 160 38" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 28 C20 22 35 32 55 26 C75 20 90 30 110 22 C130 14 145 24 160 18" stroke="#ef4444" stroke-width="2" opacity=".45" fill="none"/>
-        </svg>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon indigo">
-          <svg data-lucide="calendar-check" style="color:#6366f1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="stat-val">{{ nb_reservations }}</div>
-        <div class="stat-lbl">Réservations</div>
-        <div class="stat-sub">Demandes en cours</div>
-        <svg class="stat-sparkline" viewBox="0 0 160 38" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 30 C25 18 40 28 65 20 C85 14 100 26 125 16 C140 10 150 22 160 14" stroke="#6366f1" stroke-width="2" opacity=".45" fill="none"/>
-        </svg>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon green">
-          <svg data-lucide="message-circle" style="color:#10b981" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="stat-val">{{ nb_messages }}</div>
-        <div class="stat-lbl">Conversations</div>
-        <div class="stat-sub">Messages récents</div>
-        <svg class="stat-sparkline" viewBox="0 0 160 38" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 32 C30 24 45 30 70 22 C90 16 110 28 135 18 C148 12 155 20 160 16" stroke="#10b981" stroke-width="2" opacity=".45" fill="none"/>
-        </svg>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon orange">
-          <svg data-lucide="search" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="stat-val">∞</div>
-        <div class="stat-lbl">Recherches</div>
-        <div class="stat-sub">Recherches effectuées</div>
-        <svg class="stat-sparkline" viewBox="0 0 160 38" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <path d="M0 26 C20 18 40 30 65 20 C88 12 108 26 130 16 C145 10 155 20 160 14" stroke="#f59e0b" stroke-width="2" opacity=".45" fill="none"/>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Actions rapides -->
-    <div class="section-row">
-      <div class="section-title">Actions rapides</div>
-    </div>
-    <div class="actions-grid">
-      <a href="{% url 'logements:recherche' %}" class="action-card">
-        <div class="action-icon" style="background:var(--db-pri-bg)">
-          <svg data-lucide="search" style="color:var(--db-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="action-name">Rechercher</div>
-        <div class="action-desc">Trouver un logement</div>
-      </a>
-      <a href="{% url 'chat:chatbot' %}" class="action-card">
-        <div class="action-icon" style="background:#ede9fe">
-          <svg data-lucide="bot" style="color:#7c3aed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="action-name">Chatbot IA</div>
-        <div class="action-desc">Recherche intelligente</div>
-      </a>
-      <a href="{% url 'accounts:mes_favoris' %}" class="action-card">
-        <div class="action-icon" style="background:var(--db-red-bg)">
-          <svg data-lucide="heart" style="color:var(--db-red)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="action-name">Mes favoris</div>
-        <div class="action-desc">{{ nb_favoris }} logement{{ nb_favoris|pluralize }} sauvegardé{{ nb_favoris|pluralize }}</div>
-      </a>
-      <a href="{% url 'accounts:mes_reservations' %}" class="action-card">
-        <div class="action-icon" style="background:var(--db-green-bg)">
-          <svg data-lucide="calendar-check" style="color:var(--db-green)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="action-name">Réservations</div>
-        <div class="action-desc">{{ nb_reservations }} demande{{ nb_reservations|pluralize }} en cours</div>
-      </a>
-      <a href="{% url 'paiements:historique' %}" class="action-card">
-        <div class="action-icon" style="background:var(--db-orange-bg)">
-          <svg data-lucide="credit-card" style="color:var(--db-orange)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </div>
-        <div class="action-name">Paiements</div>
-        <div class="action-desc">Voir l'historique des paiements</div>
-      </a>
-    </div>
-
-    <!-- Favoris + Profil/Réservations -->
-    <div class="db-two-col">
-
-      <!-- Favoris récents -->
-      <div>
-        <div class="card border-0" style="background:var(--db-card);border:1px solid var(--db-border)!important;border-radius:var(--r)">
-          <div style="padding:.9rem 1rem;border-bottom:1px solid var(--db-border);display:flex;justify-content:space-between;align-items:center">
-            <div class="section-title">
-              <svg data-lucide="heart" style="color:var(--db-red)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-              Mes favoris récents
-            </div>
-            <a href="{% url 'accounts:mes_favoris' %}" class="see-all">
-              Voir tout
-              <svg data-lucide="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            </a>
-          </div>
-          <div style="padding:1rem">
-            {% if favoris %}
-            <div class="fav-grid">
-              {% for fav in favoris %}
-              <a href="{% url 'logements:detail' fav.logement.slug %}" class="fav-card">
-                <div class="fav-img-wrap">
-                  {% with photo=fav.logement.get_photo_principale %}
-                  <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}"
-                       alt="{{ fav.logement.titre }}">
-                  {% endwith %}
-                  <div class="fav-heart">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="#ef4444" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </div>
-                </div>
-                <div class="fav-info">
-                  <div class="fav-titre">{{ fav.logement.titre|truncatechars:40 }}</div>
-                  <div class="fav-loc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {% if fav.logement.quartier %}{{ fav.logement.quartier.nom }}, {% endif %}{{ fav.logement.ville.nom }}
-                  </div>
-                  <div class="fav-prix">{{ fav.logement.prix_formate }}/mois</div>
-                </div>
-              </a>
-              {% endfor %}
-            </div>
-            <div style="text-align:center;padding-top:.9rem">
-              <a href="{% url 'accounts:mes_favoris' %}" class="see-all" style="justify-content:center">
-                Voir tous mes favoris
-                <svg data-lucide="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-              </a>
-            </div>
+    <!-- ─── Bannière ─── -->
+    <section class="lc-hero mb-4">
+      <div class="lc-hero-user">
+        <img src="{{ user.get_avatar_url }}" alt="" class="lc-hero-avatar">
+        <div>
+          <p>Espace locataire</p>
+          <h1>Bonjour, {{ user.prenom|default:user.get_full_name }}</h1>
+          <p>
+            {% if prochaine_visite %}
+              Prochaine visite le {{ prochaine_visite.date_debut|date:"l j F" }}
+            {% elif nb_en_cours %}
+              {{ nb_en_cours }} demande{{ nb_en_cours|pluralize }} en cours
             {% else %}
-            <div style="text-align:center;padding:2.5rem 1rem">
-              <svg data-lucide="heart" style="width:44px;height:44px;color:#d1d5db;margin-bottom:.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-              <p style="color:var(--db-muted);font-size:.85rem;margin-bottom:.75rem">Aucun favori pour l'instant.</p>
-              <a href="{% url 'logements:recherche' %}" class="btn-ia" style="display:inline-flex;font-size:.8rem;padding:.5rem .9rem">
-                Explorer les logements
-              </a>
-            </div>
+              Prêt à trouver votre prochain logement ?
             {% endif %}
-          </div>
+          </p>
         </div>
       </div>
+      <a href="{% url 'chat:chatbot' %}" class="lc-hero-cta"><svg data-lucide="bot"></svg>Rechercher avec l'IA</a>
+    </section>
 
-      <!-- Colonne droite -->
-      <div class="db-right">
-
-        <!-- Profil -->
-        <div class="profil-card">
-          <div class="profil-card-header">
-            <svg data-lucide="user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            Mon profil
+    <!-- ─── Statistiques ─── -->
+    <div class="row g-3 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <a href="{% url 'accounts:mes_favoris' %}" class="lc-stat c1">
+          <div class="lc-stat-top">
+            <div><div class="lc-stat-val">{{ nb_favoris }}</div><div class="lc-stat-lbl">Favoris</div></div>
+            <div class="lc-stat-ico"><svg data-lucide="heart"></svg></div>
           </div>
-          <div class="profil-user-row">
-            <div class="profil-av-wrap">
-              <img src="{{ user.get_avatar_url }}" alt="{{ user.get_full_name }}">
-              <div class="profil-av-edit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:9px;height:9px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </a>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <a href="{% url 'accounts:mes_reservations' %}" class="lc-stat c2">
+          <div class="lc-stat-top">
+            <div><div class="lc-stat-val">{{ nb_en_cours }}</div><div class="lc-stat-lbl">Demandes en cours</div></div>
+            <div class="lc-stat-ico"><svg data-lucide="calendar-clock"></svg></div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <a href="{% url 'accounts:mes_reservations' %}" class="lc-stat c3">
+          <div class="lc-stat-top">
+            <div><div class="lc-stat-val">{{ nb_visites }}</div><div class="lc-stat-lbl">Visites à venir</div></div>
+            <div class="lc-stat-ico"><svg data-lucide="map-pin"></svg></div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <a href="{% url 'chat:conversations' %}" class="lc-stat c4">
+          <div class="lc-stat-top">
+            <div><div class="lc-stat-val">{{ nb_messages }}</div><div class="lc-stat-lbl">Conversations</div></div>
+            <div class="lc-stat-ico"><svg data-lucide="message-circle"></svg></div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ─── Colonne gauche ─── -->
+      <div class="col-xl-8">
+
+        {% if prochaine_visite %}
+        <!-- Prochaine visite -->
+        <div class="lc-card mb-4">
+          <div class="lc-card-head">
+            <h2><svg data-lucide="map-pin" class="lc-violet"></svg>Prochaine visite</h2>
+            <a href="{% url 'accounts:mes_reservations' %}">Toutes mes demandes</a>
+          </div>
+          <div class="lc-visit">
+            {% with photo=prochaine_visite.logement.get_photo_principale %}
+            {% if photo %}<img src="{{ photo.image.url }}" alt="" class="lc-visit-img">
+            {% else %}<div class="lc-visit-img"></div>{% endif %}
+            {% endwith %}
+            <div class="lc-visit-body">
+              <div class="lc-visit-when">
+                <span class="lc-visit-date">{{ prochaine_visite.date_debut|date:"l j F" }}</span>
+                {% if prochaine_visite.heure_visite %}<span class="lc-visit-hour">à {{ prochaine_visite.heure_visite|time:"H\hi" }}</span>{% endif %}
+              </div>
+              <div class="lc-name">{{ prochaine_visite.logement.titre|truncatechars:60 }}</div>
+              {% if prochaine_visite.lieu_rencontre %}
+              <div class="lc-meta"><svg data-lucide="map-pin"></svg>Rendez-vous : {{ prochaine_visite.lieu_rencontre }}</div>
+              {% endif %}
+              <div class="lc-visit-actions">
+                <a href="{% url 'chat:demarrer' prochaine_visite.logement.pk %}" class="lc-btn primary"><svg data-lucide="message-circle"></svg>Écrire au bailleur</a>
+                <a href="{% url 'logements:detail' prochaine_visite.logement.slug %}" class="lc-btn ghost"><svg data-lucide="eye"></svg>Voir l'annonce</a>
               </div>
             </div>
-            <div>
-              <div class="profil-name">{{ user.get_full_name }}</div>
-              <div class="profil-email">{{ user.email }}</div>
-              <span class="profil-badge">{{ user.get_role_display }}</span>
-            </div>
           </div>
-          <div class="profil-pct-row">
-            <span class="profil-pct-lbl">Profil complété</span>
-            <span class="profil-pct-val">75%</span>
-          </div>
-          <div class="profil-progress">
-            <div class="profil-progress-bar" style="width:75%"></div>
-          </div>
-          <a href="{% url 'accounts:profil' %}" class="profil-btn">
-            <svg data-lucide="pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            Modifier le profil
-          </a>
         </div>
+        {% endif %}
 
-        <!-- Réservations récentes -->
-        <div class="reserv-card">
-          <div class="reserv-header">
-            <svg data-lucide="calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            Mes demandes récentes
+        <!-- Favoris -->
+        <div class="lc-card mb-4">
+          <div class="lc-card-head">
+            <h2><svg data-lucide="heart" style="color:#ef4444"></svg>Mes favoris</h2>
+            <a href="{% url 'accounts:mes_favoris' %}">Voir tous</a>
           </div>
-          {% for res in reservations %}
-          <div class="reserv-item">
-            {% with photo=res.logement.get_photo_principale %}
-            <img class="reserv-img"
-                 src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}"
-                 alt="{{ res.logement.titre }}">
-            {% endwith %}
-            <div style="flex:1;min-width:0">
-              <div class="reserv-titre">{{ res.logement.titre|truncatechars:28 }}</div>
-              <div class="reserv-date">📅 {{ res.date_debut|date:"d M Y" }}</div>
-            </div>
-            <span class="reserv-status
-              {% if res.statut == 'CONFIRME' %}status-confirme
-              {% elif res.statut == 'EN_ATTENTE' %}status-en_attente
-              {% elif res.statut == 'REFUSE' %}status-refuse
-              {% else %}status-autre{% endif %}">
-              {{ res.get_statut_display }}
-            </span>
-          </div>
-          {% empty %}
-          <div style="text-align:center;padding:1.5rem;color:var(--db-muted);font-size:.82rem">
-            Aucune réservation.
-          </div>
-          {% endfor %}
-          {% if reservations %}
-          <div class="reserv-footer">
-            <a href="{% url 'accounts:mes_reservations' %}">
-              Voir toutes les réservations →
+          {% if favoris %}
+          <div class="lc-grid">
+            {% for fav in favoris %}
+            {% with l=fav.logement %}
+            <a href="{% url 'logements:detail' l.slug %}" class="lc-home">
+              {% with photo=l.get_photo_principale %}
+              <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}" alt="" class="lc-home-img" loading="lazy">
+              {% endwith %}
+              <div class="lc-home-body">
+                <div class="lc-home-titre">{{ l.titre|truncatechars:36 }}</div>
+                <div class="lc-meta"><svg data-lucide="map-pin"></svg>{% if l.quartier %}{{ l.quartier.nom }}, {% endif %}{{ l.ville.nom }}</div>
+                <div class="lc-home-prix">{{ l.prix_formate }}{% if l.type_offre == 'LOCATION' %} <small>/mois</small>{% endif %}</div>
+              </div>
             </a>
+            {% endwith %}
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="lc-empty">
+            <svg data-lucide="heart"></svg>
+            Aucun favori pour le moment.
+            <div class="mt-3"><a href="{% url 'logements:recherche' %}" class="lc-btn primary">Explorer les logements</a></div>
           </div>
           {% endif %}
         </div>
 
-      </div>
-    </div>
-
-    <!-- Logements recommandés -->
-    <div class="reco-section">
-      <div class="section-row">
-        <div class="section-title">
-          <svg data-lucide="sparkles" style="color:#f59e0b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-          Logements recommandés pour vous
+        <!-- Recommandations -->
+        {% recommandations_locataire request.user as logements_suggeres %}
+        <div class="lc-card">
+          <div class="lc-card-head">
+            <h2><svg data-lucide="sparkles" class="lc-amber"></svg>Recommandés pour vous</h2>
+            <a href="{% url 'logements:recherche' %}">Voir tout</a>
+          </div>
+          {% if logements_suggeres %}
+          <div class="lc-grid">
+            {% for l in logements_suggeres %}
+            <div class="lc-home">
+              {% with photo=l.get_photo_principale %}
+              <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}" alt="" class="lc-home-img" loading="lazy">
+              {% endwith %}
+              <button type="button" class="lc-fav" data-favori="{{ l.pk }}" aria-label="Ajouter aux favoris" aria-pressed="false">
+                <svg data-lucide="heart"></svg>
+              </button>
+              <a href="{% url 'logements:detail' l.slug %}" class="lc-home-body text-decoration-none">
+                <div class="lc-home-titre">{{ l.titre|truncatechars:36 }}</div>
+                <div class="lc-meta"><svg data-lucide="map-pin"></svg>{% if l.quartier %}{{ l.quartier.nom }}, {% endif %}{{ l.ville.nom }}</div>
+                <div class="lc-home-prix">{{ l.prix_formate }}{% if l.type_offre == 'LOCATION' %} <small>/mois</small>{% endif %}</div>
+                <div class="lc-home-meta">
+                  <span>{{ l.nb_chambres }} ch.</span>
+                  {% if l.nb_salles_bain %}<span>{{ l.nb_salles_bain }} sdb</span>{% endif %}
+                  {% if l.surface %}<span>{{ l.surface }} m²</span>{% endif %}
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="lc-empty">
+            <svg data-lucide="home"></svg>
+            Faites quelques recherches pour recevoir des recommandations.
+            <div class="mt-3"><a href="{% url 'logements:recherche' %}" class="lc-btn primary">Explorer les logements</a></div>
+          </div>
+          {% endif %}
         </div>
-        <a href="{% url 'logements:recherche' %}" class="see-all">
-          Voir tout
-          <svg data-lucide="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        </a>
       </div>
 
-      {% load logements_tags %}
-      {% recommandations_locataire request.user as logements_suggeres %}
+      <!-- ─── Colonne droite ─── -->
+      <div class="col-xl-4">
 
-      {% if logements_suggeres %}
-      <div class="reco-grid">
-        {% for logement in logements_suggeres %}
-        <a href="{% url 'logements:detail' logement.slug %}" class="reco-card">
-          <div class="reco-img-wrap">
-            {% with photo=logement.get_photo_principale %}
-            <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}"
-                 alt="{{ logement.titre }}">
+        <!-- Mes demandes -->
+        <div class="lc-card mb-4">
+          <div class="lc-card-head">
+            <h2><svg data-lucide="calendar-check" class="lc-violet"></svg>Mes demandes</h2>
+            <a href="{% url 'accounts:mes_reservations' %}">Voir toutes</a>
+          </div>
+          {% for res in reservations %}
+          <a href="{% url 'accounts:mes_reservations' %}" class="lc-row text-decoration-none">
+            {% with photo=res.logement.get_photo_principale %}
+            {% if photo %}<img src="{{ photo.image.url }}" alt="" class="lc-thumb">
+            {% else %}<div class="lc-thumb"></div>{% endif %}
             {% endwith %}
-            <button class="reco-fav-btn" onclick="event.preventDefault();toggleFavori({{ logement.pk }},this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </button>
-          </div>
-          <div class="reco-info">
-            <div class="reco-titre">{{ logement.titre|truncatechars:36 }}</div>
-            <div class="reco-loc">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {% if logement.quartier %}{{ logement.quartier.nom }}, {% endif %}{{ logement.ville.nom }}
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="lc-name text-truncate">{{ res.logement.titre|truncatechars:30 }}</div>
+              <div class="lc-meta">
+                {{ res.get_type_demande_display }} · {{ res.date_debut|date:"d/m/Y" }}{% if res.heure_visite %} · {{ res.heure_visite|time:"H\hi" }}{% endif %}
+              </div>
             </div>
-            <div class="reco-prix">{{ logement.prix_formate }}/mois</div>
-            <div class="reco-meta">
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M2 4h20v16H2z"/><path d="M2 9h20"/><path d="M9 4v5"/></svg>
-                {{ logement.nb_chambres }} ch.
-              </span>
-              {% if logement.nb_salles_bain %}
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.683 3 4 3.683 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><line x1="10" y1="5" x2="8" y2="7"/></svg>
-                {{ logement.nb_salles_bain }} sdb
-              </span>
-              {% endif %}
-              {% if logement.surface %}
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                {{ logement.surface }} m²
-              </span>
-              {% endif %}
-            </div>
+            {% if res.statut == 'CONFIRME' %}<span class="lc-badge ok">Confirmée</span>
+            {% elif res.statut == 'EN_ATTENTE' %}<span class="lc-badge warn">En attente</span>
+            {% elif res.statut == 'REFUSE' %}<span class="lc-badge ko">Refusée</span>
+            {% elif res.statut == 'TERMINE' %}<span class="lc-badge info">Effectuée</span>
+            {% else %}<span class="lc-badge neutral">{{ res.get_statut_display }}</span>{% endif %}
+          </a>
+          {% empty %}
+          <div class="lc-empty">
+            <svg data-lucide="calendar-x"></svg>
+            Aucune demande de visite ou de réservation.
           </div>
-        </a>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div style="text-align:center;padding:2.5rem;color:var(--db-muted)">
-        <svg data-lucide="home" style="width:44px;height:44px;color:#d1d5db;margin-bottom:.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-        <p style="font-size:.85rem;margin-bottom:.75rem">Commencez à rechercher des logements pour obtenir des recommandations.</p>
-        <a href="{% url 'logements:recherche' %}" class="btn-ia" style="display:inline-flex;font-size:.8rem;padding:.5rem .9rem">
-          Explorer les logements
-        </a>
-      </div>
-      {% endif %}
-    </div>
+          {% endfor %}
+        </div>
 
+        <!-- Assistant IA -->
+        <div class="lc-ia mb-4">
+          <div class="lc-ia-ico"><svg data-lucide="bot"></svg></div>
+          <h3>Recherche intelligente</h3>
+          <p>Décrivez le logement que vous voulez, l'assistant IA fait le tri pour vous.</p>
+          <a href="{% url 'chat:chatbot' %}" class="lc-btn">Discuter avec l'IA<svg data-lucide="arrow-right"></svg></a>
+        </div>
+
+        <!-- Profil -->
+        <div class="lc-card">
+          <div class="lc-card-head">
+            <h2><svg data-lucide="user" class="lc-violet"></svg>Mon profil</h2>
+            <a href="{% url 'accounts:profil' %}">Modifier</a>
+          </div>
+          <div class="lc-row">
+            <img src="{{ user.get_avatar_url }}" alt="" class="lc-avatar" width="52" height="52">
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="lc-name text-truncate">{{ user.get_full_name }}</div>
+              <div class="lc-meta d-block text-truncate">{{ user.email }}</div>
+            </div>
+            <span class="lc-badge info">{{ user.get_role_display }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </main>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-function toggleFavori(id, btn) {
-  fetch(`/logements/${id}/favori/`, {
-    method: 'POST',
-    headers: { 'X-CSRFToken': document.cookie.split('csrftoken=')[1]?.split(';')[0] }
+(function () {
+  var side = document.getElementById('lcSide');
+  var overlay = document.getElementById('lcOverlay');
+  var btn = document.getElementById('lcToggle');
+  function toggle(open) { side.classList.toggle('open', open); overlay.classList.toggle('show', open); }
+  if (btn) btn.addEventListener('click', function () { toggle(!side.classList.contains('open')); });
+  overlay.addEventListener('click', function () { toggle(false); });
+
+  if (window.lucide) lucide.createIcons();
+
+  var csrf = '{{ csrf_token }}';
+  document.querySelectorAll('.lc-fav').forEach(function (bouton) {
+    bouton.addEventListener('click', function () {
+      fetch('/logements/' + bouton.dataset.favori + '/favori/', {
+        method: 'POST', headers: { 'X-CSRFToken': csrf }
+      })
+        .then(function (rep) { return rep.json(); })
+        .then(function (d) {
+          var actif = d.status === 'added';
+          bouton.classList.toggle('on', actif);
+          bouton.setAttribute('aria-pressed', actif);
+          bouton.setAttribute('aria-label', actif ? 'Retirer des favoris' : 'Ajouter aux favoris');
+        });
+    });
   });
-}
+})();
 </script>
 {% endblock %}

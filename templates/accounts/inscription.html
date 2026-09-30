@@ -1,250 +1,188 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 {% block title %}Inscription{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="cx-page">
+  <div class="cx-main large">
 
-<style>
-  /* ─── Cacher header et footer ─────────────────────────── */
-  header, 
-  footer,
-  .navbar,
-  .site-footer,
-  .footer,
-  #footer {
-    display: none !important;
-  }
+    <!-- ─── Présentation ─── -->
+    <section class="cx-intro">
+      <div class="cx-brand">
+        <img src="{% static 'images/logo.png' %}" alt="" class="cx-logo">
+        <h1 class="cx-wordmark">Logement<span>CM</span></h1>
+      </div>
+      <p class="cx-lead">Rejoignez la plateforme qui simplifie la location au Cameroun.</p>
+      <ul class="cx-points">
+        <li><i class="bi bi-search"></i>Locataires : trouvez et visitez en quelques clics</li>
+        <li><i class="bi bi-building"></i>Bailleurs : publiez vos annonces et gérez vos demandes</li>
+        <li><i class="bi bi-shield-check"></i>Des échanges et des paiements sécurisés</li>
+      </ul>
+    </section>
 
-  /* ─── Page d'inscription avec background ─────────────── */
-  .page-inscription {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 0;
-    overflow: hidden;
-    isolation: isolate;
-    background: #0F0A3C;
-  }
-
-  /* Background Image */
-  .page-inscription .bg-image {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-image: url("{% static 'images/aceuil.jpg' %}");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  .page-inscription .bg-image::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg,
-      rgba(15, 10, 60, 0.85) 0%,
-     
-    );
-    z-index: 1;
-  }
-
-  .page-inscription .container {
-    position: relative;
-    z-index: 2;
-  }
-
-  /* ─── Auth Card améliorée ────────────────────────────── */
-  .auth-card {
-    max-width: 520px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-    z-index: 3;
-  }
-
-  @media (max-width: 576px) {
-    .auth-card {
-      padding: 1.75rem 1.25rem;
-      margin: 0 12px;
-    }
-  }
-
-  /* ─── Correction pour le scroll ───────────────────────── */
-  body {
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-
-  html {
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-</style>
-
-<!-- ─── Page avec background ────────────────────────────── -->
-<section class="page-inscription">
-  <!-- Background Image -->
-  <div class="bg-image"></div>
-
-  <div class="container">
-    <div class="auth-card">
-
-      <!-- En-tête -->
-      <div class="text-center mb-4">
-        <div style="width:56px;height:56px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
-                    border-radius:16px;display:flex;align-items:center;justify-content:center;
-                    margin:0 auto 1rem;box-shadow:0 8px 25px rgba(99,102,241,.3)">
-          <svg data-lucide="user-plus" style="width:28px;height:28px;color:white"></svg>
+    <!-- ─── Formulaire ─── -->
+    <section>
+      <div class="cx-card">
+        <div class="cx-card-head">
+          <h2>Créer un compte</h2>
+          <p>C'est gratuit et rapide.</p>
         </div>
-        <h2 class="fw-bold mb-1">Créer un compte</h2>
-        <p class="text-muted small">Rejoignez LogementCM gratuitement</p>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="cx-alert" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>{{ form.non_field_errors.0 }}</span>
+          </div>
+          {% endif %}
+
+          <div class="cx-row">
+            <div class="cx-field">
+              <label for="{{ form.prenom.id_for_label }}" class="visually-hidden">Prénom</label>
+              {{ form.prenom }}
+              {% for e in form.prenom.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="cx-field">
+              <label for="{{ form.nom.id_for_label }}" class="visually-hidden">Nom</label>
+              {{ form.nom }}
+              {% for e in form.nom.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="cx-field">
+            <label for="{{ form.email.id_for_label }}" class="visually-hidden">Adresse e-mail</label>
+            {{ form.email }}
+            {% for e in form.email.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="cx-row">
+            <div class="cx-field">
+              <label for="{{ form.telephone.id_for_label }}" class="visually-hidden">Téléphone</label>
+              {{ form.telephone }}
+              {% for e in form.telephone.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="cx-field">
+              <label for="{{ form.ville.id_for_label }}" class="visually-hidden">Ville</label>
+              {{ form.ville }}
+              {% for e in form.ville.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="cx-field">
+            <span class="cx-label" id="libelleRole">Je suis</span>
+            <div class="cx-roles" id="cxRoles" role="radiogroup" aria-labelledby="libelleRole">
+              <button type="button" class="cx-role" role="radio" data-valeur="LOCATAIRE" aria-checked="false">
+                <b><i class="bi bi-search"></i>Locataire</b><small>Je cherche un logement</small>
+              </button>
+              <button type="button" class="cx-role" role="radio" data-valeur="BAILLEUR" aria-checked="false">
+                <b><i class="bi bi-building"></i>Bailleur</b><small>Je propose un logement</small>
+              </button>
+              <div class="cx-role-select">
+                <label for="{{ form.role.id_for_label }}" class="visually-hidden">Je suis</label>
+                {{ form.role }}
+              </div>
+            </div>
+            {% for e in form.role.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="cx-row">
+            <div class="cx-field">
+              <label for="{{ form.password1.id_for_label }}" class="visually-hidden">Mot de passe</label>
+              <div class="cx-pwd">
+                {{ form.password1 }}
+                <button type="button" class="cx-eye" id="cxEye" aria-label="Afficher les mots de passe" aria-pressed="false">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              {% for e in form.password1.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="cx-field">
+              <label for="{{ form.password2.id_for_label }}" class="visually-hidden">Confirmer le mot de passe</label>
+              {{ form.password2 }}
+              {% for e in form.password2.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <label class="cx-remember" for="{{ form.accepter_cgu.id_for_label }}">
+            {{ form.accepter_cgu }}
+            <span>J'accepte les <a href="#">conditions d'utilisation</a></span>
+          </label>
+          {% for e in form.accepter_cgu.errors %}<div class="cx-err">{{ e }}</div>{% endfor %}
+
+          <div class="mt-3">
+            <button type="submit" class="cx-submit green">Créer mon compte</button>
+          </div>
+
+          <p class="cx-legal">Vos informations servent uniquement à faire fonctionner votre compte LogementCM.</p>
+        </form>
       </div>
 
-      <form method="post" novalidate>
-        {% csrf_token %}
+      <p class="cx-note">Déjà inscrit ? <a href="{% url 'accounts:connexion' %}">Se connecter</a></p>
+    </section>
 
-        <div class="row g-3 mb-3">
-          <div class="col-6">
-            <label class="form-label">Prénom *</label>
-            {{ form.prenom }}
-            {% if form.prenom.errors %}
-            <div class="text-danger small mt-1">
-              <svg data-lucide="alert-circle" style="width:13px;height:13px"></svg>
-              {{ form.prenom.errors.0 }}
-            </div>
-            {% endif %}
-          </div>
-          <div class="col-6">
-            <label class="form-label">Nom *</label>
-            {{ form.nom }}
-            {% if form.nom.errors %}
-            <div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">
-            <svg data-lucide="mail" style="width:14px;height:14px;margin-right:5px"></svg>
-            Email *
-          </label>
-          {{ form.email }}
-          {% if form.email.errors %}
-          <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
-          {% endif %}
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">
-            <svg data-lucide="phone" style="width:14px;height:14px;margin-right:5px"></svg>
-            Téléphone
-          </label>
-          {{ form.telephone }}
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">
-            <svg data-lucide="users" style="width:14px;height:14px;margin-right:5px"></svg>
-            Je suis *
-          </label>
-          {{ form.role }}
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">
-            <svg data-lucide="map-pin" style="width:14px;height:14px;margin-right:5px"></svg>
-            Ville
-          </label>
-          {{ form.ville }}
-        </div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-6">
-            <label class="form-label">
-              <svg data-lucide="lock" style="width:14px;height:14px;margin-right:5px"></svg>
-              Mot de passe *
-            </label>
-            {{ form.password1 }}
-            {% if form.password1.errors %}
-            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
-            {% endif %}
-          </div>
-          <div class="col-6">
-            <label class="form-label">
-              <svg data-lucide="lock" style="width:14px;height:14px;margin-right:5px"></svg>
-              Confirmer *
-            </label>
-            {{ form.password2 }}
-            {% if form.password2.errors %}
-            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
-            {% endif %}
-          </div>
-        </div>
-
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger small">
-          <svg data-lucide="alert-triangle" style="width:15px;height:15px;margin-right:6px"></svg>
-          {{ form.non_field_errors.0 }}
-        </div>
-        {% endif %}
-
-        <div class="mb-3 form-check">
-          {{ form.accepter_cgu }}
-          <label class="form-check-label small">
-            J'accepte les <a href="#" class="text-primary">conditions d'utilisation</a>
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-          <svg data-lucide="user-plus" style="width:17px;height:17px;margin-right:7px;vertical-align:-3px"></svg>
-          Créer mon compte
-        </button>
-
-      </form>
-
-      <hr class="my-3">
-      <p class="text-center text-muted small mb-0">
-        Déjà inscrit ?
-        <a href="{% url 'accounts:connexion' %}" class="text-primary fw-semibold">
-          Se connecter
-          <svg data-lucide="arrow-right" style="width:14px;height:14px;margin-left:3px"></svg>
-        </a>
-      </p>
-
-    </div>
   </div>
-</section>
+
+  <div class="cx-foot">
+    <a href="{% url 'logements:accueil' %}">Accueil</a>
+    <a href="{% url 'logements:recherche' %}">Rechercher</a>
+    <span>© LogementCM</span>
+  </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
-const telInput = document.getElementById('id_telephone');
-if (telInput) {
-  // Pré-remplir avec +237 au focus si vide
-  telInput.addEventListener('focus', function () {
-    if (!this.value) this.value = '+237';
-  });
-  // Empêcher la suppression du +237
-  telInput.addEventListener('keydown', function (e) {
-    if (this.value.length <= 4 &&
-        (e.key === 'Backspace' || e.key === 'Delete')) {
-      e.preventDefault();
-    }
-  });
-  // Retirer les caractères non autorisés
-  telInput.addEventListener('input', function () {
-    let val = this.value.replace(/[^\d+]/g, '');
-    if (!val.startsWith('+237')) val = '+237' + val.replace(/\+/g, '');
-    if (val.length > 13) val = val.slice(0, 13);
-    this.value = val;
-  });
-}
+(function () {
+  /* Choix du profil : les boutons pilotent la liste déroulante d'origine */
+  var groupe = document.getElementById('cxRoles');
+  var select = document.getElementById('{{ form.role.id_for_label }}');
+  if (groupe && select) {
+    var boutons = groupe.querySelectorAll('.cx-role');
+    var choisir = function (valeur) {
+      select.value = valeur;
+      boutons.forEach(function (b) { b.setAttribute('aria-checked', b.dataset.valeur === valeur); });
+    };
+    boutons.forEach(function (b) {
+      b.addEventListener('click', function () { choisir(b.dataset.valeur); });
+    });
+    groupe.classList.add('cx-roles-js');
+    choisir(select.value || 'LOCATAIRE');
+  }
+
+  /* Afficher / masquer les mots de passe */
+  var oeil = document.getElementById('cxEye');
+  var mdp1 = document.getElementById('{{ form.password1.id_for_label }}');
+  var mdp2 = document.getElementById('{{ form.password2.id_for_label }}');
+  if (oeil && mdp1) {
+    oeil.addEventListener('click', function () {
+      var visible = mdp1.type === 'password';
+      [mdp1, mdp2].forEach(function (c) { if (c) c.type = visible ? 'text' : 'password'; });
+      oeil.setAttribute('aria-pressed', visible);
+      oeil.setAttribute('aria-label', visible ? 'Masquer les mots de passe' : 'Afficher les mots de passe');
+      oeil.firstElementChild.className = visible ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  }
+
+  /* Téléphone : préfixe +237 */
+  var tel = document.getElementById('{{ form.telephone.id_for_label }}');
+  if (tel) {
+    tel.addEventListener('focus', function () { if (!this.value) this.value = '+237'; });
+    tel.addEventListener('keydown', function (e) {
+      if (this.value.length <= 4 && (e.key === 'Backspace' || e.key === 'Delete')) e.preventDefault();
+    });
+    tel.addEventListener('input', function () {
+      var val = this.value.replace(/[^\d+]/g, '');
+      if (!val.startsWith('+237')) val = '+237' + val.replace(/\+/g, '');
+      this.value = val.slice(0, 13);
+    });
+  }
+  if (window.lucide) lucide.createIcons();
+})();
 </script>
-{% endblock %}
- 
 {% endblock %}

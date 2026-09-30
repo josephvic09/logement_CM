@@ -334,14 +334,60 @@
     .bn-item-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
     /* ── Chatbot flottant ─────────────────────────── */
-    @keyframes chatbotFloat {
-      0%,100% { transform: translateY(0); filter: drop-shadow(0 4px 15px rgba(16,163,127,.4)); }
-      50%      { transform: translateY(-8px); filter: drop-shadow(0 8px 25px rgba(16,163,127,.6)); }
+    @keyframes chatbotPulse {
+      0%   { transform: scale(1);   opacity: .55; }
+      70%  { transform: scale(1.55); opacity: 0; }
+      100% { transform: scale(1.55); opacity: 0; }
     }
-    #chatbotFloatingBtn { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; cursor: grab; z-index: 998; user-select: none; }
-    @media (max-width: 991.98px) { #chatbotFloatingBtn { bottom: 76px; width: 48px; height: 48px; } }
-    #chatbotFloatingBtn:active { cursor: grabbing; animation: none; }
-    #chatbotFloatingBtn.dragging { cursor: grabbing; animation: none; transition: none; }
+    #chatbotFloatingBtn { position: fixed; bottom: 80px; right: 20px; width: 58px; height: 58px; cursor: grab; z-index: 998; user-select: none; touch-action: none; }
+    #chatbotFloatingBtn .cb-core {
+      position: relative; width: 100%; height: 100%; border-radius: 50%;
+      background: linear-gradient(135deg, #6d3fe8 0%, #7c4dff 55%, #8b5cf6 100%);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 28px rgba(109,63,232,.45), inset 0 0 0 1.5px rgba(255,255,255,.25);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    #chatbotFloatingBtn .cb-core svg { width: 28px; height: 28px; pointer-events: none; }
+    #chatbotFloatingBtn .cb-core img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      border-radius: 50%; border: 2.5px solid #fff; pointer-events: none;
+    }
+    #chatbotFloatingBtn .cb-core::before {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(124,77,255,.55); z-index: -1; animation: chatbotPulse 2.8s ease-out infinite;
+    }
+    #chatbotFloatingBtn:hover .cb-core { transform: scale(1.07); box-shadow: 0 14px 34px rgba(109,63,232,.55), inset 0 0 0 1.5px rgba(255,255,255,.3); }
+    #chatbotFloatingBtn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; border-radius: 50%; box-shadow: 0 0 0 6px #6d3fe8; }
+    #chatbotFloatingBtn .cb-tag {
+      position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px;
+      border-radius: 50px; background: #fff; color: #6d3fe8; font-size: .62rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2); pointer-events: none;
+    }
+    #chatbotFloatingBtn .cb-label {
+      position: absolute; right: calc(100% + 12px); top: 50%; transform: translate(6px, -50%);
+      background: var(--bg-card, #fff); color: var(--text-primary, #1e1b3a);
+      border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: .5rem .85rem;
+      font-size: .8rem; font-weight: 600; line-height: 1.25; white-space: nowrap;
+      box-shadow: 0 10px 30px rgba(0,0,0,.14); opacity: 0; pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    #chatbotFloatingBtn .cb-label small { display: block; font-weight: 500; font-size: .7rem; color: var(--text-muted, #94a3b8); }
+    #chatbotFloatingBtn:hover .cb-label, #chatbotFloatingBtn:focus-visible .cb-label { opacity: 1; transform: translate(0, -50%); }
+    #chatbotFloatingBtn:active { cursor: grabbing; }
+    #chatbotFloatingBtn.dragging { cursor: grabbing; transition: none; }
+    #chatbotFloatingBtn.dragging .cb-core { transform: scale(.96); }
+    #chatbotFloatingBtn.dragging .cb-label { opacity: 0; }
+    #chatbotFloatingBtn ~ #btnTop { bottom: 9.5rem; }
+    @media (max-width: 991.98px) {
+      #chatbotFloatingBtn { bottom: 76px; width: 52px; height: 52px; }
+      #chatbotFloatingBtn .cb-core svg { width: 25px; height: 25px; }
+      #chatbotFloatingBtn .cb-label { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #chatbotFloatingBtn .cb-core::before { animation: none; display: none; }
+      #chatbotFloatingBtn .cb-core, #chatbotFloatingBtn .cb-label { transition: none; }
+    }
 
     /* ── Transitions globales ─────────────────────── */
     body, main, .card, .card-body, .modal-content, .dropdown-menu,
@@ -362,7 +408,7 @@
   })();
 </script>
 
-<body>
+<body{% if user.is_authenticated %} data-authenticated="true"{% endif %}>
 
 <!-- ═══════════════════════════════════════════════
      NAVBAR DESKTOP
@@ -743,13 +789,19 @@
   </div>
 </nav>
 
-<!-- Bouton chatbot flottant -->
-{% if request.resolver_match.url_name != 'chatbot' %}
-<div id="chatbotFloatingBtn" onmousedown="startDrag(event)" ontouchstart="startDragTouch(event)" title="Assistant IA">
-  <img src="{% static 'images/chatbot.jpg' %}" alt="Chatbot IA"
-       style="width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 4px 20px rgba(16,163,127,.4);pointer-events:none;animation:chatbotFloat 3s ease-in-out infinite"
-       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%236366f1%22/%3E%3Ctext x=%2250%22 y=%2268%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22%3E🤖%3C/text%3E%3C/svg%3E'">
-  <span style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#ef4444;color:white;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid white;pointer-events:none">IA</span>
+<!-- Bouton chatbot flottant (réservé aux locataires connectés) -->
+{% if user.is_authenticated and user.role == 'LOCATAIRE' and request.resolver_match.url_name != 'chatbot' %}
+<div id="chatbotFloatingBtn" role="button" tabindex="0" aria-label="Ouvrir l'assistant IA"
+     onmousedown="startDrag(event)" ontouchstart="startDragTouch(event)">
+  <span class="cb-label">Assistant IA<small>Trouvez votre logement</small></span>
+  <div class="cb-core">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+      <path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+    </svg>
+    <img src="{% static 'images/chatbot.jpg' %}" alt="" onerror="this.remove()">
+  </div>
+  <span class="cb-tag">IA</span>
 </div>
 {% endif %}
 
@@ -765,6 +817,7 @@
 {% load static %}
 <script src="{% static 'js/main.js' %}"></script>
 <script src="{% static 'js/icons.js' %}"></script>
+<script src="{% static 'js/notifications.js' %}"></script>
 {% block extra_js %}{% endblock %}
 
 <script>
@@ -785,7 +838,7 @@
   });
 
   // ── Chatbot draggable ──────────────────────────
-  {% if request.resolver_match.url_name != 'chatbot' %}
+  {% if user.is_authenticated and user.role == 'LOCATAIRE' and request.resolver_match.url_name != 'chatbot' %}
   let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
   let clickStartX = 0, clickStartY = 0;
   const chatbotBtn = document.getElementById('chatbotFloatingBtn');
@@ -870,6 +923,12 @@
     chatbotBtn.addEventListener('click', function(e) {
       if (chatbotBtn.dataset.dragged === 'true') { e.preventDefault(); return; }
       window.location.href = '{% url "chat:chatbot" %}';
+    });
+    chatbotBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        window.location.href = '{% url "chat:chatbot" %}';
+      }
     });
     loadPos();
   }

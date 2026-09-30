@@ -3,18 +3,20 @@ Utilitaires pour créer des notifications automatiques.
 Appelé depuis toutes les apps du projet.
 """
 from .models import Notification
+from .realtime import pousser_notification
 
 
 def notifier(destinataire, type_notif, titre, message, lien=''):
-    """Créer une notification."""
+    """Créer une notification et l'envoyer en direct au destinataire."""
     try:
-        Notification.objects.create(
+        notif = Notification.objects.create(
             destinataire=destinataire,
             type_notif=type_notif,
             titre=titre,
             message=message,
             lien=lien,
         )
+        pousser_notification(notif)
     except Exception:
         pass
 

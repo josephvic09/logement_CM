@@ -27,10 +27,24 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
+# Render fournit automatiquement le nom de domaine du service
+RENDER_HOSTNAME = config('RENDER_EXTERNAL_HOSTNAME', default='')
+if RENDER_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS = [f'https://{RENDER_HOSTNAME}']
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600
+
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # doit rester en premier : runserver devient compatible WebSocket
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +59,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'taggit',
+    'channels',
     # Vos applications
     'accounts',
     'logements',
@@ -103,19 +118,24 @@ WSGI_APPLICATION = 'logement_cm.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='logement'),
-        'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default='Amandinevic12'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+DATABASE_URL = config('DATABASE_URL', default='')
+if DATABASE_URL:  # production (Render) : PostgreSQL
+    import dj_database_url
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)}
+else:  # développement : MySQL local, identifiants dans .env
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DB_NAME', default='logement'),
+            'USER': config('DB_USER', default='root'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
     }
-}
 
 
 # Password validation
@@ -164,11 +184,22 @@ LOGOUT_REDIRECT_URL = '/'
 # Fichiers statiques
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Fichiers médias
+# Fichiers médias : Cloudinary en production (le disque de Render est éphémère)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
+if CLOUDINARY_URL:
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    MEDIA_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    MEDIA_BACKEND = 'django.core.files.storage.FileSystemStorage'
+
+STORAGES = {
+    'default':     {'BACKEND': MEDIA_BACKEND},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
@@ -200,6 +231,19 @@ ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 
 # Email (console pour le développement)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Notifications instantanées (WebSocket)
+ASGI_APPLICATION = 'logement_cm.asgi.application'
+REDIS_URL = config('REDIS_URL', default='')
+if REDIS_URL:  # production : pip install channels-redis
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        }
+    }
+else:  # développement : un seul processus
+    CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 # Paiements Mobile Money (Campay) — démo par défaut, production : https://www.campay.net/api
 CAMPAY_BASE_URL  = config('CAMPAY_BASE_URL', default='https://demo.campay.net/api')

@@ -247,7 +247,8 @@ def tableau_de_bord(request):
 
 @login_required
 def dashboard_locataire(request):
-    from logements.models import Favori, Reservation, RechercheHistorique
+    from django.db.models import Count, Q
+    from logements.models import Favori, Reservation
     from chat.models import Conversation
 
     favoris = Favori.objects.filter(
@@ -256,21 +257,39 @@ def dashboard_locataire(request):
         'logement__photos'
     ).order_by('-cree_le')[:6]
 
-    reservations = Reservation.objects.filter(
-        locataire=request.user
-    ).select_related('logement__ville').order_by('-cree_le')[:5]
+    demandes = Reservation.objects.filter(locataire=request.user)
+    aujourdhui = timezone.localdate()
+    compteurs = demandes.aggregate(
+        total=Count('pk'),
+        en_cours=Count('pk', filter=Q(statut__in=['EN_ATTENTE', 'CONFIRME'])),
+        visites_a_venir=Count('pk', filter=Q(
+            type_demande='VISITE', statut='CONFIRME', date_debut__gte=aujourdhui
+        )),
+    )
 
-    nb_messages = (
-        Conversation.objects.filter(locataire=request.user) |
-        Conversation.objects.filter(bailleur=request.user)
+    prochaine_visite = demandes.filter(
+        type_demande='VISITE', statut='CONFIRME', date_debut__gte=aujourdhui
+    ).select_related('logement__ville', 'logement__quartier').prefetch_related(
+        'logement__photos'
+    ).order_by('date_debut', 'heure_visite').first()
+
+    reservations = demandes.select_related(
+        'logement__ville'
+    ).prefetch_related('logement__photos').order_by('-cree_le')[:5]
+
+    nb_messages = Conversation.objects.filter(
+        Q(locataire=request.user) | Q(bailleur=request.user)
     ).count()
 
     context = {
-        'favoris':      favoris,
-        'reservations': reservations,
-        'nb_favoris':   Favori.objects.filter(utilisateur=request.user).count(),
-        'nb_reservations': Reservation.objects.filter(locataire=request.user).count(),
-        'nb_messages':  nb_messages,
+        'favoris':          favoris,
+        'reservations':     reservations,
+        'prochaine_visite': prochaine_visite,
+        'nb_favoris':       Favori.objects.filter(utilisateur=request.user).count(),
+        'nb_reservations':  compteurs['total'],
+        'nb_en_cours':      compteurs['en_cours'],
+        'nb_visites':       compteurs['visites_a_venir'],
+        'nb_messages':      nb_messages,
     }
     return render(request, 'accounts/dashboard_locataire.html', context)
 

@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from .models import Notification
+from .realtime import pousser_compteur
 
 
 @login_required
@@ -16,6 +17,7 @@ def liste_notifications(request):
     # Marquer comme lues auto si demandé
     if request.GET.get('tout_lire'):
         notifs_non_lues.update(lue=True, lue_le=timezone.now())
+        pousser_compteur(request.user)
         return redirect('notifs:liste')
 
     return render(request, 'notifs/liste.html', {
@@ -35,7 +37,8 @@ def marquer_lue(request, notif_id):
     )
     notif.lue    = True
     notif.lue_le = timezone.now()
-    notif.save()
+    notif.save(update_fields=['lue', 'lue_le'])
+    pousser_compteur(request.user)
     return JsonResponse({'status': 'ok'})
 
 
@@ -46,6 +49,7 @@ def marquer_lues(request):
     request.user.notifications.filter(lue=False).update(
         lue=True, lue_le=timezone.now()
     )
+    pousser_compteur(request.user)
     return JsonResponse({'status': 'ok'})
 
 
@@ -87,6 +91,7 @@ def supprimer_notification(request, notif_id):
         destinataire=request.user
     )
     notif.delete()
+    pousser_compteur(request.user)
     return JsonResponse({'status': 'ok'})
 
 
