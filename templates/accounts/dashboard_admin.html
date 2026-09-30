@@ -2,418 +2,531 @@
 {% load humanize %}
 {% block title %}Administration{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ═══════════ Dashboard admin — style « SkillPath » ═══════════ */
+  :root {
+    --adm-bg: #f4f5fb;
+    --adm-card: #ffffff;
+    --adm-line: #e8eaf3;
+    --adm-violet: #6d3fe8;
+    --adm-violet-2: #7c4dff;
+    --adm-side-w: 255px;
+  }
+  [data-theme="dark"] {
+    --adm-bg: #0f0f13;
+    --adm-card: #1a1a24;
+    --adm-line: #2d2d3d;
+  }
+
+  /* On masque le footer sur cette page : un vrai tableau de bord */
+  footer { display: none !important; }
+
+  /* Barre du haut épurée : on retire la recherche et les liens
+     Rechercher / Carte / Chatbot IA / Messages / Notifications.
+     (On garde le bouton thème et l'avatar.) */
+  .navbar .nav-search { display: none !important; }
+  .navbar .nav-links-desktop > li:nth-child(-n+5) { display: none !important; }
+
+  .adm-wrap { display: flex; align-items: flex-start; background: var(--adm-bg); min-height: calc(100vh - 70px); }
+
+  /* ── Sidebar ── */
+  .adm-side {
+    width: var(--adm-side-w); flex-shrink: 0;
+    position: sticky; top: 70px; align-self: flex-start;
+    height: calc(100vh - 70px); overflow-y: auto;
+    background: var(--adm-card); border-right: 1px solid var(--adm-line);
+    padding: 1.1rem .9rem 1.5rem; z-index: 1030;
+  }
+  .adm-side-label {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+    color: var(--adm-violet); background: rgba(109,63,232,.1);
+    padding: 4px 14px; border-radius: 50px; margin: .4rem 0 .7rem;
+  }
+  .adm-link {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .62rem .85rem; margin-bottom: 4px;
+    border-radius: 10px; text-decoration: none;
+    font-size: .86rem; font-weight: 500; color: var(--text-secondary);
+    transition: .15s;
+  }
+  .adm-link svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .adm-link:hover { background: rgba(109,63,232,.08); color: var(--adm-violet); }
+  .adm-link.active {
+    background: linear-gradient(135deg, var(--adm-violet), var(--adm-violet-2));
+    color: #fff; box-shadow: 0 6px 16px rgba(109,63,232,.3);
+  }
+  .adm-link .adm-count {
+    margin-left: auto; font-size: .68rem; font-weight: 700;
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #ef4444; color: #fff;
+  }
+  .adm-link .adm-count.warn { background: #f59e0b; }
+
+  .adm-side-overlay { display: none; }
+
+  /* ── Zone principale ── */
+  .adm-main { flex: 1; min-width: 0; padding: 1.5rem 1.5rem 3rem; }
+
+  /* ── Bannière ── */
+  .adm-hero {
+    background: linear-gradient(120deg, #6d3fe8 0%, #7c4dff 60%, #8b5cf6 100%);
+    border-radius: 18px; color: #fff; padding: 1.4rem 1.6rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.5rem; flex-wrap: wrap; position: relative; overflow: hidden;
+  }
+  .adm-hero::after {
+    content: ""; position: absolute; right: -60px; top: -80px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: rgba(255,255,255,.07); pointer-events: none;
+  }
+  .adm-hero-user { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
+  .adm-hero-avatar {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 3px solid rgba(255,255,255,.85); background: rgba(255,255,255,.2);
+  }
+  .adm-hero h2 { font-size: 1.35rem; font-weight: 800; margin: 0; color: #fff; }
+  .adm-hero p { margin: 0; font-size: .82rem; opacity: .8; }
+  .adm-hero-pills { display: flex; gap: 1.4rem; flex-wrap: wrap; position: relative; z-index: 1; }
+  .adm-pill { display: flex; align-items: center; gap: .6rem; }
+  .adm-pill-ico {
+    width: 40px; height: 40px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .adm-pill-ico svg { width: 19px; height: 19px; color: var(--adm-violet); }
+  .adm-pill-val { font-size: 1.1rem; font-weight: 800; line-height: 1.1; }
+  .adm-pill-lbl { font-size: .7rem; opacity: .8; }
+
+  /* ── Cartes statistiques dégradées ── */
+  .adm-stat {
+    border-radius: 14px; color: #fff; padding: 1.15rem 1.3rem 1rem;
+    position: relative; overflow: hidden; height: 100%;
+    box-shadow: 0 8px 22px rgba(0,0,0,.08);
+  }
+  .adm-stat.c1 { background: linear-gradient(135deg, #c84fbd, #d5559f); }
+  .adm-stat.c2 { background: linear-gradient(135deg, #9b59d6, #8f5ad0); }
+  .adm-stat.c3 { background: linear-gradient(135deg, #5b8def, #6b86ee); }
+  .adm-stat.c4 { background: linear-gradient(135deg, #17a2b8, #1cb5c4); }
+  .adm-stat-top { display: flex; justify-content: space-between; align-items: center; }
+  .adm-stat-val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .adm-stat-lbl { font-size: .8rem; opacity: .9; }
+  .adm-stat-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,.3); margin-top: .9rem; }
+  .adm-stat-bar span { display: block; height: 100%; border-radius: 4px; background: #fff; }
+
+  /* Anneau de progression */
+  .adm-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+  .adm-ring::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(#fff calc(var(--p) * 1%), rgba(255,255,255,.3) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  }
+  .adm-ring span {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700;
+  }
+
+  /* ── Cartes génériques ── */
+  .adm-card {
+    background: var(--adm-card); border: 1px solid var(--adm-line);
+    border-radius: 14px; overflow: hidden;
+  }
+  .adm-card-head {
+    padding: .95rem 1.2rem; border-bottom: 1px solid var(--adm-line);
+    display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  }
+  .adm-card-head h5, .adm-card-head h6 {
+    margin: 0; font-weight: 700; font-size: .98rem; color: var(--text-primary);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .adm-card-head a { font-size: .78rem; font-weight: 600; color: var(--adm-violet); text-decoration: none; }
+  .adm-card .table { --bs-table-bg: transparent; color: var(--text-primary); }
+  .adm-card .table thead th {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-muted); font-weight: 700; border-bottom-color: var(--adm-line);
+    padding: .7rem 1rem;
+  }
+  .adm-card .table td { padding: .75rem 1rem; border-bottom-color: var(--adm-line); }
+  .adm-row { padding: .9rem 1.2rem; border-bottom: 1px solid var(--adm-line); }
+  .adm-row:last-child { border-bottom: 0; }
+
+  .adm-badge {
+    font-size: .66rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 50px; white-space: nowrap; display: inline-block;
+  }
+
+  /* ── Actions rapides ── */
+  .adm-quick {
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    padding: 1.1rem .5rem; background: var(--adm-card);
+    border: 1px solid var(--adm-line); border-radius: 14px;
+    text-decoration: none; color: var(--text-primary);
+    font-size: .82rem; font-weight: 600; position: relative; transition: .2s;
+  }
+  .adm-quick:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.08); }
+  .adm-quick-ico {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .adm-quick-ico svg { width: 22px; height: 22px; }
+  .adm-quick .adm-count {
+    position: absolute; top: 10px; right: 10px; color: #fff;
+    min-width: 20px; height: 20px; padding: 0 5px; border-radius: 50px;
+    font-size: .68rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .adm-chart-box { position: relative; height: 320px; padding: 1rem 1.2rem 1.2rem; }
+
+  /* ── Mobile : sidebar en tiroir ── */
+  @media (max-width: 991.98px) {
+    .adm-side {
+      position: fixed; top: 0; left: 0; height: 100vh; padding-top: 1.5rem;
+      transform: translateX(-100%); transition: transform .25s ease;
+      box-shadow: 0 0 40px rgba(0,0,0,.2);
+    }
+    .adm-side.open { transform: translateX(0); }
+    .adm-side-overlay.show {
+      display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1025;
+    }
+    .adm-main { padding: 1rem 1rem 5.5rem; }
+    .adm-hero { padding: 1.1rem; }
+    .adm-hero-pills { gap: 1rem; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4 px-4">
+<div class="adm-wrap">
 
-  <!-- ─── En-tête ──────────────────────────────────── -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <div>
-      <p class="text-muted small mb-0">Panneau de contrôle</p>
-      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
-        <svg data-lucide="shield-check"
-             style="width:26px;height:26px;color:var(--primary)">
-        </svg>
-        Administration
-      </h2>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="/admin/" class="btn btn-outline-secondary btn-sm">
-        <svg data-lucide="settings"
-             style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
-        </svg>
-        Admin Django
-      </a>
-      <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
-         class="btn btn-primary btn-sm">
-        <svg data-lucide="clock"
-             style="width:15px;height:15px;margin-right:5px;vertical-align:-2px">
-        </svg>
-        Annonces en attente
-        {% if nb_en_attente > 0 %}
-        <span class="badge bg-white text-primary ms-1"
-              style="font-size:.68rem">
-          {{ nb_en_attente }}
-        </span>
-        {% endif %}
-      </a>
-    </div>
-  </div>
+  <!-- ═════════════ SIDEBAR ═════════════ -->
+  <div class="adm-side-overlay" id="admOverlay"></div>
+  <aside class="adm-side" id="admSide">
 
-  <!-- ─── Stats globales ────────────────────────────── -->
-  <div class="row g-3 mb-4">
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon indigo">
-          <svg data-lucide="users"
-               style="width:22px;height:22px;color:#6366f1">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_utilisateurs|intcomma }}</div>
-          <div class="dash-lbl">Utilisateurs actifs</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon green">
-          <svg data-lucide="building"
-               style="width:22px;height:22px;color:#10b981">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_logements|intcomma }}</div>
-          <div class="dash-lbl">Logements publiés</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon orange">
-          <svg data-lucide="clock"
-               style="width:22px;height:22px;color:#f59e0b">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_en_attente }}</div>
-          <div class="dash-lbl">En attente validation</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon red">
-          <svg data-lucide="flag"
-               style="width:22px;height:22px;color:#ef4444">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_signalements }}</div>
-          <div class="dash-lbl">Signalements</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon purple">
-          <svg data-lucide="user-check"
-               style="width:22px;height:22px;color:#8b5cf6">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_bailleurs }}</div>
-          <div class="dash-lbl">Bailleurs</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon indigo">
-          <svg data-lucide="user"
-               style="width:22px;height:22px;color:#6366f1">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_locataires }}</div>
-          <div class="dash-lbl">Locataires</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon green">
-          <svg data-lucide="calendar-check"
-               style="width:22px;height:22px;color:#10b981">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_reservations }}</div>
-          <div class="dash-lbl">Réservations</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-      <div class="dash-stat">
-        <div class="dash-icon orange">
-          <svg data-lucide="message-circle"
-               style="width:22px;height:22px;color:#f59e0b">
-          </svg>
-        </div>
-        <div>
-          <div class="dash-val">{{ nb_conversations }}</div>
-          <div class="dash-lbl">Conversations</div>
-        </div>
-      </div>
-    </div>
-  </div>
+    <span class="adm-side-label">Tableau de bord</span>
+    <a href="{{ request.path }}" class="adm-link active">
+      <svg data-lucide="layout-dashboard"></svg> Vue d'ensemble
+    </a>
 
-  <!-- ─── Actions rapides ───────────────────────────── -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
-      <a href="{% url 'accounts:admin_utilisateurs' %}"
-         class="d-block text-decoration-none">
-        <div class="card p-3 text-center"
-             style="border:1.5px solid var(--border);transition:.2s"
-             onmouseover="this.style.borderColor='var(--primary)';this.style.background='var(--primary-light)'"
-             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
-          <svg data-lucide="users"
-               style="width:26px;height:26px;color:var(--primary);margin:0 auto .5rem">
-          </svg>
-          <div class="fw-semibold small">Utilisateurs</div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 col-6">
-      <a href="{% url 'accounts:admin_logements' %}"
-         class="d-block text-decoration-none">
-        <div class="card p-3 text-center"
-             style="border:1.5px solid var(--border);transition:.2s"
-             onmouseover="this.style.borderColor='#10b981';this.style.background='#f0fdf4'"
-             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
-          <svg data-lucide="building"
-               style="width:26px;height:26px;color:#10b981;margin:0 auto .5rem">
-          </svg>
-          <div class="fw-semibold small">Logements</div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 col-6">
-      <a href="{% url 'accounts:admin_signalements' %}"
-         class="d-block text-decoration-none">
-        <div class="card p-3 text-center"
-             style="border:1.5px solid var(--border);transition:.2s;position:relative"
-             onmouseover="this.style.borderColor='#ef4444';this.style.background='#fff5f5'"
-             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
-          {% if nb_signalements > 0 %}
-          <span style="position:absolute;top:8px;right:8px;
-                       background:#ef4444;color:white;
-                       width:20px;height:20px;border-radius:50%;
-                       font-size:.7rem;font-weight:700;
-                       display:flex;align-items:center;justify-content:center">
-            {{ nb_signalements }}
-          </span>
-          {% endif %}
-          <svg data-lucide="flag"
-               style="width:26px;height:26px;color:#ef4444;margin:0 auto .5rem">
-          </svg>
-          <div class="fw-semibold small">Signalements</div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-3 col-6">
-      <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
-         class="d-block text-decoration-none">
-        <div class="card p-3 text-center"
-             style="border:1.5px solid var(--border);transition:.2s;position:relative"
-             onmouseover="this.style.borderColor='#f59e0b';this.style.background='#fffbeb'"
-             onmouseout="this.style.borderColor='var(--border)';this.style.background='white'">
-          {% if nb_en_attente > 0 %}
-          <span style="position:absolute;top:8px;right:8px;
-                       background:#f59e0b;color:white;
-                       width:20px;height:20px;border-radius:50%;
-                       font-size:.7rem;font-weight:700;
-                       display:flex;align-items:center;justify-content:center">
-            {{ nb_en_attente }}
-          </span>
-          {% endif %}
-          <svg data-lucide="clock"
-               style="width:26px;height:26px;color:#f59e0b;margin:0 auto .5rem">
-          </svg>
-          <div class="fw-semibold small">Validations</div>
-        </div>
-      </a>
-    </div>
-  </div>
+    <span class="adm-side-label mt-3">Gestion</span>
+    <a href="{% url 'accounts:admin_utilisateurs' %}" class="adm-link">
+      <svg data-lucide="users"></svg> Utilisateurs
+    </a>
+    <a href="{% url 'accounts:admin_logements' %}" class="adm-link">
+      <svg data-lucide="building"></svg> Logements
+    </a>
+    <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE" class="adm-link">
+      <svg data-lucide="clock"></svg> Validations
+      {% if nb_en_attente > 0 %}<span class="adm-count warn">{{ nb_en_attente }}</span>{% endif %}
+    </a>
+    <a href="{% url 'accounts:admin_signalements' %}" class="adm-link">
+      <svg data-lucide="flag"></svg> Signalements
+      {% if nb_signalements > 0 %}<span class="adm-count">{{ nb_signalements }}</span>{% endif %}
+    </a>
 
-  <div class="row g-4">
+    <span class="adm-side-label mt-3">Système</span>
+    <a href="/admin/" class="adm-link">
+      <svg data-lucide="settings"></svg> Admin Django
+    </a>
+  </aside>
 
-    <!-- ─── Annonces en attente ───────────────────── -->
-    <div class="col-lg-7">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-white border-bottom py-3 rounded-top-4
-                    d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
-            <svg data-lucide="clock"
-                 style="width:18px;height:18px;color:#f59e0b">
-            </svg>
-            Annonces en attente
+  <!-- ═════════════ CONTENU ═════════════ -->
+  <div class="adm-main">
+
+    <!-- Bouton menu (mobile) -->
+    <button type="button" id="admToggle"
+            class="btn btn-sm mb-3 d-lg-none d-inline-flex align-items-center gap-2"
+            style="background:var(--adm-violet);color:#fff;border-radius:10px">
+      <svg data-lucide="menu" style="width:16px;height:16px"></svg> Menu
+    </button>
+
+    <!-- ─── Bannière ─── -->
+    <div class="adm-hero mb-4">
+      <div class="adm-hero-user">
+        <img src="{{ user.get_avatar_url }}" alt="{{ user.get_full_name }}" class="adm-hero-avatar">
+        <div>
+          <p>Panneau de contrôle</p>
+          <h2>Bonjour, {{ user.prenom|default:user.get_full_name }}</h2>
+          <p>
             {% if nb_en_attente > 0 %}
-            <span style="background:#fef3c7;color:#92400e;
-                         font-size:.72rem;font-weight:700;
-                         padding:2px 10px;border-radius:50px">
-              {{ nb_en_attente }}
-            </span>
-            {% endif %}
-          </h5>
-          <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE"
-             class="text-primary small fw-semibold text-decoration-none">
-            Voir toutes
-          </a>
-        </div>
-        <div class="card-body p-0">
-          {% for logement in annonces_attente %}
-          <div class="p-3 border-bottom d-flex gap-3 align-items-center">
-
-            {% with photo=logement.get_photo_principale %}
-            {% if photo %}
-            <img src="{{ photo.image.url }}"
-                 class="rounded-3 flex-shrink-0"
-                 style="width:60px;height:50px;object-fit:cover">
+              {{ nb_en_attente }} annonce{{ nb_en_attente|pluralize }} à valider
             {% else %}
-            <div class="rounded-3 flex-shrink-0 d-flex align-items-center
-                        justify-content-center"
-                 style="width:60px;height:50px;background:var(--gray-100)">
-              <svg data-lucide="home"
-                   style="width:20px;height:20px;color:var(--gray-300)">
-              </svg>
-            </div>
+              Tout est à jour
             {% endif %}
-            {% endwith %}
-
-            <div class="flex-grow-1 overflow-hidden">
-              <div class="fw-semibold small text-truncate">
-                {{ logement.titre }}
-              </div>
-              <div class="text-muted d-flex align-items-center gap-1"
-                   style="font-size:.73rem">
-                <svg data-lucide="map-pin"
-                     style="width:11px;height:11px;color:var(--primary)">
-                </svg>
-                {{ logement.ville.nom }}
-                &nbsp;·&nbsp;
-                <svg data-lucide="user"
-                     style="width:11px;height:11px">
-                </svg>
-                {{ logement.bailleur.get_full_name }}
-              </div>
-              <div class="fw-bold"
-                   style="font-size:.85rem;color:var(--primary);margin-top:2px">
-                {{ logement.prix_formate }}
-              </div>
-            </div>
-
-            <div class="d-flex gap-2 flex-shrink-0">
-              <form method="post"
-                    action="{% url 'logements:admin_valider' logement.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="valider">
-                <button type="submit"
-                        class="btn btn-sm"
-                        style="background:#d1fae5;color:#065f46;
-                               border:none;font-size:.75rem;
-                               font-weight:600;padding:.3rem .75rem;
-                               border-radius:var(--radius-sm)">
-                  Valider
-                </button>
-              </form>
-              <form method="post"
-                    action="{% url 'logements:admin_valider' logement.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="rejeter">
-                <button type="submit"
-                        class="btn btn-sm"
-                        style="background:#fee2e2;color:#991b1b;
-                               border:none;font-size:.75rem;
-                               font-weight:600;padding:.3rem .75rem;
-                               border-radius:var(--radius-sm)">
-                  Rejeter
-                </button>
-              </form>
-              <a href="{% url 'logements:detail' logement.slug %}"
-                 target="_blank"
-                 class="btn btn-sm btn-outline-secondary"
-                 style="font-size:.75rem;padding:.3rem .65rem">
-                <svg data-lucide="eye" style="width:14px;height:14px"></svg>
-              </a>
-            </div>
-
-          </div>
-          {% empty %}
-          <div class="text-center py-4 text-muted small">
-            <svg data-lucide="check-circle"
-                 style="width:32px;height:32px;color:#10b981;
-                        display:block;margin:0 auto .5rem">
-            </svg>
-            Aucune annonce en attente. Tout est validé !
-          </div>
-          {% endfor %}
+          </p>
         </div>
       </div>
 
-      <!-- Derniers logements -->
-      <div class="card border-0 shadow-sm rounded-4 mt-4">
-        <div class="card-header bg-white border-bottom py-3 rounded-top-4
-                    d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
-            <svg data-lucide="building"
-                 style="width:18px;height:18px;color:var(--primary)">
-            </svg>
-            Dernières annonces
-          </h5>
-          <a href="{% url 'accounts:admin_logements' %}"
-             class="text-primary small fw-semibold text-decoration-none">
-            Voir toutes
+      <div class="adm-hero-pills">
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="user-check"></svg></div>
+          <div><div class="adm-pill-val">{{ nb_bailleurs }}</div><div class="adm-pill-lbl">Bailleurs</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="user"></svg></div>
+          <div><div class="adm-pill-val">{{ nb_locataires }}</div><div class="adm-pill-lbl">Locataires</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="calendar-check"></svg></div>
+          <div><div class="adm-pill-val">{{ nb_reservations }}</div><div class="adm-pill-lbl">Réservations</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="message-circle"></svg></div>
+          <div><div class="adm-pill-val">{{ nb_conversations }}</div><div class="adm-pill-lbl">Conversations</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Cartes statistiques ─── -->
+    {% with total=nb_logements|add:nb_en_attente %}
+    <div class="row g-3 mb-4">
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c1">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_utilisateurs|intcomma }}</div>
+              <div class="adm-stat-lbl">Utilisateurs actifs</div>
+            </div>
+            {% widthratio nb_bailleurs nb_utilisateurs 100 as p_bailleurs %}
+            <div class="adm-ring" style="--p:{{ p_bailleurs }}" title="Part de bailleurs">
+              <span>{{ p_bailleurs }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_bailleurs }}%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c2">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_logements|intcomma }}</div>
+              <div class="adm-stat-lbl">Logements publiés</div>
+            </div>
+            {% widthratio nb_logements total 100 as p_publies %}
+            <div class="adm-ring" style="--p:{{ p_publies }}" title="Part d'annonces publiées">
+              <span>{{ p_publies }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_publies }}%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c3">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_en_attente }}</div>
+              <div class="adm-stat-lbl">En attente de validation</div>
+            </div>
+            {% widthratio nb_en_attente total 100 as p_attente %}
+            <div class="adm-ring" style="--p:{{ p_attente }}" title="Part d'annonces en attente">
+              <span>{{ p_attente }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_attente }}%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c4">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_signalements }}</div>
+              <div class="adm-stat-lbl">Signalements</div>
+            </div>
+            {% widthratio nb_signalements nb_logements 100 as p_signal %}
+            <div class="adm-ring" style="--p:{{ p_signal }}" title="Signalements par rapport aux annonces publiées">
+              <span>{{ p_signal }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_signal }}%"></span></div>
+        </div>
+      </div>
+
+    </div>
+    {% endwith %}
+
+    <!-- ─── Graphique d'activité ─── -->
+    <div class="adm-card mb-4">
+      <div class="adm-card-head">
+        <h5>Activité de la plateforme</h5>
+        <div class="d-flex gap-2">
+          <a href="/admin/" class="btn btn-outline-secondary btn-sm" style="font-size:.75rem;color:var(--text-secondary)">
+            <svg data-lucide="settings" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px"></svg>Admin Django
+          </a>
+          <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE" class="btn btn-sm"
+             style="background:var(--adm-violet);color:#fff;font-size:.75rem">
+            <svg data-lucide="clock" style="width:14px;height:14px;margin-right:4px;vertical-align:-2px"></svg>Annonces en attente
+            {% if nb_en_attente > 0 %}<span class="badge bg-white ms-1" style="color:var(--adm-violet);font-size:.66rem">{{ nb_en_attente }}</span>{% endif %}
           </a>
         </div>
-        <div class="card-body p-0">
+      </div>
+      {% if chart_data %}
+        <div class="adm-chart-box"><canvas id="activityChart"></canvas></div>
+        {{ chart_data|json_script:"chart-data" }}
+      {% else %}
+        <div class="text-center text-muted small py-5">
+          Les données du graphique ne sont pas encore fournies par la vue.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ─── Actions rapides ─── -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:admin_utilisateurs' %}" class="adm-quick">
+          <div class="adm-quick-ico" style="background:rgba(99,102,241,.12)">
+            <svg data-lucide="users" style="color:#6366f1"></svg>
+          </div>
+          Utilisateurs
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:admin_logements' %}" class="adm-quick">
+          <div class="adm-quick-ico" style="background:rgba(16,185,129,.12)">
+            <svg data-lucide="building" style="color:#10b981"></svg>
+          </div>
+          Logements
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:admin_signalements' %}" class="adm-quick">
+          {% if nb_signalements > 0 %}<span class="adm-count" style="background:#ef4444">{{ nb_signalements }}</span>{% endif %}
+          <div class="adm-quick-ico" style="background:rgba(239,68,68,.12)">
+            <svg data-lucide="flag" style="color:#ef4444"></svg>
+          </div>
+          Signalements
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE" class="adm-quick">
+          {% if nb_en_attente > 0 %}<span class="adm-count" style="background:#f59e0b">{{ nb_en_attente }}</span>{% endif %}
+          <div class="adm-quick-ico" style="background:rgba(245,158,11,.14)">
+            <svg data-lucide="clock" style="color:#f59e0b"></svg>
+          </div>
+          Validations
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ─── Colonne gauche ─── -->
+      <div class="col-xl-7">
+
+        <!-- Annonces en attente -->
+        <div class="adm-card mb-4">
+          <div class="adm-card-head">
+            <h5>
+              <svg data-lucide="clock" style="width:18px;height:18px;color:#f59e0b"></svg>
+              Annonces en attente
+              {% if nb_en_attente > 0 %}
+              <span class="adm-badge" style="background:#fef3c7;color:#92400e">{{ nb_en_attente }}</span>
+              {% endif %}
+            </h5>
+            <a href="{% url 'accounts:admin_logements' %}?statut=EN_ATTENTE">Voir toutes</a>
+          </div>
+          <div>
+            {% for logement in annonces_attente %}
+            <div class="adm-row d-flex gap-3 align-items-center flex-wrap">
+
+              {% with photo=logement.get_photo_principale %}
+              {% if photo %}
+              <img src="{{ photo.image.url }}" class="rounded-3 flex-shrink-0"
+                   style="width:60px;height:50px;object-fit:cover" alt="">
+              {% else %}
+              <div class="rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center"
+                   style="width:60px;height:50px;background:rgba(109,63,232,.08)">
+                <svg data-lucide="home" style="width:20px;height:20px;color:var(--adm-violet)"></svg>
+              </div>
+              {% endif %}
+              {% endwith %}
+
+              <div class="flex-grow-1 overflow-hidden" style="min-width:140px">
+                <div class="fw-semibold small text-truncate" style="color:var(--text-primary)">{{ logement.titre }}</div>
+                <div class="text-muted d-flex align-items-center gap-1 flex-wrap" style="font-size:.73rem">
+                  <svg data-lucide="map-pin" style="width:11px;height:11px;color:var(--adm-violet)"></svg>
+                  {{ logement.ville.nom }}
+                  &nbsp;·&nbsp;
+                  <svg data-lucide="user" style="width:11px;height:11px"></svg>
+                  {{ logement.bailleur.get_full_name }}
+                </div>
+                <div class="fw-bold" style="font-size:.85rem;color:var(--adm-violet);margin-top:2px">
+                  {{ logement.prix_formate }}
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 flex-shrink-0">
+                <form method="post" action="{% url 'logements:admin_valider' logement.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="valider">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#d1fae5;color:#065f46;border:none;font-size:.75rem;font-weight:600;padding:.3rem .75rem;border-radius:8px">
+                    Valider
+                  </button>
+                </form>
+                <form method="post" action="{% url 'logements:admin_valider' logement.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="rejeter">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#fee2e2;color:#991b1b;border:none;font-size:.75rem;font-weight:600;padding:.3rem .75rem;border-radius:8px">
+                    Rejeter
+                  </button>
+                </form>
+                <a href="{% url 'logements:detail' logement.slug %}" target="_blank"
+                   class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;padding:.3rem .65rem">
+                  <svg data-lucide="eye" style="width:14px;height:14px"></svg>
+                </a>
+              </div>
+
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted small">
+              <svg data-lucide="check-circle" style="width:32px;height:32px;color:#10b981;display:block;margin:0 auto .5rem"></svg>
+              Aucune annonce en attente. Tout est validé !
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Dernières annonces -->
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h5>
+              <svg data-lucide="building" style="width:18px;height:18px;color:var(--adm-violet)"></svg>
+              Dernières annonces
+            </h5>
+            <a href="{% url 'accounts:admin_logements' %}">Voir toutes</a>
+          </div>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  <th>Logement</th>
-                  <th>Bailleur</th>
-                  <th>Prix</th>
-                  <th>Statut</th>
-                  <th>Vues</th>
-                </tr>
+                <tr><th>Logement</th><th>Bailleur</th><th>Prix</th><th>Statut</th><th>Vues</th></tr>
               </thead>
               <tbody>
                 {% for logement in derniers_logements %}
                 <tr>
                   <td>
-                    <div class="fw-semibold small">
-                      {{ logement.titre|truncatechars:30 }}
-                    </div>
-                    <div class="text-muted" style="font-size:.72rem">
-                      {{ logement.ville.nom }}
-                    </div>
+                    <div class="fw-semibold small">{{ logement.titre|truncatechars:30 }}</div>
+                    <div class="text-muted" style="font-size:.72rem">{{ logement.ville.nom }}</div>
                   </td>
-                  <td class="small text-muted">
-                    {{ logement.bailleur.get_full_name|truncatechars:20 }}
-                  </td>
-                  <td class="small fw-bold" style="color:var(--primary)">
-                    {{ logement.prix_formate }}
-                  </td>
+                  <td class="small text-muted">{{ logement.bailleur.get_full_name|truncatechars:20 }}</td>
+                  <td class="small fw-bold" style="color:var(--adm-violet)">{{ logement.prix_formate }}</td>
                   <td>
                     {% if logement.statut == 'PUBLIE' %}
-                    <span style="background:#d1fae5;color:#065f46;
-                                 font-size:.68rem;font-weight:700;
-                                 padding:2px 8px;border-radius:50px">
-                      Publié
-                    </span>
+                    <span class="adm-badge" style="background:#d1fae5;color:#065f46">Publié</span>
                     {% elif logement.statut == 'EN_ATTENTE' %}
-                    <span style="background:#fef3c7;color:#92400e;
-                                 font-size:.68rem;font-weight:700;
-                                 padding:2px 8px;border-radius:50px">
-                      En attente
-                    </span>
+                    <span class="adm-badge" style="background:#fef3c7;color:#92400e">En attente</span>
                     {% elif logement.statut == 'SUSPENDU' %}
-                    <span style="background:#fee2e2;color:#991b1b;
-                                 font-size:.68rem;font-weight:700;
-                                 padding:2px 8px;border-radius:50px">
-                      Suspendu
-                    </span>
+                    <span class="adm-badge" style="background:#fee2e2;color:#991b1b">Suspendu</span>
                     {% else %}
-                    <span style="background:var(--gray-100);color:var(--gray-500);
-                                 font-size:.68rem;font-weight:700;
-                                 padding:2px 8px;border-radius:50px">
-                      {{ logement.get_statut_display }}
-                    </span>
+                    <span class="adm-badge" style="background:rgba(148,163,184,.18);color:var(--text-secondary)">{{ logement.get_statut_display }}</span>
                     {% endif %}
                   </td>
-                  <td class="small text-muted">
-                    {{ logement.nb_vues|intcomma }}
-                  </td>
+                  <td class="small text-muted">{{ logement.nb_vues|intcomma }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -421,144 +534,156 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ─── Sidebar droite ────────────────────────── -->
-    <div class="col-lg-5">
+      <!-- ─── Colonne droite ─── -->
+      <div class="col-xl-5">
 
-      <!-- Derniers inscrits -->
-      <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom py-3 rounded-top-4
-                    d-flex justify-content-between align-items-center">
-          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
-            <svg data-lucide="user-plus"
-                 style="width:16px;height:16px;color:var(--primary)">
-            </svg>
-            Derniers inscrits
-          </h6>
-          <a href="{% url 'accounts:admin_utilisateurs' %}"
-             class="text-primary small fw-semibold text-decoration-none">
-            Voir tous
-          </a>
-        </div>
-        <div class="card-body p-0">
-          {% for u in derniers_users %}
-          <div class="p-3 border-bottom d-flex align-items-center gap-3">
-            <img src="{{ u.get_avatar_url }}"
-                 class="rounded-circle flex-shrink-0"
-                 width="38" height="38"
-                 style="object-fit:cover"
-                 alt="{{ u.get_full_name }}">
-            <div class="flex-grow-1 overflow-hidden">
-              <div class="fw-semibold small text-truncate">
-                {{ u.get_full_name }}
+        <!-- Derniers inscrits -->
+        <div class="adm-card mb-4">
+          <div class="adm-card-head">
+            <h6>
+              <svg data-lucide="user-plus" style="width:16px;height:16px;color:var(--adm-violet)"></svg>
+              Derniers inscrits
+            </h6>
+            <a href="{% url 'accounts:admin_utilisateurs' %}">Voir tous</a>
+          </div>
+          <div>
+            {% for u in derniers_users %}
+            <div class="adm-row d-flex align-items-center gap-3">
+              <img src="{{ u.get_avatar_url }}" class="rounded-circle flex-shrink-0"
+                   width="38" height="38" style="object-fit:cover" alt="{{ u.get_full_name }}">
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="fw-semibold small text-truncate" style="color:var(--text-primary)">{{ u.get_full_name }}</div>
+                <div class="text-muted text-truncate" style="font-size:.72rem">{{ u.email }}</div>
               </div>
-              <div class="text-muted text-truncate" style="font-size:.72rem">
-                {{ u.email }}
+              <div class="d-flex flex-column align-items-end gap-1">
+                <span class="adm-badge"
+                      style="{% if u.role == 'BAILLEUR' %}background:#dbeafe;color:#1e40af
+                             {% elif u.role == 'ADMIN' %}background:#fee2e2;color:#991b1b
+                             {% else %}background:rgba(109,63,232,.12);color:var(--adm-violet){% endif %}">
+                  {{ u.get_role_display }}
+                </span>
+                <span style="font-size:.65rem;color:var(--text-muted)">{{ u.date_inscription|date:"d/m/Y" }}</span>
               </div>
             </div>
-            <div class="d-flex flex-column align-items-end gap-1">
-              <span style="font-size:.65rem;font-weight:700;padding:2px 8px;
-                           border-radius:50px;white-space:nowrap;
-                           {% if u.role == 'BAILLEUR' %}background:#dbeafe;color:#1e40af
-                           {% elif u.role == 'ADMIN' %}background:#fee2e2;color:#991b1b
-                           {% else %}background:var(--primary-light);color:var(--primary){% endif %}">
-                {{ u.get_role_display }}
-              </span>
-              <span style="font-size:.65rem;color:var(--text-muted)">
-                {{ u.date_inscription|date:"d/m/Y" }}
-              </span>
-            </div>
+            {% empty %}
+            <div class="text-center py-3 text-muted small">Aucun utilisateur.</div>
+            {% endfor %}
           </div>
-          {% empty %}
-          <div class="text-center py-3 text-muted small">
-            Aucun utilisateur.
-          </div>
-          {% endfor %}
         </div>
+
+        <!-- Signalements récents -->
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h6>
+              <svg data-lucide="flag" style="width:16px;height:16px;color:#ef4444"></svg>
+              Signalements récents
+              {% if nb_signalements > 0 %}
+              <span class="adm-badge" style="background:#fee2e2;color:#991b1b">{{ nb_signalements }}</span>
+              {% endif %}
+            </h6>
+            <a href="{% url 'accounts:admin_signalements' %}">Voir tous</a>
+          </div>
+          <div>
+            {% for signal in signalements %}
+            <div class="adm-row">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <div class="fw-semibold small" style="color:var(--text-primary)">{{ signal.logement.titre|truncatechars:35 }}</div>
+                <span class="adm-badge ms-2 flex-shrink-0" style="background:#fee2e2;color:#991b1b">{{ signal.get_motif_display }}</span>
+              </div>
+              <div class="text-muted" style="font-size:.72rem">
+                Signalé par {{ signal.auteur.get_full_name }} · {{ signal.cree_le|timesince }}
+              </div>
+              <div class="d-flex gap-2 mt-2">
+                <form method="post" action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="traiter">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#d1fae5;color:#065f46;border:none;font-size:.72rem;font-weight:600;padding:.25rem .65rem;border-radius:8px">
+                    Traité
+                  </button>
+                </form>
+                <form method="post" action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="suspendre">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#fee2e2;color:#991b1b;border:none;font-size:.72rem;font-weight:600;padding:.25rem .65rem;border-radius:8px">
+                    Suspendre annonce
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted small">
+              <svg data-lucide="check-circle" style="width:28px;height:28px;color:#10b981;display:block;margin:0 auto .5rem"></svg>
+              Aucun signalement en attente.
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
       </div>
-
-      <!-- Signalements récents -->
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-white border-bottom py-3 rounded-top-4
-                    d-flex justify-content-between align-items-center">
-          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
-            <svg data-lucide="flag"
-                 style="width:16px;height:16px;color:#ef4444">
-            </svg>
-            Signalements récents
-            {% if nb_signalements > 0 %}
-            <span style="background:#fee2e2;color:#991b1b;
-                         font-size:.68rem;font-weight:700;
-                         padding:2px 8px;border-radius:50px">
-              {{ nb_signalements }}
-            </span>
-            {% endif %}
-          </h6>
-          <a href="{% url 'accounts:admin_signalements' %}"
-             class="text-primary small fw-semibold text-decoration-none">
-            Voir tous
-          </a>
-        </div>
-        <div class="card-body p-0">
-          {% for signal in signalements %}
-          <div class="p-3 border-bottom">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-              <div class="fw-semibold small">
-                {{ signal.logement.titre|truncatechars:35 }}
-              </div>
-              <span style="font-size:.65rem;font-weight:700;padding:2px 8px;
-                           border-radius:50px;background:#fee2e2;color:#991b1b;
-                           white-space:nowrap;flex-shrink:0;margin-left:.5rem">
-                {{ signal.get_motif_display }}
-              </span>
-            </div>
-            <div class="text-muted" style="font-size:.72rem">
-              Signalé par {{ signal.auteur.get_full_name }}
-              · {{ signal.cree_le|timesince }}
-            </div>
-            <div class="d-flex gap-2 mt-2">
-              <form method="post"
-                    action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="traiter">
-                <button type="submit"
-                        class="btn btn-sm"
-                        style="background:#d1fae5;color:#065f46;
-                               border:none;font-size:.72rem;
-                               font-weight:600;padding:.25rem .65rem;
-                               border-radius:var(--radius-sm)">
-                  Traité
-                </button>
-              </form>
-              <form method="post"
-                    action="{% url 'accounts:admin_traiter_signalement' signal.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="suspendre">
-                <button type="submit"
-                        class="btn btn-sm"
-                        style="background:#fee2e2;color:#991b1b;
-                               border:none;font-size:.72rem;
-                               font-weight:600;padding:.25rem .65rem;
-                               border-radius:var(--radius-sm)">
-                  Suspendre annonce
-                </button>
-              </form>
-            </div>
-          </div>
-          {% empty %}
-          <div class="text-center py-4 text-muted small">
-            <svg data-lucide="check-circle"
-                 style="width:28px;height:28px;color:#10b981;
-                        display:block;margin:0 auto .5rem">
-            </svg>
-            Aucun signalement en attente.
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  /* Sidebar mobile */
+  var side = document.getElementById('admSide');
+  var overlay = document.getElementById('admOverlay');
+  var btn = document.getElementById('admToggle');
+  function toggle(open) {
+    side.classList.toggle('open', open);
+    overlay.classList.toggle('show', open);
+  }
+  if (btn) btn.addEventListener('click', function () { toggle(!side.classList.contains('open')); });
+  overlay.addEventListener('click', function () { toggle(false); });
+
+  if (window.lucide) lucide.createIcons();
+
+  /* Graphique d'activité (barres + courbe) */
+  var dataEl = document.getElementById('chart-data');
+  var canvas = document.getElementById('activityChart');
+  if (!dataEl || !canvas || !window.Chart) return;
+  var d = JSON.parse(dataEl.textContent);
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var tick = dark ? '#94a3b8' : '#64748b';
+  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+
+  var ctx = canvas.getContext('2d');
+  var g = ctx.createLinearGradient(0, 0, 0, 300);
+  g.addColorStop(0, 'rgba(59,130,246,.25)');
+  g.addColorStop(1, 'rgba(59,130,246,0)');
+
+  new Chart(ctx, {
+    data: {
+      labels: d.labels,
+      datasets: [
+        { type: 'line', label: 'Inscriptions', data: d.inscrits,
+          borderColor: '#3b82f6', backgroundColor: g, fill: true,
+          tension: 0, pointRadius: 0, borderWidth: 2, order: 0 },
+        { type: 'bar', label: 'Annonces publiées', data: d.publiees,
+          backgroundColor: '#a855f7', borderRadius: 4, barPercentage: .6, order: 1 },
+        { type: 'bar', label: 'Annonces en attente', data: d.attente,
+          backgroundColor: '#22c55e', borderRadius: 4, barPercentage: .6, order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom',
+                 labels: { usePointStyle: true, pointStyle: 'circle', color: tick, boxWidth: 8 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tick } },
+        y: { beginAtZero: true, grid: { color: grid, borderDash: [3, 3] },
+             ticks: { color: tick, precision: 0 } }
+      }
+    }
+  });
+})();
+</script>
 {% endblock %}

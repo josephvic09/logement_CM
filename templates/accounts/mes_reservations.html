@@ -52,8 +52,20 @@
             <div class="d-flex flex-wrap gap-3 small">
               <span class="d-flex align-items-center gap-1">
                 <svg data-lucide="calendar" style="width:13px;height:13px;color:var(--primary)"></svg>
-                <strong>Du :</strong> {{ res.date_debut|date:"d/m/Y" }}
+                <strong>{% if res.type_demande == 'VISITE' %}Le :{% else %}Du :{% endif %}</strong> {{ res.date_debut|date:"d/m/Y" }}
               </span>
+              {% if res.heure_visite %}
+              <span class="d-flex align-items-center gap-1">
+                <svg data-lucide="clock" style="width:13px;height:13px;color:var(--primary)"></svg>
+                {{ res.heure_visite|time:"H\hi" }}
+              </span>
+              {% endif %}
+              {% if res.type_demande == 'VISITE' and res.lieu_rencontre %}
+              <span class="d-flex align-items-center gap-1">
+                <svg data-lucide="map-pin" style="width:13px;height:13px;color:var(--primary)"></svg>
+                <strong>Rendez-vous :</strong> {{ res.lieu_rencontre }}
+              </span>
+              {% endif %}
               {% if res.date_fin %}
               <span class="d-flex align-items-center gap-1">
                 <svg data-lucide="calendar" style="width:13px;height:13px;color:var(--primary)"></svg>
@@ -109,6 +121,16 @@
                 <svg data-lucide="message-circle" style="width:13px;height:13px;margin-right:4px"></svg>
                 Contacter
               </a>
+              {% if res.statut == 'EN_ATTENTE' or res.statut == 'CONFIRME' %}
+              <form method="post" action="{% url 'accounts:annuler_reservation' res.pk %}"
+                    onsubmit="return confirm('Annuler cette demande ?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100" style="font-size:.78rem"
+                        {% if res.paye %}disabled title="Frais payés : contactez le bailleur"{% endif %}>
+                  Annuler ma demande
+                </button>
+              </form>
+              {% endif %}
             </div>
           </div>
 

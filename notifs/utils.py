@@ -67,44 +67,88 @@ def notif_nouveau_favori(logement, utilisateur):
 
 def notif_nouvelle_reservation(reservation):
     """Notifier le bailleur d'une nouvelle demande."""
+    nom = reservation.locataire.get_full_name()
+    date = reservation.date_debut.strftime("%d/%m/%Y")
+    if reservation.type_demande == 'VISITE':
+        titre = 'Nouvelle demande de visite'
+        heure = reservation.heure_visite.strftime("%Hh%M") if reservation.heure_visite else ''
+        message = (f'{nom} souhaite visiter votre logement '
+                   f'"{reservation.logement.titre}" le {date}'
+                   f'{f" à {heure}" if heure else ""}.')
+    else:
+        titre = 'Nouvelle réservation'
+        message = (f'{nom} souhaite réserver votre logement '
+                   f'"{reservation.logement.titre}" à partir du {date}.')
     notifier(
         destinataire=reservation.logement.bailleur,
         type_notif='RESERVATION',
-        titre='Nouvelle demande de visite',
-        message=(
-            f'{reservation.locataire.get_full_name()} souhaite '
-            f'visiter votre logement "{reservation.logement.titre}" '
-            f'le {reservation.date_debut.strftime("%d/%m/%Y")}.'
-        ),
-        lien='/accounts/gerer-reservations/',
+        titre=titre,
+        message=message,
+        lien=f'/accounts/gerer-reservations/?type={reservation.type_demande}',
     )
 
 
 def notif_reservation_confirmee(reservation):
-    """Notifier le locataire que sa réservation est confirmée."""
+    """Notifier le locataire que sa demande de visite ou réservation est confirmée."""
+    detail = ''
+    if reservation.type_demande == 'VISITE':
+        titre, objet = 'Visite confirmée !', 'demande de visite'
+        quand = reservation.date_debut.strftime("%d/%m/%Y")
+        if reservation.heure_visite:
+            quand += f' à {reservation.heure_visite.strftime("%Hh%M")}'
+        detail = f' Rendez-vous le {quand}'
+        if reservation.lieu_rencontre:
+            detail += f' : {reservation.lieu_rencontre}'
+        detail += '.'
+    else:
+        titre, objet = 'Réservation confirmée !', 'réservation'
     notifier(
         destinataire=reservation.locataire,
         type_notif='RESERVATION',
-        titre='Visite confirmée !',
+        titre=titre,
         message=(
-            f'Votre demande de visite pour "{reservation.logement.titre}" '
-            f'a été confirmée par le bailleur.'
+            f'Votre {objet} pour "{reservation.logement.titre}" '
+            f'a été confirmée par le bailleur.{detail}'
         ),
         lien='/accounts/mes-reservations/',
     )
 
 
 def notif_reservation_refusee(reservation):
-    """Notifier le locataire que sa réservation est refusée."""
+    """Notifier le locataire que sa demande de visite ou réservation est refusée."""
+    objet = 'demande de visite' if reservation.type_demande == 'VISITE' else 'réservation'
     notifier(
         destinataire=reservation.locataire,
         type_notif='REJET',
         titre='Demande refusée',
         message=(
-            f'Votre demande pour "{reservation.logement.titre}" '
+            f'Votre {objet} pour "{reservation.logement.titre}" '
             f'n\'a pas pu être acceptée par le bailleur.'
         ),
         lien='/accounts/mes-reservations/',
+    )
+
+
+def notif_reservation_annulee(reservation, par_bailleur):
+    """Notifier l'autre partie qu'une demande de visite ou réservation est annulée."""
+    objet = 'demande de visite' if reservation.type_demande == 'VISITE' else 'réservation'
+    if par_bailleur:
+        destinataire = reservation.locataire
+        auteur = 'le bailleur'
+        lien = '/accounts/mes-reservations/'
+    else:
+        destinataire = reservation.logement.bailleur
+        auteur = reservation.locataire.get_full_name()
+        lien = f'/accounts/gerer-reservations/?type={reservation.type_demande}'
+    notifier(
+        destinataire=destinataire,
+        type_notif='REJET',
+        titre='Demande annulée',
+        message=(
+            f'La {objet} pour "{reservation.logement.titre}" '
+            f'a été annulée par {auteur}.'
+        ),
+        lien=lien,
     )
 
 

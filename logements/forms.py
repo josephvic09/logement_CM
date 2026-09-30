@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Logement, Avis, Reservation, Ville, Quartier
 
 
@@ -191,17 +192,43 @@ class AvisForm(forms.ModelForm):
         }
 
 
-class ReservationForm(forms.ModelForm):
+WIDGETS_DEMANDE = {
+    'date_debut': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    'date_fin':   forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    'message':    forms.Textarea(attrs={
+        'class': 'form-control',
+        'rows':  3,
+        'placeholder': 'Message au bailleur (optionnel)',
+    }),
+}
+
+
+class VisiteForm(forms.ModelForm):
     class Meta:
-        model  = Reservation
-        fields = ['type_demande', 'date_debut', 'date_fin', 'message']
+        model   = Reservation
+        fields  = ['date_debut', 'heure_visite', 'lieu_rencontre', 'message']
         widgets = {
-            'type_demande': forms.Select(attrs={'class': 'form-select'}),
-            'date_debut':   forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'date_fin':     forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'message':      forms.Textarea(attrs={
+            **WIDGETS_DEMANDE,
+            'heure_visite': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'lieu_rencontre': forms.TextInput(attrs={
                 'class': 'form-control',
-                'rows':  3,
-                'placeholder': 'Message au bailleur (optionnel)',
+                'placeholder': 'Devant le logement (par défaut)',
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['heure_visite'].required = True
+
+    def clean_date_debut(self):
+        date = self.cleaned_data['date_debut']
+        if date < timezone.localdate():
+            raise forms.ValidationError("La date de visite ne peut pas être passée.")
+        return date
+
+
+class ReservationForm(forms.ModelForm):
+    class Meta:
+        model   = Reservation
+        fields  = ['date_debut', 'date_fin', 'message']
+        widgets = WIDGETS_DEMANDE

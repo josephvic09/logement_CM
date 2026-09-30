@@ -221,4 +221,30 @@
     </div>
   </div>
 </section>
+{% block extra_js %}
+<script>
+const telInput = document.getElementById('id_telephone');
+if (telInput) {
+  // Pré-remplir avec +237 au focus si vide
+  telInput.addEventListener('focus', function () {
+    if (!this.value) this.value = '+237';
+  });
+  // Empêcher la suppression du +237
+  telInput.addEventListener('keydown', function (e) {
+    if (this.value.length <= 4 &&
+        (e.key === 'Backspace' || e.key === 'Delete')) {
+      e.preventDefault();
+    }
+  });
+  // Retirer les caractères non autorisés
+  telInput.addEventListener('input', function () {
+    let val = this.value.replace(/[^\d+]/g, '');
+    if (!val.startsWith('+237')) val = '+237' + val.replace(/\+/g, '');
+    if (val.length > 13) val = val.slice(0, 13);
+    this.value = val;
+  });
+}
+</script>
+{% endblock %}
+ 
 {% endblock %}

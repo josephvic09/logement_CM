@@ -471,10 +471,11 @@ function initMap() {
   });
 
   // Tuile carte
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19,
-  }).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
+  referrerPolicy: 'strict-origin-when-cross-origin',
+}).addTo(map);
 
   // Groupe clusters
   clusterGroup = L.markerClusterGroup({

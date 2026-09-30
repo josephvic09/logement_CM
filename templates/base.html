@@ -3,36 +3,28 @@
 <html lang="fr" data-theme="light">
 <head>
   <!-- PWA -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#6366f1">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LogementCM">
-<link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LogementCM">
+  <link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-
-
-
   <title>{% block title %}LogementCM{% endblock %} | LogementCM 🏠</title>
   <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-  {% load static %}
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
   <style>
-    /* ═══════════════════════════════════════════════════════════════
-       DARK MODE — variables CSS globales
-       La classe [data-theme="dark"] sur <html> active le mode sombre.
-       Toutes les pages héritent automatiquement.
-    ═══════════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════
+       VARIABLES DARK / LIGHT MODE
+    ═══════════════════════════════════════════════ */
     :root {
       --bg-body:        #ffffff;
       --bg-card:        #ffffff;
@@ -46,12 +38,11 @@
       --border-color:   #e2e8f0;
       --shadow-color:   rgba(0,0,0,.08);
       --navbar-border:  rgba(0,0,0,.06);
-      --dropdown-shadow: 0 10px 40px rgba(0,0,0,.12);
+      --dropdown-shadow:0 10px 40px rgba(0,0,0,.12);
       --link-color:     #64748b;
       --link-hover:     #1e1b3a;
       --hr-color:       rgba(255,255,255,.1);
     }
-
     [data-theme="dark"] {
       --bg-body:        #0f0f13;
       --bg-card:        #1a1a24;
@@ -65,27 +56,70 @@
       --border-color:   #2d2d3d;
       --shadow-color:   rgba(0,0,0,.4);
       --navbar-border:  rgba(255,255,255,.06);
-      --dropdown-shadow: 0 10px 40px rgba(0,0,0,.6);
+      --dropdown-shadow:0 10px 40px rgba(0,0,0,.6);
       --link-color:     #94a3b8;
       --link-hover:     #f1f5f9;
       --hr-color:       rgba(255,255,255,.06);
     }
 
-    /* ─── Application des variables ──────────────────────────────── */
     body {
       background-color: var(--bg-body) !important;
       color: var(--text-primary) !important;
       transition: background-color .25s ease, color .25s ease;
+      /* espace en bas sur mobile pour la bottom nav */
+      padding-bottom: 0;
     }
+    @media (max-width: 991.98px) {
+      body { padding-bottom: 64px; }
+    }
+
+    /* ── Navbar ───────────────────────────────────── */
     .navbar {
       background: var(--bg-navbar) !important;
       border-bottom: 1px solid var(--navbar-border) !important;
       transition: background .25s ease;
+      padding: .5rem 0;
     }
     .nav-link { color: var(--link-color) !important; }
     .nav-link:hover { color: var(--link-hover) !important; }
     .navbar-brand { color: var(--text-primary) !important; }
 
+    /* Masquer les liens texte sur mobile (gardés dans bottom nav) */
+    @media (max-width: 991.98px) {
+      .nav-links-desktop { display: none !important; }
+      .nav-search { max-width: 200px; }
+    }
+
+    /* ── Avatar style Google ────────────────────────
+       Cercle coloré avec initiales (fallback si pas de photo)
+    ─────────────────────────────────────────────── */
+    .google-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700;
+      color: white; flex-shrink: 0;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .google-avatar:hover {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.2);
+    }
+    .google-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
+    }
+    .google-avatar-initials {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: .85rem; font-weight: 700;
+      color: white;
+    }
+
+    /* ── Dropdown ─────────────────────────────────── */
     .dropdown-menu {
       background: var(--bg-dropdown) !important;
       border: 1px solid var(--border-color) !important;
@@ -96,6 +130,37 @@
     .dropdown-divider { border-color: var(--border-color) !important; }
     .dropdown-header { color: var(--text-muted) !important; }
 
+    /* ── Google Account dropdown header ─────────── */
+    .google-account-header {
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .google-account-info .name {
+      font-weight: 600; font-size: .9rem;
+      color: var(--text-primary);
+    }
+    .google-account-info .email {
+      font-size: .75rem; color: var(--text-muted);
+    }
+    .google-account-info .manage-btn {
+      display: inline-block;
+      margin-top: .35rem;
+      padding: .25rem .7rem;
+      border: 1px solid var(--border-color);
+      border-radius: 99px;
+      font-size: .72rem; font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: .15s;
+    }
+    .google-account-info .manage-btn:hover {
+      background: var(--bg-input);
+      border-color: #6366f1;
+      color: #6366f1;
+    }
+
+    /* ── Formulaires ──────────────────────────────── */
     .card, .rounded-4, .shadow-sm {
       background: var(--bg-card) !important;
       border-color: var(--border-color) !important;
@@ -117,27 +182,96 @@
     .alert { background: var(--bg-card) !important; border-color: var(--border-color) !important; }
     footer { background: var(--bg-footer) !important; }
 
+    /* ── Dark mode overrides ──────────────────────── */
+    [data-theme="dark"] body, [data-theme="dark"] main {
+      background-color: #0f0f13 !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .card, [data-theme="dark"] .card-body,
+    [data-theme="dark"] .card-header, [data-theme="dark"] .card-footer {
+      background-color: #1a1a24 !important;
+      border-color: #2d2d3d !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .bg-white, [data-theme="dark"] .bg-light,
+    [data-theme="dark"] .rounded-3, [data-theme="dark"] .rounded-4,
+    [data-theme="dark"] .shadow-sm, [data-theme="dark"] .shadow {
+      background-color: #1a1a24 !important;
+      border-color: #2d2d3d !important;
+    }
+    [data-theme="dark"] .form-control, [data-theme="dark"] .form-select,
+    [data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="email"],
+    [data-theme="dark"] input[type="password"], [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] input[type="search"], [data-theme="dark"] textarea,
+    [data-theme="dark"] select {
+      background-color: #1e1e2a !important;
+      color: #f1f5f9 !important;
+      border-color: #2d2d3d !important;
+    }
+    [data-theme="dark"] .form-control::placeholder,
+    [data-theme="dark"] textarea::placeholder { color: #64748b !important; }
+    [data-theme="dark"] .form-control:focus, [data-theme="dark"] .form-select:focus {
+      background-color: #1e1e2a !important;
+      color: #f1f5f9 !important;
+      border-color: #6366f1 !important;
+    }
+    [data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,
+    [data-theme="dark"] h4,[data-theme="dark"] h5,[data-theme="dark"] h6 {
+      color: #f1f5f9 !important;
+    }
     [data-theme="dark"] .nav-search .form-control {
       background: #1e1e2a !important;
       color: #f1f5f9 !important;
       border-color: #2d2d3d !important;
     }
-    [data-theme="dark"] .btn-outline-secondary {
-      color: #94a3b8 !important;
+    [data-theme="dark"] .dropdown-menu {
+      background-color: #1a1a24 !important;
       border-color: #2d2d3d !important;
     }
+    [data-theme="dark"] .dropdown-item { color: #f1f5f9 !important; }
+    [data-theme="dark"] .dropdown-item:hover { background-color: #1e1e2a !important; }
     [data-theme="dark"] .modal-content {
-      background: #1a1a24 !important;
+      background-color: #1a1a24 !important;
+      color: #f1f5f9 !important;
+      border-color: #2d2d3d !important;
+    }
+    [data-theme="dark"] .table { color: #f1f5f9 !important; }
+    [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(255,255,255,.03) !important;
       color: #f1f5f9 !important;
     }
-    [data-theme="dark"] .table {
-      color: var(--text-primary) !important;
+    [data-theme="dark"] .alert {
+      background-color: #1a1a24 !important;
+      border-color: #2d2d3d !important;
+      color: #f1f5f9 !important;
     }
-    [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
-      background: rgba(255,255,255,.03) !important;
+    [data-theme="dark"] .alert-success {
+      background-color: rgba(16,185,129,.1) !important;
+      border-color: rgba(16,185,129,.3) !important;
+      color: #34d399 !important;
+    }
+    [data-theme="dark"] .alert-danger {
+      background-color: rgba(239,68,68,.1) !important;
+      border-color: rgba(239,68,68,.3) !important;
+      color: #f87171 !important;
+    }
+    [data-theme="dark"] .pagination .page-link {
+      background-color: #1a1a24 !important;
+      border-color: #2d2d3d !important;
+      color: #94a3b8 !important;
+    }
+    [data-theme="dark"] .pagination .page-item.active .page-link {
+      background-color: #6366f1 !important;
+      border-color: #6366f1 !important;
+      color: white !important;
+    }
+    [data-theme="dark"] ::-webkit-scrollbar { width: 10px; }
+    [data-theme="dark"] ::-webkit-scrollbar-track { background: #0f0f13; }
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+      background: #2d2d3d; border-radius: 5px;
     }
 
-    /* ─── Toggle button ──────────────────────────────────────────── */
+    /* ── Toggle dark mode ─────────────────────────── */
     .dark-toggle {
       width: 36px; height: 36px;
       border-radius: 50%;
@@ -148,353 +282,97 @@
       cursor: pointer; transition: all .2s ease;
       flex-shrink: 0;
     }
-    .dark-toggle:hover {
-      border-color: #6366f1;
-      color: #6366f1;
-      background: #eef2ff;
-    }
-    [data-theme="dark"] .dark-toggle:hover {
-      background: #1e1e35;
-    }
+    .dark-toggle:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
+    [data-theme="dark"] .dark-toggle:hover { background: #1e1e35; }
     .dark-toggle svg { width: 16px; height: 16px; }
     .icon-sun  { display: none; }
     .icon-moon { display: block; }
     [data-theme="dark"] .icon-sun  { display: block; }
     [data-theme="dark"] .icon-moon { display: none; }
-  
 
-  
-  /* ═══════════════════════════════════════════════════════════════
-     DARK MODE GLOBAL - S'applique à TOUS les templates automatiquement
-     ═══════════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════
+       BOTTOM NAVIGATION — mobile only (≤ 992px)
+    ═══════════════════════════════════════════════ */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: var(--bg-navbar);
+      border-top: 1px solid var(--border-color);
+      z-index: 1030;
+      box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+    }
+    @media (max-width: 991.98px) {
+      .bottom-nav { display: flex; }
+    }
+    .bottom-nav-inner {
+      display: flex; align-items: center;
+      justify-content: space-around;
+      width: 100%; height: 100%;
+      padding: 0 .5rem;
+    }
+    .bn-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; flex: 1; padding: .5rem .25rem;
+      text-decoration: none; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; transition: .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bn-item svg { width: 22px; height: 22px; }
+    .bn-item span { font-size: .62rem; font-weight: 500; }
+    .bn-item.active { color: #6366f1; }
+    .bn-item:not(.active):hover { color: var(--text-secondary); }
+    .bn-item .bn-badge {
+      position: absolute; top: 6px;
+      background: #ef4444; color: white;
+      width: 16px; height: 16px; border-radius: 50%;
+      font-size: .55rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin-left: 14px; margin-top: -4px;
+    }
+    .bn-item-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
-  /* ─── Application des variables à tous les éléments Bootstrap ─── */
-  [data-theme="dark"] body,
-  [data-theme="dark"] main {
-    background-color: #0f0f13 !important;
-    color: #f1f5f9 !important;
-  }
+    /* ── Chatbot flottant ─────────────────────────── */
+    @keyframes chatbotFloat {
+      0%,100% { transform: translateY(0); filter: drop-shadow(0 4px 15px rgba(16,163,127,.4)); }
+      50%      { transform: translateY(-8px); filter: drop-shadow(0 8px 25px rgba(16,163,127,.6)); }
+    }
+    #chatbotFloatingBtn { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; cursor: grab; z-index: 998; user-select: none; }
+    @media (max-width: 991.98px) { #chatbotFloatingBtn { bottom: 76px; width: 48px; height: 48px; } }
+    #chatbotFloatingBtn:active { cursor: grabbing; animation: none; }
+    #chatbotFloatingBtn.dragging { cursor: grabbing; animation: none; transition: none; }
 
-  /* ─── Toutes les cartes ──────────────────────────────────────── */
-  [data-theme="dark"] .card,
-  [data-theme="dark"] .card-body,
-  [data-theme="dark"] .card-header,
-  [data-theme="dark"] .card-footer {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
+    /* ── Transitions globales ─────────────────────── */
+    body, main, .card, .card-body, .modal-content, .dropdown-menu,
+    .form-control, .table, .alert, .navbar, .bottom-nav {
+      transition: background-color .3s ease, color .3s ease, border-color .3s ease !important;
+    }
 
-  /* ─── Tous les conteneurs blancs ─────────────────────────────── */
-  [data-theme="dark"] .bg-white,
-  [data-theme="dark"] .bg-light,
-  [data-theme="dark"] .rounded-3,
-  [data-theme="dark"] .rounded-4,
-  [data-theme="dark"] .shadow-sm,
-  [data-theme="dark"] .shadow,
-  [data-theme="dark"] .border {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Tous les formulaires ───────────────────────────────────── */
-  [data-theme="dark"] .form-control,
-  [data-theme="dark"] .form-select,
-  [data-theme="dark"] input[type="text"],
-  [data-theme="dark"] input[type="email"],
-  [data-theme="dark"] input[type="password"],
-  [data-theme="dark"] input[type="number"],
-  [data-theme="dark"] input[type="search"],
-  [data-theme="dark"] input[type="tel"],
-  [data-theme="dark"] input[type="url"],
-  [data-theme="dark"] textarea,
-  [data-theme="dark"] select {
-    background-color: #1e1e2a !important;
-    color: #f1f5f9 !important;
-    border-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .form-control::placeholder,
-  [data-theme="dark"] textarea::placeholder {
-    color: #64748b !important;
-  }
-
-  [data-theme="dark"] .form-control:focus,
-  [data-theme="dark"] .form-select:focus {
-    background-color: #1e1e2a !important;
-    color: #f1f5f9 !important;
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
-  }
-
-  /* ─── Tous les textes ────────────────────────────────────────── */
-  [data-theme="dark"] h1,
-  [data-theme="dark"] h2,
-  [data-theme="dark"] h3,
-  [data-theme="dark"] h4,
-  [data-theme="dark"] h5,
-  [data-theme="dark"] h6,
-  [data-theme="dark"] p,
-  [data-theme="dark"] span,
-  [data-theme="dark"] div,
-  [data-theme="dark"] label {
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Liens ──────────────────────────────────────────────────── */
-  [data-theme="dark"] a {
-    color: #94a3b8 !important;
-  }
-
-  [data-theme="dark"] a:hover {
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Boutons outline ────────────────────────────────────────── */
-  [data-theme="dark"] .btn-outline-secondary,
-  [data-theme="dark"] .btn-outline-primary,
-  [data-theme="dark"] .btn-outline-danger,
-  [data-theme="dark"] .btn-outline-success {
-    color: #94a3b8 !important;
-    border-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .btn-outline-secondary:hover,
-  [data-theme="dark"] .btn-outline-primary:hover {
-    background-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Tables ─────────────────────────────────────────────────── */
-  [data-theme="dark"] .table {
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .table-hover > tbody > tr:hover {
-    background-color: rgba(255, 255, 255, 0.075) !important;
-  }
-
-  [data-theme="dark"] .table thead th {
-    border-bottom-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .table td,
-  [data-theme="dark"] .table th {
-    border-color: #2d2d3d !important;
-  }
-
-  /* ─── Modals ─────────────────────────────────────────────────── */
-  [data-theme="dark"] .modal-content {
-    background-color: #1a1a24 !important;
-    color: #f1f5f9 !important;
-    border-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .modal-header,
-  [data-theme="dark"] .modal-footer {
-    border-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .modal-title {
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Dropdowns ──────────────────────────────────────────────── */
-  [data-theme="dark"] .dropdown-menu {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
-  }
-
-  [data-theme="dark"] .dropdown-item {
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .dropdown-item:hover {
-    background-color: #1e1e2a !important;
-  }
-
-  [data-theme="dark"] .dropdown-header {
-    color: #64748b !important;
-  }
-
-  [data-theme="dark"] .dropdown-divider {
-    border-color: #2d2d3d !important;
-  }
-
-  /* ─── Listes ─────────────────────────────────────────────────── */
-  [data-theme="dark"] .list-group-item {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .list-group-item:hover {
-    background-color: #1e1e2a !important;
-  }
-
-  /* ─── Alertes ────────────────────────────────────────────────── */
-  [data-theme="dark"] .alert {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .alert-success {
-    background-color: rgba(16, 185, 129, 0.1) !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
-    color: #34d399 !important;
-  }
-
-  [data-theme="dark"] .alert-danger {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-    color: #f87171 !important;
-  }
-
-  /* ─── Badges ─────────────────────────────────────────────────── */
-  [data-theme="dark"] .badge {
-    border: 1px solid #2d2d3d !important;
-  }
-
-  /* ─── Pagination ─────────────────────────────────────────────── */
-  [data-theme="dark"] .pagination .page-link {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #94a3b8 !important;
-  }
-
-  [data-theme="dark"] .pagination .page-link:hover {
-    background-color: #1e1e2a !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .pagination .page-item.active .page-link {
-    background-color: #6366f1 !important;
-    border-color: #6366f1 !important;
-    color: white !important;
-  }
-
-  /* ─── Breadcrumbs ────────────────────────────────────────────── */
-  [data-theme="dark"] .breadcrumb {
-    background-color: transparent !important;
-  }
-
-  [data-theme="dark"] .breadcrumb-item {
-    color: #64748b !important;
-  }
-
-  [data-theme="dark"] .breadcrumb-item.active {
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Nav tabs ───────────────────────────────────────────────── */
-  [data-theme="dark"] .nav-tabs {
-    border-bottom-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .nav-tabs .nav-link {
-    color: #94a3b8 !important;
-  }
-
-  [data-theme="dark"] .nav-tabs .nav-link:hover {
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  [data-theme="dark"] .nav-tabs .nav-link.active {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Progress bars ──────────────────────────────────────────── */
-  [data-theme="dark"] .progress {
-    background-color: #1e1e2a !important;
-  }
-
-  /* ─── Tooltips ───────────────────────────────────────────────── */
-  [data-theme="dark"] .tooltip-inner {
-    background-color: #1e1e2a !important;
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Popovers ───────────────────────────────────────────────── */
-  [data-theme="dark"] .popover {
-    background-color: #1a1a24 !important;
-    border-color: #2d2d3d !important;
-  }
-
-  [data-theme="dark"] .popover-body {
-    color: #f1f5f9 !important;
-  }
-
-  /* ─── Images et contraste ────────────────────────────────────── */
-  [data-theme="dark"] img {
-    filter: brightness(0.9);
-  }
-
-  [data-theme="dark"] .navbar-brand img,
-  [data-theme="dark"] .sidebar-user-avatar,
-  [data-theme="dark"] .rounded-circle {
-    filter: none !important;
-  }
-
-  /* ─── Transitions fluides ────────────────────────────────────── */
-  body, main, .card, .card-body, .modal-content, .dropdown-menu,
-  .form-control, .table, .list-group-item, .alert, .navbar,
-  .chatbot-page, .chatbot-sidebar, .msg-row {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-  }
-
-  /* ─── Scrollbars ─────────────────────────────────────────────── */
-  [data-theme="dark"] ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  [data-theme="dark"] ::-webkit-scrollbar-track {
-    background: #0f0f13;
-  }
-
-  [data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: #2d2d3d;
-    border-radius: 5px;
-  }
-
-  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: #3d3d4d;
-  }
-</style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 
   {% block extra_css %}{% endblock %}
 </head>
+
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('[PWA] Service Worker enregistré'))
-        .catch(err => console.warn('[PWA] Erreur SW :', err));
-    });
-  }
+  (function () {
+    var t = localStorage.getItem('lcm_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
 </script>
+
 <body>
 
-<!-- ─── Navbar ────────────────────────────────────────────────── -->
+<!-- ═══════════════════════════════════════════════
+     NAVBAR DESKTOP
+═══════════════════════════════════════════════ -->
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
 
     <!-- Logo -->
     <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'logements:accueil' %}">
-      <img src="{% static 'images/logo.png' %}"
-           alt="LogementCM"
+      <img src="{% static 'images/logo.png' %}" alt="LogementCM"
            style="height:52px;width:52px;object-fit:contain;border-radius:50%;margin:-12px 0">
       <span style="font-weight:800;font-size:1.1rem">
         Logement<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);
@@ -504,52 +382,99 @@
       </span>
     </a>
 
-    <!-- Toggle mobile -->
-    <button class="navbar-toggler border-0" type="button"
-            data-bs-toggle="collapse" data-bs-target="#navMain">
-      <svg data-lucide="menu" style="width:22px;height:22px"></svg>
-    </button>
+    <!-- Icônes mobiles (droite du logo) -->
+    <div class="d-flex align-items-center gap-2 d-lg-none ms-auto">
+      <!-- Dark mode mobile -->
+      <button class="dark-toggle" onclick="toggleDark()" title="Thème">
+        <svg data-lucide="sun"  class="icon-sun"></svg>
+        <svg data-lucide="moon" class="icon-moon"></svg>
+      </button>
+      {% if user.is_authenticated %}
+      <!-- Avatar Google mobile -->
+      <div class="google-avatar dropdown" id="mobileAvatarWrap">
+        <a href="#" data-bs-toggle="dropdown" class="google-avatar" style="background:{{ user.get_avatar_color|default:'#6366f1' }}">
+          {% if user.avatar %}
+            <img src="{{ user.get_avatar_url }}" alt="{{ user.prenom }}">
+          {% else %}
+            <div class="google-avatar-initials" style="background:{{ user.get_avatar_color|default:'#6366f1' }}">
+              {{ user.prenom|first|upper }}{{ user.nom|first|upper }}
+            </div>
+          {% endif %}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-0" style="min-width:280px">
+          <!-- En-tête Google style -->
+          <li>
+            <div class="google-account-header">
+              <div class="google-avatar" style="width:48px;height:48px;background:{{ user.get_avatar_color|default:'#6366f1' }}">
+                {% if user.avatar %}
+                  <img src="{{ user.get_avatar_url }}" alt="{{ user.prenom }}">
+                {% else %}
+                  <div class="google-avatar-initials" style="font-size:1.1rem;background:{{ user.get_avatar_color|default:'#6366f1' }}">
+                    {{ user.prenom|first|upper }}{{ user.nom|first|upper }}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="google-account-info">
+                <div class="name">{{ user.get_full_name }}</div>
+                <div class="email">{{ user.email }}</div>
+                <a href="{% url 'accounts:profil' %}" class="manage-btn">Gérer le compte</a>
+              </div>
+            </div>
+          </li>
+          <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:tableau_de_bord' %}">
+            <svg data-lucide="layout-dashboard" style="width:16px;height:16px"></svg>Tableau de bord</a></li>
+          <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:profil' %}">
+            <svg data-lucide="user" style="width:16px;height:16px"></svg>Mon profil</a></li>
+          {% if user.est_bailleur %}
+          <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'logements:creer' %}">
+            <svg data-lucide="plus-circle" style="width:16px;height:16px"></svg>Publier une annonce</a></li>
+          {% endif %}
+          <li><hr class="dropdown-divider my-1"></li>
+          <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="{% url 'accounts:deconnexion' %}">
+            <svg data-lucide="log-out" style="width:16px;height:16px"></svg>Déconnexion</a></li>
+        </ul>
+      </div>
+      {% else %}
+      <a href="{% url 'accounts:connexion' %}" class="btn btn-primary btn-sm px-3">Connexion</a>
+      {% endif %}
+    </div>
 
+    <!-- Navbar desktop (collapse sur mobile) -->
     <div class="collapse navbar-collapse" id="navMain">
 
-      <!-- Recherche rapide -->
-      <form class="d-flex mx-auto nav-search"
-            action="{% url 'logements:recherche' %}" method="get">
+      <!-- Recherche -->
+      <form class="d-flex mx-auto nav-search" action="{% url 'logements:recherche' %}" method="get">
         <div class="input-group input-group-sm">
           <input class="form-control" type="search" name="q"
-                 placeholder="Rechercher un logement..."
-                 value="{{ request.GET.q }}">
+                 placeholder="Rechercher un logement..." value="{{ request.GET.q }}">
           <button class="btn btn-primary" type="submit">
             <svg data-lucide="search" style="width:15px;height:15px"></svg>
           </button>
         </div>
       </form>
 
-      <ul class="navbar-nav ms-auto align-items-center gap-1">
+      <ul class="navbar-nav ms-auto align-items-center gap-1 nav-links-desktop">
 
         <li class="nav-item">
           <a class="nav-link" href="{% url 'logements:recherche' %}">
-            <svg data-lucide="search" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            <svg data-lucide="search" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px"></svg>
             Rechercher
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link" href="{% url 'logements:carte' %}">
-            <svg data-lucide="map" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            <svg data-lucide="map" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px"></svg>
             Carte
           </a>
         </li>
 
         {% if user.is_authenticated %}
-
         <li class="nav-item">
           <a class="nav-link" href="{% url 'chat:chatbot' %}">
-            <svg data-lucide="bot" style="width:16px;height:16px;margin-right:5px;vertical-align:-2px"></svg>
+            <svg data-lucide="bot" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px"></svg>
             Chatbot IA
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link" href="{% url 'chat:conversations' %}">
             <svg data-lucide="message-circle" style="width:20px;height:20px;vertical-align:-4px"></svg>
@@ -558,38 +483,22 @@
 
         <!-- Notifications -->
         <li class="nav-item dropdown">
-          <a class="nav-link position-relative" href="#"
-             data-bs-toggle="dropdown" id="notifDropdown"
-             onclick="chargerNotifications()">
+          <a class="nav-link position-relative" href="#" data-bs-toggle="dropdown" onclick="chargerNotifications()">
             <svg data-lucide="bell" style="width:20px;height:20px;vertical-align:-4px"></svg>
-            <span id="notifBadge"
-                  style="position:absolute;top:-2px;right:-4px;
-                         background:#ef4444;color:white;
-                         width:18px;height:18px;border-radius:50%;
-                         font-size:.65rem;font-weight:800;
-                         display:none;align-items:center;
-                         justify-content:center;line-height:1">0</span>
+            <span id="notifBadge" style="position:absolute;top:-2px;right:-4px;background:#ef4444;color:white;width:18px;height:18px;border-radius:50%;font-size:.65rem;font-weight:800;display:none;align-items:center;justify-content:center;line-height:1">0</span>
           </a>
-          <div class="dropdown-menu dropdown-menu-end p-0 shadow border-0 rounded-4"
-               style="width:360px;max-height:500px;overflow:hidden">
+          <div class="dropdown-menu dropdown-menu-end p-0 shadow border-0 rounded-4" style="width:360px;max-height:500px;overflow:hidden">
             <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
               <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
-                <svg data-lucide="bell" style="width:16px;height:16px;color:var(--primary)"></svg>
+                <svg data-lucide="bell" style="width:16px;height:16px;color:#6366f1"></svg>
                 Notifications
-                <span id="notifCountBadge"
-                      style="background:var(--primary-light);color:var(--primary);
-                             font-size:.7rem;font-weight:700;
-                             padding:1px 8px;border-radius:50px;display:none">0</span>
+                <span id="notifCountBadge" style="background:#eef2ff;color:#6366f1;font-size:.7rem;font-weight:700;padding:1px 8px;border-radius:50px;display:none">0</span>
               </h6>
-              <button onclick="toutMarquerLu()"
-                      class="btn btn-link btn-sm p-0 text-muted"
-                      style="font-size:.75rem;text-decoration:none">Tout lire</button>
+              <button onclick="toutMarquerLu()" class="btn btn-link btn-sm p-0 text-muted" style="font-size:.75rem;text-decoration:none">Tout lire</button>
             </div>
             <div id="notifList" style="max-height:380px;overflow-y:auto">
               <div class="text-center py-4 text-muted small" id="notifLoading">
-                <div style="width:20px;height:20px;border:2px solid var(--primary);
-                            border-top-color:transparent;border-radius:50%;
-                            animation:spin .6s linear infinite;margin:0 auto .5rem"></div>
+                <div style="width:20px;height:20px;border:2px solid #6366f1;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto .5rem"></div>
                 Chargement...
               </div>
             </div>
@@ -602,101 +511,88 @@
           </div>
         </li>
 
-        <!-- ── Dark mode toggle ────────────────────────────────── -->
+        <!-- Toggle dark desktop -->
         <li class="nav-item">
-          <button class="dark-toggle" id="darkToggle"
-                  onclick="toggleDark()" title="Changer de thème">
+          <button class="dark-toggle" onclick="toggleDark()" title="Changer de thème">
             <svg data-lucide="sun"  class="icon-sun"></svg>
             <svg data-lucide="moon" class="icon-moon"></svg>
           </button>
         </li>
 
-        <!-- Menu profil -->
+        <!-- Avatar Google desktop -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-             href="#" data-bs-toggle="dropdown">
-            <img src="{{ user.get_avatar_url }}" class="rounded-circle"
-                 width="32" height="32" style="object-fit:cover">
-            <span class="d-none d-md-inline">{{ user.prenom }}</span>
+          <a class="nav-link d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+            <div class="google-avatar" style="background:{{ user.get_avatar_color|default:'#6366f1' }}">
+              {% if user.avatar %}
+                <img src="{{ user.get_avatar_url }}" alt="{{ user.prenom }}">
+              {% else %}
+                <div class="google-avatar-initials" style="background:{{ user.get_avatar_color|default:'#6366f1' }}">
+                  {{ user.prenom|first|upper }}{{ user.nom|first|upper }}
+                </div>
+              {% endif %}
+            </div>
+            <span class="d-none d-xl-inline" style="font-size:.84rem;font-weight:500;color:var(--text-primary)">{{ user.prenom }}</span>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-2">
-            <li><h6 class="dropdown-header">{{ user.get_full_name }}</h6></li>
-            <li><hr class="dropdown-divider"></li>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-0" style="min-width:280px">
             <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                 href="{% url 'accounts:tableau_de_bord' %}">
-                <svg data-lucide="layout-dashboard" style="width:16px;height:16px"></svg>
-                Tableau de bord
-              </a>
+              <div class="google-account-header">
+                <div class="google-avatar" style="width:48px;height:48px;background:{{ user.get_avatar_color|default:'#6366f1' }}">
+                  {% if user.avatar %}
+                    <img src="{{ user.get_avatar_url }}" alt="{{ user.prenom }}">
+                  {% else %}
+                    <div class="google-avatar-initials" style="font-size:1.1rem;background:{{ user.get_avatar_color|default:'#6366f1' }}">
+                      {{ user.prenom|first|upper }}{{ user.nom|first|upper }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="google-account-info">
+                  <div class="name">{{ user.get_full_name }}</div>
+                  <div class="email">{{ user.email }}</div>
+                  <a href="{% url 'accounts:profil' %}" class="manage-btn">Gérer le compte</a>
+                </div>
+              </div>
             </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                 href="{% url 'accounts:profil' %}">
-                <svg data-lucide="user" style="width:16px;height:16px"></svg>
-                Mon profil
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                 href="{% url 'accounts:mes_favoris' %}">
-                <svg data-lucide="heart" style="width:16px;height:16px"></svg>
-                Mes favoris
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                 href="{% url 'accounts:mes_reservations' %}">
-                <svg data-lucide="calendar-check" style="width:16px;height:16px"></svg>
-                Mes réservations
-              </a>
-            </li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:tableau_de_bord' %}">
+              <svg data-lucide="layout-dashboard" style="width:16px;height:16px"></svg>Tableau de bord</a></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:profil' %}">
+              <svg data-lucide="user" style="width:16px;height:16px"></svg>Mon profil</a></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:mes_favoris' %}">
+              <svg data-lucide="heart" style="width:16px;height:16px"></svg>Mes favoris</a></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'accounts:mes_reservations' %}">
+              <svg data-lucide="calendar-check" style="width:16px;height:16px"></svg>Mes réservations</a></li>
             {% if user.est_bailleur %}
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                 href="{% url 'logements:creer' %}">
-                <svg data-lucide="plus-circle" style="width:16px;height:16px"></svg>
-                Publier une annonce
-              </a>
-            </li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2" href="{% url 'logements:creer' %}">
+              <svg data-lucide="plus-circle" style="width:16px;height:16px"></svg>Publier une annonce</a></li>
             {% endif %}
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
-                 href="{% url 'accounts:deconnexion' %}">
-                <svg data-lucide="log-out" style="width:16px;height:16px"></svg>
-                Déconnexion
-              </a>
-            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="{% url 'accounts:deconnexion' %}">
+              <svg data-lucide="log-out" style="width:16px;height:16px"></svg>Déconnexion</a></li>
           </ul>
         </li>
 
         {% else %}
 
-        <!-- ── Dark mode toggle (non connecté) ───────────────── -->
+        <!-- Toggle dark desktop (non connecté) -->
         <li class="nav-item">
-          <button class="dark-toggle" id="darkToggle"
-                  onclick="toggleDark()" title="Changer de thème">
+          <button class="dark-toggle" onclick="toggleDark()" title="Changer de thème">
             <svg data-lucide="sun"  class="icon-sun"></svg>
             <svg data-lucide="moon" class="icon-moon"></svg>
           </button>
         </li>
-
         <li class="nav-item">
           <a class="nav-link" href="{% url 'accounts:connexion' %}">Connexion</a>
         </li>
         <li class="nav-item">
-          <a class="btn btn-primary btn-sm px-3"
-             href="{% url 'accounts:inscription' %}">S'inscrire</a>
+          <a class="btn btn-primary btn-sm px-3" href="{% url 'accounts:inscription' %}">S'inscrire</a>
         </li>
 
         {% endif %}
-
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- ─── Messages Django ───────────────────────────────────────── -->
+<!-- Messages Django -->
 {% if messages %}
 <div class="container mt-3">
   {% for msg in messages %}
@@ -708,419 +604,158 @@
 </div>
 {% endif %}
 
-<!-- ─── Contenu principal ─────────────────────────────────────── -->
+<!-- Contenu -->
 <main>{% block content %}{% endblock %}</main>
 
-<!-- ─── Footer ───────────────────────────────────────────────── -->
+<!-- Footer -->
 <footer class="mt-5 py-5">
   <div class="container">
     <div class="row g-4">
-
       <div class="col-lg-4">
         <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
-          <img src="{% static 'images/logo.png' %}" alt="LogementCM"
-               style="height:32px;width:32px;object-fit:contain;border-radius:50%">
+          <img src="{% static 'images/logo.png' %}" alt="LogementCM" style="height:32px;width:32px;object-fit:contain;border-radius:50%">
           LogementCM
         </h5>
-        <p style="color:var(--gray-400);font-size:.875rem;line-height:1.7">
+        <p style="color:rgba(255,255,255,.6);font-size:.875rem;line-height:1.7">
           La plateforme intelligente de recherche de logements au Cameroun.
-          Trouvez votre chez-vous en quelques clics.
         </p>
         <div class="d-flex gap-3 mt-3">
-          <a href="#" style="color:var(--gray-400);transition:.2s"
-             onmouseover="this.style.color='#6366f1'"
-             onmouseout="this.style.color='var(--gray-400)'">
-            <svg data-lucide="facebook" style="width:20px;height:20px"></svg>
-          </a>
-          <a href="#" style="color:var(--gray-400);transition:.2s"
-             onmouseover="this.style.color='#6366f1'"
-             onmouseout="this.style.color='var(--gray-400)'">
-            <svg data-lucide="twitter" style="width:20px;height:20px"></svg>
-          </a>
-          <a href="#" style="color:var(--gray-400);transition:.2s"
-             onmouseover="this.style.color='#6366f1'"
-             onmouseout="this.style.color='var(--gray-400)'">
-            <svg data-lucide="instagram" style="width:20px;height:20px"></svg>
-          </a>
-          <a href="#" style="color:var(--gray-400);transition:.2s"
-             onmouseover="this.style.color='#25d366'"
-             onmouseout="this.style.color='var(--gray-400)'">
-            <svg data-lucide="message-circle" style="width:20px;height:20px"></svg>
-          </a>
+          <a href="#" style="color:rgba(255,255,255,.5);transition:.2s" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+            <svg data-lucide="facebook" style="width:20px;height:20px"></svg></a>
+          <a href="#" style="color:rgba(255,255,255,.5);transition:.2s" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+            <svg data-lucide="twitter" style="width:20px;height:20px"></svg></a>
+          <a href="#" style="color:rgba(255,255,255,.5);transition:.2s" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+            <svg data-lucide="instagram" style="width:20px;height:20px"></svg></a>
         </div>
       </div>
-
       <div class="col-lg-2 col-6">
         <h6 class="fw-semibold mb-3" style="color:white">Rechercher</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=LOCATION">À louer</a></li>
-          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=VENTE">À vendre</a></li>
-          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Yaoundé">Yaoundé</a></li>
-          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Douala">Douala</a></li>
-          <li class="mb-2"><a href="{% url 'logements:carte' %}">Carte interactive</a></li>
+        <ul class="list-unstyled" style="color:rgba(255,255,255,.6);font-size:.875rem">
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=LOCATION" style="color:rgba(255,255,255,.6)">À louer</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?type_offre=VENTE" style="color:rgba(255,255,255,.6)">À vendre</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Yaoundé" style="color:rgba(255,255,255,.6)">Yaoundé</a></li>
+          <li class="mb-2"><a href="{% url 'logements:recherche' %}?ville=Douala" style="color:rgba(255,255,255,.6)">Douala</a></li>
+          <li class="mb-2"><a href="{% url 'logements:carte' %}" style="color:rgba(255,255,255,.6)">Carte</a></li>
         </ul>
       </div>
-
       <div class="col-lg-2 col-6">
         <h6 class="fw-semibold mb-3" style="color:white">Compte</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="{% url 'accounts:inscription' %}">S'inscrire</a></li>
-          <li class="mb-2"><a href="{% url 'accounts:connexion' %}">Connexion</a></li>
-          <li class="mb-2"><a href="{% url 'chat:chatbot' %}">Chatbot IA</a></li>
+        <ul class="list-unstyled" style="color:rgba(255,255,255,.6);font-size:.875rem">
+          <li class="mb-2"><a href="{% url 'accounts:inscription' %}" style="color:rgba(255,255,255,.6)">S'inscrire</a></li>
+          <li class="mb-2"><a href="{% url 'accounts:connexion' %}" style="color:rgba(255,255,255,.6)">Connexion</a></li>
+          <li class="mb-2"><a href="{% url 'chat:chatbot' %}" style="color:rgba(255,255,255,.6)">Chatbot IA</a></li>
           {% if user.is_authenticated %}
-          <li class="mb-2"><a href="{% url 'accounts:mes_favoris' %}">Mes favoris</a></li>
-          <li class="mb-2"><a href="{% url 'accounts:mes_reservations' %}">Réservations</a></li>
+          <li class="mb-2"><a href="{% url 'accounts:mes_favoris' %}" style="color:rgba(255,255,255,.6)">Mes favoris</a></li>
+          <li class="mb-2"><a href="{% url 'accounts:mes_reservations' %}" style="color:rgba(255,255,255,.6)">Réservations</a></li>
           {% endif %}
         </ul>
       </div>
-
       <div class="col-lg-4">
         <h6 class="fw-semibold mb-3" style="color:white">Contact</h6>
-        <ul class="list-unstyled" style="color:var(--gray-400);font-size:.875rem">
+        <ul class="list-unstyled" style="color:rgba(255,255,255,.6);font-size:.875rem">
           <li class="mb-2 d-flex align-items-center gap-2">
-            <svg data-lucide="map-pin" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
-            Yaoundé, Cameroun
-          </li>
+            <svg data-lucide="map-pin" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>Yaoundé, Cameroun</li>
           <li class="mb-2 d-flex align-items-center gap-2">
-            <svg data-lucide="phone" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
-            +237 653381189
-          </li>
+            <svg data-lucide="phone" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>+237 653381189</li>
           <li class="mb-2 d-flex align-items-center gap-2">
-            <svg data-lucide="mail" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>
-            khaliploic@gmail.com
-          </li>
+            <svg data-lucide="mail" style="width:15px;height:15px;color:#6366f1;flex-shrink:0"></svg>khaliploic@gmail.com</li>
         </ul>
-        <span class="badge mt-2"
-              style="background:var(--primary-light);color:var(--primary);font-size:.72rem;font-weight:700">
+        <span class="badge mt-2" style="background:#1e1b4b;color:#a5b4fc;font-size:.72rem;font-weight:700">
           IAI Cameroun — Projet fin d'études
         </span>
       </div>
-
     </div>
-
-    <hr style="border-color:var(--hr-color);margin-top:2rem">
-    <div class="d-flex justify-content-between flex-wrap gap-2"
-         style="font-size:.8rem;color:var(--gray-400)">
+    <hr style="border-color:rgba(255,255,255,.08);margin-top:2rem">
+    <div class="d-flex justify-content-between flex-wrap gap-2" style="font-size:.8rem;color:rgba(255,255,255,.5)">
       <span>© 2026 LogementCM</span>
       <span>Développé avec ❤️ pour le Cameroun 🇨🇲</span>
     </div>
   </div>
 </footer>
-<!-- Bouton flottant Chatbot IA déplaçable -->
-{% if request.resolver_match.url_name != 'chatbot' %}
-<div id="chatbotFloatingBtn"
-     style="position:fixed;
-            bottom:100px;
-            right:20px;
-            width:60px;
-            height:60px;
-            cursor:grab;
-            z-index:998;
-            user-select:none;
-            transition:transform .2s ease"
-     onmousedown="startDrag(event)"
-     ontouchstart="startDragTouch(event)"
-     title="Assistant IA LogementCM - Déplacez-moi !">
-  
-  <!-- Image du logo -->
-  <img src="{% static 'images/chatbot.jpg' %}"
-       alt="Chatbot IA"
-       style="width:100%;
-              height:100%;
-              border-radius:50%;
-              object-fit:cover;
-              box-shadow:0 4px 20px rgba(16,163,127,.4);
-              pointer-events:none;
-              animation:chatbotFloat 3s ease-in-out infinite"
-       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2310a37f%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22%3E🤖%3C/text%3E%3C/svg%3E'">
-  
-  <!-- Badge IA -->
-  <span style="position:absolute;
-               top:-5px;
-               right:-5px;
-               width:22px;
-               height:22px;
-               background:#ef4444;
-               color:white;
-               border-radius:50%;
-               font-size:10px;
-               font-weight:800;
-               display:flex;
-               align-items:center;
-               justify-content:center;
-               border:2px solid white;
-               pointer-events:none">
-    IA
-  </span>
-</div>
 
-<!-- Tooltip -->
-<div id="chatbotTooltip"
-     style="position:fixed;
-            background:#202123;
-            color:white;
-            padding:8px 12px;
-            border-radius:8px;
-            font-size:13px;
-            font-weight:500;
-            opacity:0;
-            pointer-events:none;
-            transition:opacity .3s ease;
-            z-index:999;
-            white-space:nowrap">
-  💬 Parler à l'IA
+<!-- ═══════════════════════════════════════════════
+     BOTTOM NAVIGATION — visible seulement sur mobile
+═══════════════════════════════════════════════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+
+    <a href="{% url 'logements:accueil' %}" class="bn-item {% if request.resolver_match.url_name == 'accueil' %}active{% endif %}">
+      <div class="bn-item-wrap">
+        <svg data-lucide="home"></svg>
+      </div>
+      <span>Accueil</span>
+    </a>
+
+    <a href="{% url 'logements:recherche' %}" class="bn-item {% if request.resolver_match.url_name == 'recherche' %}active{% endif %}">
+      <div class="bn-item-wrap">
+        <svg data-lucide="search"></svg>
+      </div>
+      <span>Recherche</span>
+    </a>
+
+    {% if user.is_authenticated %}
+    <a href="{% url 'chat:chatbot' %}" class="bn-item {% if request.resolver_match.url_name == 'chatbot' %}active{% endif %}">
+      <div class="bn-item-wrap">
+        <svg data-lucide="bot"></svg>
+      </div>
+      <span>IA</span>
+    </a>
+
+    <a href="{% url 'accounts:mes_favoris' %}" class="bn-item {% if request.resolver_match.url_name == 'mes_favoris' %}active{% endif %}">
+      <div class="bn-item-wrap">
+        <svg data-lucide="heart"></svg>
+      </div>
+      <span>Favoris</span>
+    </a>
+
+    <a href="{% url 'accounts:tableau_de_bord' %}" class="bn-item {% if request.resolver_match.url_name == 'tableau_de_bord' %}active{% endif %}">
+      <div class="bn-item-wrap">
+        <svg data-lucide="layout-dashboard"></svg>
+      </div>
+      <span>Dashboard</span>
+    </a>
+
+    {% else %}
+
+    <a href="{% url 'chat:chatbot' %}" class="bn-item">
+      <div class="bn-item-wrap">
+        <svg data-lucide="bot"></svg>
+      </div>
+      <span>IA</span>
+    </a>
+
+    <a href="{% url 'logements:carte' %}" class="bn-item">
+      <div class="bn-item-wrap">
+        <svg data-lucide="map"></svg>
+      </div>
+      <span>Carte</span>
+    </a>
+
+    <a href="{% url 'accounts:inscription' %}" class="bn-item">
+      <div class="bn-item-wrap">
+        <svg data-lucide="user-plus"></svg>
+      </div>
+      <span>Inscription</span>
+    </a>
+
+    {% endif %}
+
+  </div>
+</nav>
+
+<!-- Bouton chatbot flottant -->
+{% if request.resolver_match.url_name != 'chatbot' %}
+<div id="chatbotFloatingBtn" onmousedown="startDrag(event)" ontouchstart="startDragTouch(event)" title="Assistant IA">
+  <img src="{% static 'images/chatbot.jpg' %}" alt="Chatbot IA"
+       style="width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 4px 20px rgba(16,163,127,.4);pointer-events:none;animation:chatbotFloat 3s ease-in-out infinite"
+       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%236366f1%22/%3E%3Ctext x=%2250%22 y=%2268%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22%3E🤖%3C/text%3E%3C/svg%3E'">
+  <span style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#ef4444;color:white;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid white;pointer-events:none">IA</span>
 </div>
 {% endif %}
 
-<style>
-  @keyframes chatbotFloat {
-    0%, 100% {
-      transform: translateY(0);
-      filter: drop-shadow(0 4px 15px rgba(16,163,127,.4));
-    }
-    50% {
-      transform: translateY(-8px);
-      filter: drop-shadow(0 8px 25px rgba(16,163,127,.6));
-    }
-  }
-  
-  #chatbotFloatingBtn:hover {
-    transform: scale(1.1) !important;
-    cursor: grab;
-  }
-  
-  #chatbotFloatingBtn:active {
-    cursor: grabbing;
-    animation: none;
-  }
-  
-  #chatbotFloatingBtn.dragging {
-    cursor: grabbing;
-    animation: none;
-    transition: none;
-  }
-</style>
-
-<script>
-  // ═══════════════════════════════════════════════════════════════
-  // Bouton chatbot déplaçable
-  // ═══════════════════════════════════════════════════════════════
-  
-  {% if request.resolver_match.url_name != 'chatbot' %}
-  
-  let isDragging = false;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
-  let clickStartTime = 0;
-  let clickStartX = 0;
-  let clickStartY = 0;
-  
-  const chatbotBtn = document.getElementById('chatbotFloatingBtn');
-  const chatbotTooltip = document.getElementById('chatbotTooltip');
-  
-  if (chatbotBtn && chatbotTooltip) {
-    
-    // Charger la position sauvegardée
-    function loadChatbotPosition() {
-      const saved = localStorage.getItem('chatbot_position');
-      if (saved) {
-        try {
-          const pos = JSON.parse(saved);
-          chatbotBtn.style.left = 'auto';
-          chatbotBtn.style.right = pos.right + 'px';
-          chatbotBtn.style.bottom = pos.bottom + 'px';
-          chatbotBtn.style.top = 'auto';
-        } catch(e) {
-          console.error('Erreur position chatbot:', e);
-        }
-      }
-    }
-    
-    // Sauvegarder la position
-    function saveChatbotPosition() {
-      const rect = chatbotBtn.getBoundingClientRect();
-      const pos = {
-        right: window.innerWidth - rect.right,
-        bottom: window.innerHeight - rect.bottom
-      };
-      localStorage.setItem('chatbot_position', JSON.stringify(pos));
-    }
-    
-    // Démarrer le drag (souris)
-    function startDrag(e) {
-      if (e.button === 2) return;
-      e.preventDefault();
-      
-      const rect = chatbotBtn.getBoundingClientRect();
-      dragOffsetX = e.clientX - rect.left;
-      dragOffsetY = e.clientY - rect.top;
-      
-      clickStartTime = Date.now();
-      clickStartX = e.clientX;
-      clickStartY = e.clientY;
-      
-      isDragging = false;
-      chatbotBtn.classList.add('dragging');
-      
-      document.addEventListener('mousemove', onDrag);
-      document.addEventListener('mouseup', stopDrag);
-    }
-    
-    // Démarrer le drag (tactile)
-    function startDragTouch(e) {
-      const touch = e.touches[0];
-      const rect = chatbotBtn.getBoundingClientRect();
-      
-      dragOffsetX = touch.clientX - rect.left;
-      dragOffsetY = touch.clientY - rect.top;
-      
-      clickStartTime = Date.now();
-      clickStartX = touch.clientX;
-      clickStartY = touch.clientY;
-      
-      isDragging = false;
-      chatbotBtn.classList.add('dragging');
-      
-      document.addEventListener('touchmove', onDragTouch, { passive: false });
-      document.addEventListener('touchend', stopDragTouch);
-    }
-    
-    // Pendant le drag (souris)
-    function onDrag(e) {
-      e.preventDefault();
-      
-      const deltaX = Math.abs(e.clientX - clickStartX);
-      const deltaY = Math.abs(e.clientY - clickStartY);
-      
-      if (deltaX > 5 || deltaY > 5) {
-        isDragging = true;
-      }
-      
-      if (isDragging) {
-        chatbotBtn.style.left = (e.clientX - dragOffsetX) + 'px';
-        chatbotBtn.style.top = (e.clientY - dragOffsetY) + 'px';
-        chatbotBtn.style.right = 'auto';
-        chatbotBtn.style.bottom = 'auto';
-        
-        chatbotTooltip.style.opacity = '0';
-        chatbotBtn.dataset.dragged = 'true';
-      }
-    }
-    
-    // Pendant le drag (tactile)
-    function onDragTouch(e) {
-      e.preventDefault();
-      
-      const touch = e.touches[0];
-      const deltaX = Math.abs(touch.clientX - clickStartX);
-      const deltaY = Math.abs(touch.clientY - clickStartY);
-      
-      if (deltaX > 5 || deltaY > 5) {
-        isDragging = true;
-      }
-      
-      if (isDragging) {
-        chatbotBtn.style.left = (touch.clientX - dragOffsetX) + 'px';
-        chatbotBtn.style.top = (touch.clientY - dragOffsetY) + 'px';
-        chatbotBtn.style.right = 'auto';
-        chatbotBtn.style.bottom = 'auto';
-        
-        chatbotTooltip.style.opacity = '0';
-        chatbotBtn.dataset.dragged = 'true';
-      }
-    }
-    
-    // Arrêter le drag (souris)
-    function stopDrag(e) {
-      document.removeEventListener('mousemove', onDrag);
-      document.removeEventListener('mouseup', stopDrag);
-      
-      chatbotBtn.classList.remove('dragging');
-      
-      if (isDragging) {
-        saveChatbotPosition();
-        setTimeout(() => {
-          delete chatbotBtn.dataset.dragged;
-        }, 100);
-      }
-      
-      isDragging = false;
-    }
-    
-    // Arrêter le drag (tactile)
-    function stopDragTouch(e) {
-      document.removeEventListener('touchmove', onDragTouch);
-      document.removeEventListener('touchend', stopDragTouch);
-      
-      chatbotBtn.classList.remove('dragging');
-      
-      if (isDragging) {
-        saveChatbotPosition();
-        setTimeout(() => {
-          delete chatbotBtn.dataset.dragged;
-        }, 100);
-      }
-      
-      isDragging = false;
-    }
-    
-    // Gérer le clic sur le bouton
-    chatbotBtn.addEventListener('click', function(e) {
-      if (chatbotBtn.dataset.dragged === 'true') {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      
-      window.location.href = '{% url 'chat:chatbot' %}';
-    });
-    
-    // Afficher le tooltip au survol
-    chatbotBtn.addEventListener('mouseenter', function() {
-      if (!isDragging) {
-        updateTooltipPosition();
-        chatbotTooltip.style.opacity = '1';
-      }
-    });
-    
-    chatbotBtn.addEventListener('mouseleave', function() {
-      chatbotTooltip.style.opacity = '0';
-    });
-    
-    // Mettre à jour la position du tooltip
-    function updateTooltipPosition() {
-      const rect = chatbotBtn.getBoundingClientRect();
-      chatbotTooltip.style.left = (rect.left - 40) + 'px';
-      chatbotTooltip.style.top = (rect.top - 50) + 'px';
-      chatbotTooltip.style.right = 'auto';
-      chatbotTooltip.style.bottom = 'auto';
-    }
-    
-    // Charger la position au démarrage
-    loadChatbotPosition();
-    
-    // Ajuster la position lors du redimensionnement
-    window.addEventListener('resize', function() {
-      if (!isDragging) {
-        loadChatbotPosition();
-      }
-    });
-  }
-  
-  {% endif %}
-</script>
-
 <!-- Bouton retour en haut -->
 <button id="btnTop"
-        style="position:fixed;bottom:2rem;right:1.5rem;
-               width:44px;height:44px;
-               background:linear-gradient(135deg,#6366f1,#8b5cf6);
-               border:none;border-radius:50%;color:white;
-               display:none;align-items:center;justify-content:center;
-               cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);
-               z-index:999;transition:.2s"
-        onmouseover="this.style.transform='translateY(-3px)'"
-        onmouseout="this.style.transform=''"
+        style="position:fixed;bottom:5rem;right:1.5rem;width:42px;height:42px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:50%;color:white;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);z-index:997;transition:.2s"
         onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <svg data-lucide="arrow-up" style="width:20px;height:20px"></svg>
 </button>
@@ -1133,12 +768,7 @@
 {% block extra_js %}{% endblock %}
 
 <script>
-  // ─── Dark mode ──────────────────────────────────────────────────
-  (function () {
-    const saved = localStorage.getItem('lcm_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-  })();
-
+  // ── Dark mode ──────────────────────────────────
   function toggleDark() {
     const html    = document.documentElement;
     const current = html.getAttribute('data-theme');
@@ -1148,11 +778,110 @@
     if (window.lucide) lucide.createIcons();
   }
 
-  // ─── Retour en haut ─────────────────────────────────────────────
+  // ── Retour en haut ─────────────────────────────
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('btnTop');
     if (btn) btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
   });
+
+  // ── Chatbot draggable ──────────────────────────
+  {% if request.resolver_match.url_name != 'chatbot' %}
+  let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+  let clickStartX = 0, clickStartY = 0;
+  const chatbotBtn = document.getElementById('chatbotFloatingBtn');
+
+  if (chatbotBtn) {
+    function loadPos() {
+      const saved = localStorage.getItem('chatbot_position');
+      if (saved) {
+        try {
+          const pos = JSON.parse(saved);
+          chatbotBtn.style.left = 'auto';
+          chatbotBtn.style.right = pos.right + 'px';
+          chatbotBtn.style.bottom = pos.bottom + 'px';
+          chatbotBtn.style.top = 'auto';
+        } catch(e) {}
+      }
+    }
+    function savePos() {
+      const rect = chatbotBtn.getBoundingClientRect();
+      localStorage.setItem('chatbot_position', JSON.stringify({
+        right: window.innerWidth - rect.right,
+        bottom: window.innerHeight - rect.bottom
+      }));
+    }
+    function startDrag(e) {
+      if (e.button === 2) return;
+      e.preventDefault();
+      const rect = chatbotBtn.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      clickStartX = e.clientX; clickStartY = e.clientY;
+      isDragging = false;
+      chatbotBtn.classList.add('dragging');
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', stopDrag);
+    }
+    function startDragTouch(e) {
+      const t = e.touches[0];
+      const rect = chatbotBtn.getBoundingClientRect();
+      dragOffsetX = t.clientX - rect.left;
+      dragOffsetY = t.clientY - rect.top;
+      clickStartX = t.clientX; clickStartY = t.clientY;
+      isDragging = false;
+      chatbotBtn.classList.add('dragging');
+      document.addEventListener('touchmove', onDragTouch, { passive: false });
+      document.addEventListener('touchend', stopDragTouch);
+    }
+    function onDrag(e) {
+      if (Math.abs(e.clientX-clickStartX)>5 || Math.abs(e.clientY-clickStartY)>5) isDragging = true;
+      if (isDragging) {
+        chatbotBtn.style.left = (e.clientX - dragOffsetX) + 'px';
+        chatbotBtn.style.top = (e.clientY - dragOffsetY) + 'px';
+        chatbotBtn.style.right = chatbotBtn.style.bottom = 'auto';
+        chatbotBtn.dataset.dragged = 'true';
+      }
+    }
+    function onDragTouch(e) {
+      e.preventDefault();
+      const t = e.touches[0];
+      if (Math.abs(t.clientX-clickStartX)>5 || Math.abs(t.clientY-clickStartY)>5) isDragging = true;
+      if (isDragging) {
+        chatbotBtn.style.left = (t.clientX - dragOffsetX) + 'px';
+        chatbotBtn.style.top = (t.clientY - dragOffsetY) + 'px';
+        chatbotBtn.style.right = chatbotBtn.style.bottom = 'auto';
+        chatbotBtn.dataset.dragged = 'true';
+      }
+    }
+    function stopDrag() {
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      chatbotBtn.classList.remove('dragging');
+      if (isDragging) { savePos(); setTimeout(() => delete chatbotBtn.dataset.dragged, 100); }
+      isDragging = false;
+    }
+    function stopDragTouch() {
+      document.removeEventListener('touchmove', onDragTouch);
+      document.removeEventListener('touchend', stopDragTouch);
+      chatbotBtn.classList.remove('dragging');
+      if (isDragging) { savePos(); setTimeout(() => delete chatbotBtn.dataset.dragged, 100); }
+      isDragging = false;
+    }
+    chatbotBtn.addEventListener('click', function(e) {
+      if (chatbotBtn.dataset.dragged === 'true') { e.preventDefault(); return; }
+      window.location.href = '{% url "chat:chatbot" %}';
+    });
+    loadPos();
+  }
+  {% endif %}
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.warn('[PWA] SW:', err));
+    });
+  }
 </script>
 
 </body>

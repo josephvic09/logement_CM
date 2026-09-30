@@ -14,11 +14,6 @@ from pathlib import Path
 from decouple import config          # ← ajouter cette ligne
 from datetime import timedelta       # ← ajouter cette ligne
 from django.utils.translation import gettext_lazy as _
-import os
-import dj_database_url
-from pathlib import Path
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -71,6 +66,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# Referrer-Policy : Django envoie 'same-origin' par défaut, ce qui empêche l'envoi du
+# Referer aux tuiles OpenStreetMap (erreur 403 "Access blocked")
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 # Autorise Flutter (en dev, on autorise tout)
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -105,19 +104,18 @@ WSGI_APPLICATION = 'logement_cm.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-    )
-}
-
-# Configuration SSL spécifique à Aiven pour la production
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default']['OPTIONS'] = {
-        'ssl': {
-            'ca': os.path.join(BASE_DIR, 'ca.pem'),
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME', default='logement'),
+        'USER': config('DB_USER', default='root'),
+        'PASSWORD': config('DB_PASSWORD', default='Amandinevic12'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
+}
 
 
 # Password validation
@@ -203,8 +201,11 @@ ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 # Email (console pour le développement)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Paiements Mobile Money (Campay) — démo par défaut, production : https://www.campay.net/api
+CAMPAY_BASE_URL  = config('CAMPAY_BASE_URL', default='https://demo.campay.net/api')
+CAMPAY_TOKEN     = config('CAMPAY_TOKEN', default='')      # jeton d'accès permanent (recommandé)
+CAMPAY_USERNAME  = config('CAMPAY_USERNAME', default='')   # sinon : identifiants de l'application
+CAMPAY_PASSWORD  = config('CAMPAY_PASSWORD', default='')
+
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 GROQ_MODEL   = "openai/gpt-oss-120b"
-
-
- 

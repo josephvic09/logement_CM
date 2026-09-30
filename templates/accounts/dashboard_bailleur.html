@@ -1,997 +1,680 @@
 {% extends 'base.html' %}
-{% load static humanize %}
-{% block title %}Tableau de bord Bailleur{% endblock %}
+{% load humanize %}
+{% block title %}Espace bailleur — LogementCM{% endblock %}
 
-{% block content %}
-
+{% block extra_css %}
 <style>
-  /* ─── Variables de design ─────────────────────────────── */
+  /* ═══════════ Dashboard bailleur — même style que l'admin ═══════════ */
   :root {
-    --primary: #4F46E5;
-    --primary-light: #EEF2FF;
-    --primary-dark: #3730A3;
-    --secondary: #8B5CF6;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --gray-50: #F8FAFC;
-    --gray-100: #F1F5F9;
-    --gray-200: #E2E8F0;
-    --gray-300: #CBD5E1;
-    --gray-400: #94A3B8;
-    --gray-500: #64748B;
-    --gray-600: #475569;
-    --gray-700: #334155;
-    --gray-800: #1E293B;
-    --gray-900: #0F172A;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
-    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.03);
-    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02);
-    --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.15);
-    --radius: 16px;
-    --radius-sm: 10px;
-    --radius-xs: 8px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --adm-bg: #f4f5fb;
+    --adm-card: #ffffff;
+    --adm-line: #e8eaf3;
+    --adm-violet: #6d3fe8;
+    --adm-violet-2: #7c4dff;
+    --adm-side-w: 255px;
+  }
+  [data-theme="dark"] {
+    --adm-bg: #0f0f13;
+    --adm-card: #1a1a24;
+    --adm-line: #2d2d3d;
   }
 
-  /* ─── En-tête ───────────────────────────────────────────── */
-  .dash-header {
-    margin-bottom: 2rem;
+  footer { display: none !important; }
+  .navbar .nav-search { display: none !important; }
+  .navbar .nav-links-desktop > li:nth-child(-n+5) { display: none !important; }
+
+  .adm-wrap { display: flex; align-items: flex-start; background: var(--adm-bg); min-height: calc(100vh - 70px); }
+
+  /* ── Sidebar ── */
+  .adm-side {
+    width: var(--adm-side-w); flex-shrink: 0;
+    position: sticky; top: 70px; align-self: flex-start;
+    height: calc(100vh - 70px); overflow-y: auto;
+    background: var(--adm-card); border-right: 1px solid var(--adm-line);
+    padding: 1.1rem .9rem 1.5rem; z-index: 1030;
+  }
+  .adm-side-label {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+    color: var(--adm-violet); background: rgba(109,63,232,.1);
+    padding: 4px 14px; border-radius: 50px; margin: .4rem 0 .7rem;
+  }
+  .adm-link {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .62rem .85rem; margin-bottom: 4px;
+    border-radius: 10px; text-decoration: none;
+    font-size: .86rem; font-weight: 500; color: var(--text-secondary); transition: .15s;
+  }
+  .adm-link svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .adm-link:hover { background: rgba(109,63,232,.08); color: var(--adm-violet); }
+  .adm-link.active {
+    background: linear-gradient(135deg, var(--adm-violet), var(--adm-violet-2));
+    color: #fff; box-shadow: 0 6px 16px rgba(109,63,232,.3);
+  }
+  .adm-link.logout:hover { background: rgba(239,68,68,.08); color: #ef4444; }
+  .adm-link .adm-count {
+    margin-left: auto; font-size: .68rem; font-weight: 700;
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #ef4444; color: #fff;
+  }
+  .adm-link .adm-count.warn { background: #f59e0b; }
+  .adm-link .adm-count.violet { background: var(--adm-violet); }
+  .adm-side-overlay { display: none; }
+
+  /* ── Zone principale ── */
+  .adm-main { flex: 1; min-width: 0; padding: 1.5rem 1.5rem 3rem; }
+
+  /* ── Bannière ── */
+  .adm-hero {
+    background: linear-gradient(120deg, #6d3fe8 0%, #7c4dff 60%, #8b5cf6 100%);
+    border-radius: 18px; color: #fff; padding: 1.4rem 1.6rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.5rem; flex-wrap: wrap; position: relative; overflow: hidden;
+  }
+  .adm-hero::after {
+    content: ""; position: absolute; right: -60px; top: -80px;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: rgba(255,255,255,.07); pointer-events: none;
+  }
+  .adm-hero-user { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
+  .adm-hero-avatar {
+    width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+    border: 3px solid rgba(255,255,255,.85); background: rgba(255,255,255,.2);
+  }
+  .adm-hero h2 { font-size: 1.35rem; font-weight: 800; margin: 0; color: #fff; }
+  .adm-hero p { margin: 0; font-size: .82rem; opacity: .8; }
+  .adm-hero-pills { display: flex; gap: 1.4rem; flex-wrap: wrap; position: relative; z-index: 1; }
+  .adm-pill { display: flex; align-items: center; gap: .6rem; }
+  .adm-pill-ico {
+    width: 40px; height: 40px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .adm-pill-ico svg { width: 19px; height: 19px; color: var(--adm-violet); }
+  .adm-pill-val { font-size: 1.1rem; font-weight: 800; line-height: 1.1; }
+  .adm-pill-lbl { font-size: .7rem; opacity: .8; }
+
+  /* ── Cartes statistiques dégradées ── */
+  .adm-stat {
+    border-radius: 14px; color: #fff; padding: 1.15rem 1.3rem 1rem;
+    position: relative; overflow: hidden; height: 100%;
+    box-shadow: 0 8px 22px rgba(0,0,0,.08);
+  }
+  .adm-stat.c1 { background: linear-gradient(135deg, #c84fbd, #d5559f); }
+  .adm-stat.c2 { background: linear-gradient(135deg, #9b59d6, #8f5ad0); }
+  .adm-stat.c3 { background: linear-gradient(135deg, #5b8def, #6b86ee); }
+  .adm-stat.c4 { background: linear-gradient(135deg, #17a2b8, #1cb5c4); }
+  .adm-stat-top { display: flex; justify-content: space-between; align-items: center; }
+  .adm-stat-val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .adm-stat-lbl { font-size: .8rem; opacity: .9; }
+  .adm-stat-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,.3); margin-top: .9rem; }
+  .adm-stat-bar span { display: block; height: 100%; border-radius: 4px; background: #fff; }
+
+  .adm-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+  .adm-ring::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(#fff calc(var(--p) * 1%), rgba(255,255,255,.3) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  }
+  .adm-ring span {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: .68rem; font-weight: 700;
   }
 
-  .dash-header .greeting {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--gray-900);
-    letter-spacing: -0.02em;
+  /* ── Cartes génériques ── */
+  .adm-card { background: var(--adm-card); border: 1px solid var(--adm-line); border-radius: 14px; overflow: hidden; }
+  .adm-card-head {
+    padding: .95rem 1.2rem; border-bottom: 1px solid var(--adm-line);
+    display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  }
+  .adm-card-head h5, .adm-card-head h6 {
+    margin: 0; font-weight: 700; font-size: .98rem; color: var(--text-primary);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .adm-card-head a { font-size: .78rem; font-weight: 600; color: var(--adm-violet); text-decoration: none; }
+  .adm-card .table { --bs-table-bg: transparent; color: var(--text-primary); }
+  .adm-card .table thead th {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-muted); font-weight: 700; border-bottom-color: var(--adm-line); padding: .7rem 1rem;
+  }
+  .adm-card .table td { padding: .75rem 1rem; border-bottom-color: var(--adm-line); }
+  .adm-row { padding: .9rem 1.2rem; border-bottom: 1px solid var(--adm-line); }
+  .adm-row:last-child { border-bottom: 0; }
+
+  .adm-badge { font-size: .66rem; font-weight: 700; padding: 3px 10px; border-radius: 50px; white-space: nowrap; display: inline-block; }
+  .adm-btn { border: none; font-size: .75rem; font-weight: 600; padding: .3rem .75rem; border-radius: 8px; }
+  .adm-btn.ok { background: #d1fae5; color: #065f46; }
+  .adm-btn.ko { background: #fee2e2; color: #991b1b; }
+  .adm-icon-btn { font-size: .75rem; padding: .3rem .55rem; }
+  .adm-icon-btn svg { width: 14px; height: 14px; }
+
+  /* ── Actions rapides ── */
+  .adm-quick {
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    padding: 1.1rem .5rem; background: var(--adm-card);
+    border: 1px solid var(--adm-line); border-radius: 14px;
+    text-decoration: none; color: var(--text-primary);
+    font-size: .82rem; font-weight: 600; position: relative; transition: .2s; height: 100%;
+  }
+  .adm-quick:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.08); color: var(--text-primary); }
+  .adm-quick-ico { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .adm-quick-ico svg { width: 22px; height: 22px; }
+  .adm-quick .adm-count {
+    position: absolute; top: 10px; right: 10px; color: #fff;
+    min-width: 20px; height: 20px; padding: 0 5px; border-radius: 50px;
+    font-size: .68rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
   }
 
-  .dash-header .greeting span {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  .adm-quick-ico.indigo { background: rgba(99,102,241,.12); color: #6366f1; }
+  .adm-quick-ico.green  { background: rgba(16,185,129,.12); color: #10b981; }
+  .adm-quick-ico.red    { background: rgba(239,68,68,.12);  color: #ef4444; }
+  .adm-quick-ico.amber  { background: rgba(245,158,11,.14); color: #f59e0b; }
+  .adm-quick .adm-count { background: #ef4444; }
 
-  .dash-header .subtitle {
-    font-size: 0.85rem;
-    color: var(--gray-500);
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
+  .adm-chart-box { position: relative; height: 320px; padding: 1rem 1.2rem 1.2rem; }
 
-  .btn-primary-gradient {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    border: none;
-    color: white;
-    padding: 10px 28px;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
+  /* ── Utilitaires ── */
+  .adm-violet { color: var(--adm-violet); }
+  .adm-amber { color: #f59e0b; }
+  .adm-card-head h5 svg { width: 18px; height: 18px; }
+  .adm-card-head h6 svg { width: 16px; height: 16px; }
+  .adm-btn-violet { background: var(--adm-violet); color: #fff; font-size: .75rem; border-radius: 10px; }
+  .adm-btn-violet:hover { color: #fff; opacity: .9; }
+  .adm-btn-outline { font-size: .75rem; color: var(--text-secondary); }
+  .adm-btn-violet svg, .adm-btn-outline svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -2px; }
+  .adm-thumb {
+    width: 46px; height: 38px; flex-shrink: 0; border-radius: .5rem; object-fit: cover;
+    display: flex; align-items: center; justify-content: center; background: rgba(109,63,232,.08);
   }
+  .adm-thumb svg { width: 16px; height: 16px; color: var(--adm-violet); }
+  .adm-avatar { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .adm-name { font-weight: 600; font-size: .875rem; color: var(--text-primary); }
+  .adm-meta { font-size: .73rem; color: var(--text-muted); display: flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
+  .adm-meta svg { width: 11px; height: 11px; }
+  .adm-price { font-size: .875rem; font-weight: 700; color: var(--adm-violet); white-space: nowrap; }
+  .adm-empty { text-align: center; padding: 1.5rem 1rem; color: var(--text-muted); font-size: .875rem; }
+  .adm-empty svg { display: block; width: 32px; height: 32px; margin: 0 auto .5rem; color: var(--adm-violet); }
+  .adm-progress { height: 4px; border-radius: 4px; background: var(--adm-line); }
+  .adm-progress span { display: block; height: 100%; border-radius: 4px; }
+  .adm-badge.ok   { background: #d1fae5; color: #065f46; }
+  .adm-badge.warn { background: #fef3c7; color: #92400e; }
+  .adm-badge.info { background: #dbeafe; color: #1e40af; }
+  .adm-badge.ko   { background: #fee2e2; color: #991b1b; }
+  .adm-badge.neutral { background: rgba(148,163,184,.18); color: var(--text-secondary); }
 
-  .btn-primary-gradient:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.45);
-    color: white;
-  }
-
-  /* ─── Stats Cards ───────────────────────────────────────── */
-  .stat-card-modern {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--gray-100);
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-  }
-
-  .stat-card-modern::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    border-radius: var(--radius) var(--radius) 0 0;
-  }
-
-  .stat-card-modern:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: transparent;
-  }
-
-  .stat-card-modern .stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.2rem;
-  }
-
-  .stat-card-modern .stat-icon.purple {
-    background: var(--primary-light);
-    color: var(--primary);
-  }
-  .stat-card-modern .stat-icon.green {
-    background: #D1FAE5;
-    color: var(--success);
-  }
-  .stat-card-modern .stat-icon.orange {
-    background: #FEF3C7;
-    color: var(--warning);
-  }
-  .stat-card-modern .stat-icon.red {
-    background: #FEE2E2;
-    color: var(--danger);
-  }
-  .stat-card-modern .stat-icon.blue {
-    background: #DBEAFE;
-    color: #3B82F6;
-  }
-
-  .stat-card-modern .stat-number {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--gray-900);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-  }
-
-  .stat-card-modern .stat-label {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-    font-weight: 500;
-  }
-
-  .stat-card-modern .stat-change {
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 2px 10px;
-    border-radius: 50px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .stat-change.up {
-    background: #D1FAE5;
-    color: #065F46;
-  }
-  .stat-change.down {
-    background: #FEE2E2;
-    color: #991B1B;
-  }
-
-  /* Couleurs des bordures */
-  .stat-card-modern:nth-child(1)::before { background: var(--primary); }
-  .stat-card-modern:nth-child(2)::before { background: var(--success); }
-  .stat-card-modern:nth-child(3)::before { background: var(--warning); }
-  .stat-card-modern:nth-child(4)::before { background: var(--primary); }
-  .stat-card-modern:nth-child(5)::before { background: var(--danger); }
-  .stat-card-modern:nth-child(6)::before { background: var(--warning); }
-
-  /* ─── Quick Actions ────────────────────────────────────── */
-  .quick-action-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  @media (max-width: 992px) {
-    .quick-action-grid {
-      grid-template-columns: repeat(3, 1fr);
+  /* ── Mobile : sidebar en tiroir ── */
+  @media (max-width: 991.98px) {
+    .adm-side {
+      position: fixed; top: 0; left: 0; height: 100vh; padding-top: 1.5rem;
+      transform: translateX(-100%); transition: transform .25s ease; box-shadow: 0 0 40px rgba(0,0,0,.2);
     }
-  }
-
-  @media (max-width: 576px) {
-    .quick-action-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  .quick-action-item {
-    background: white;
-    border-radius: var(--radius-sm);
-    padding: 1.25rem 0.75rem;
-    text-align: center;
-    border: 1px solid var(--gray-100);
-    transition: var(--transition);
-    text-decoration: none;
-    display: block;
-    position: relative;
-  }
-
-  .quick-action-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary);
-  }
-
-  .quick-action-item .qa-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 8px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    transition: var(--transition);
-  }
-
-  .quick-action-item:hover .qa-icon {
-    transform: scale(1.05);
-  }
-
-  .quick-action-item .qa-icon.purple { background: var(--primary-light); }
-  .quick-action-item .qa-icon.green { background: #D1FAE5; }
-  .quick-action-item .qa-icon.orange { background: #FEF3C7; }
-  .quick-action-item .qa-icon.blue { background: #DBEAFE; }
-  .quick-action-item .qa-icon.pink { background: #FCE7F3; }
-
-  .quick-action-item .qa-title {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--gray-800);
-  }
-
-  .quick-action-item .qa-sub {
-    font-size: 0.7rem;
-    color: var(--gray-500);
-    margin-top: 2px;
-  }
-
-  .quick-action-item .qa-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: var(--danger);
-    color: white;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    font-size: 0.65rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-  }
-
-  /* ─── Card principale ───────────────────────────────────── */
-  .card-modern {
-    background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--gray-100);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    transition: var(--transition);
-  }
-
-  .card-modern:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  .card-modern .card-header-modern {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--gray-100);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-  }
-
-  .card-modern .card-header-modern .title {
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--gray-800);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-modern .card-header-modern .title svg {
-    color: var(--primary);
-    width: 18px;
-    height: 18px;
-  }
-
-  .card-modern .card-body-modern {
-    padding: 0;
-  }
-
-  /* ─── Tableau ───────────────────────────────────────────── */
-  .table-dash {
-    font-size: 0.85rem;
-    margin: 0;
-  }
-
-  .table-dash thead th {
-    font-weight: 600;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray-500);
-    border-bottom: 1px solid var(--gray-100);
-    padding: 12px 16px;
-    background: var(--gray-50);
-  }
-
-  .table-dash tbody td {
-    padding: 12px 16px;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--gray-50);
-  }
-
-  .table-dash tbody tr {
-    transition: var(--transition);
-  }
-
-  .table-dash tbody tr:hover {
-    background: var(--gray-50);
-  }
-
-  .table-dash tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  /* ─── Badges de statut ──────────────────────────────────── */
-  .badge-status {
-    padding: 4px 12px;
-    border-radius: 50px;
-    font-size: 0.68rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .badge-status.publie { background: #D1FAE5; color: #065F46; }
-  .badge-status.attente { background: #FEF3C7; color: #92400E; }
-  .badge-status.suspendu { background: #FEE2E2; color: #991B1B; }
-  .badge-status.loue { background: #DBEAFE; color: #1E40AF; }
-  .badge-status.default { background: var(--gray-100); color: var(--gray-500); }
-
-  /* ─── Boutons d'action ──────────────────────────────────── */
-  .btn-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    cursor: pointer;
-    color: var(--gray-400);
-  }
-
-  .btn-icon:hover {
-    transform: scale(1.05);
-  }
-
-  .btn-icon.view:hover { background: var(--gray-100); color: var(--gray-600); }
-  .btn-icon.edit:hover { background: var(--primary-light); color: var(--primary); }
-  .btn-icon.delete:hover { background: #FEE2E2; color: var(--danger); }
-
-  .btn-icon svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  /* ─── Profile Card ──────────────────────────────────────── */
-  .profile-card-modern {
-    background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--gray-100);
-    padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .profile-card-modern .avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .profile-card-modern .name {
-    font-weight: 700;
-    color: var(--gray-800);
-    font-size: 1rem;
-  }
-
-  .profile-card-modern .email {
-    font-size: 0.8rem;
-    color: var(--gray-500);
-  }
-
-  .profile-card-modern .badge-role {
-    font-size: 0.65rem;
-    padding: 2px 12px;
-    border-radius: 50px;
-    font-weight: 600;
-  }
-
-  .badge-role.bailleur {
-    background: var(--primary-light);
-    color: var(--primary);
-  }
-  .badge-role.verified {
-    background: #D1FAE5;
-    color: #065F46;
-  }
-
-  .profile-card-modern .progress-track {
-    height: 6px;
-    border-radius: 3px;
-    background: var(--gray-100);
-    overflow: hidden;
-  }
-
-  .profile-card-modern .progress-track .bar {
-    height: 100%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    transition: width 0.6s ease;
-  }
-
-  .profile-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-
-  .profile-stats-grid .stat-box {
-    padding: 8px;
-    border-radius: var(--radius-xs);
-    background: var(--gray-50);
-    text-align: center;
-  }
-
-  .profile-stats-grid .stat-box .num {
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--gray-800);
-  }
-
-  .profile-stats-grid .stat-box .lbl {
-    font-size: 0.6rem;
-    color: var(--gray-500);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  /* ─── Reservation Items ────────────────────────────────── */
-  .reservation-item-modern {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--gray-100);
-    transition: var(--transition);
-  }
-
-  .reservation-item-modern:last-child {
-    border-bottom: none;
-  }
-
-  .reservation-item-modern:hover {
-    background: var(--gray-50);
-  }
-
-  .reservation-item-modern .res-name {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--gray-800);
-  }
-
-  .reservation-item-modern .res-property {
-    font-size: 0.78rem;
-    color: var(--gray-500);
-  }
-
-  .reservation-item-modern .res-date {
-    font-size: 0.7rem;
-    color: var(--gray-400);
-  }
-
-  .res-status-modern {
-    padding: 2px 10px;
-    border-radius: 50px;
-    font-size: 0.65rem;
-    font-weight: 600;
-  }
-
-  .res-status-modern.attente { background: #FEF3C7; color: #92400E; }
-  .res-status-modern.confirme { background: #D1FAE5; color: #065F46; }
-  .res-status-modern.refuse { background: #FEE2E2; color: #991B1B; }
-  .res-status-modern.default { background: var(--gray-100); color: var(--gray-500); }
-
-  .btn-response {
-    padding: 4px 12px;
-    border-radius: var(--radius-xs);
-    border: none;
-    font-size: 0.7rem;
-    font-weight: 600;
-    transition: var(--transition);
-    cursor: pointer;
-  }
-
-  .btn-response.confirm {
-    background: #D1FAE5;
-    color: #065F46;
-  }
-  .btn-response.confirm:hover {
-    background: #A7F3D0;
-    transform: scale(1.02);
-  }
-
-  .btn-response.refuse {
-    background: #FEE2E2;
-    color: #991B1B;
-  }
-  .btn-response.refuse:hover {
-    background: #FCA5A5;
-    transform: scale(1.02);
-  }
-
-  /* ─── Animations ────────────────────────────────────────── */
-  .animate-in {
-    animation: fadeUp 0.5s ease-out forwards;
-    opacity: 0;
-  }
-
-  .animate-in:nth-child(1) { animation-delay: 0.05s; }
-  .animate-in:nth-child(2) { animation-delay: 0.10s; }
-  .animate-in:nth-child(3) { animation-delay: 0.15s; }
-  .animate-in:nth-child(4) { animation-delay: 0.20s; }
-  .animate-in:nth-child(5) { animation-delay: 0.25s; }
-  .animate-in:nth-child(6) { animation-delay: 0.30s; }
-
-  @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* ─── Responsive ────────────────────────────────────────── */
-  @media (max-width: 768px) {
-    .dash-header .greeting {
-      font-size: 1.35rem;
-    }
-
-    .stat-card-modern {
-      padding: 1rem;
-    }
-
-    .stat-card-modern .stat-number {
-      font-size: 1.2rem;
-    }
-
-    .stat-card-modern .stat-icon {
-      width: 36px;
-      height: 36px;
-      font-size: 1rem;
-    }
-
-    .quick-action-item {
-      padding: 1rem 0.5rem;
-    }
-
-    .quick-action-item .qa-icon {
-      width: 40px;
-      height: 40px;
-      font-size: 1.2rem;
-    }
-
-    .quick-action-item .qa-title {
-      font-size: 0.75rem;
-    }
-
-    .card-modern .card-header-modern {
-      padding: 1rem;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .profile-card-modern {
-      padding: 1rem;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .quick-action-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-    }
-
-    .stat-card-modern .stat-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 0.9rem;
-    }
-
-    .stat-card-modern .stat-number {
-      font-size: 1rem;
-    }
+    .adm-side.open { transform: translateX(0); }
+    .adm-side-overlay.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1025; }
+    .adm-main { padding: 1rem 1rem 5.5rem; }
+    .adm-hero { padding: 1.1rem; }
+    .adm-hero-pills { gap: 1rem; }
   }
 </style>
+{% endblock %}
 
-<!-- ─── EN-TÊTE ──────────────────────────────────────────── -->
-<div class="container py-4">
+{% block content %}
+<div class="adm-wrap">
 
-  <div class="dash-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-      <div class="subtitle">🏠 Espace Bailleur</div>
-      <h1 class="greeting">
-        Bonjour, <span>{{ user.prenom }}</span>
-      </h1>
-    </div>
-    <a href="{% url 'logements:creer' %}" class="btn-primary-gradient">
-      <svg data-lucide="plus-circle" style="width:18px;height:18px;"></svg>
-      Nouvelle annonce
+  <!-- ═════════════ SIDEBAR ═════════════ -->
+  <div class="adm-side-overlay" id="admOverlay"></div>
+  <aside class="adm-side" id="admSide">
+
+    <span class="adm-side-label">Tableau de bord</span>
+    <a href="{{ request.path }}" class="adm-link active">
+      <svg data-lucide="layout-dashboard"></svg> Vue d'ensemble
     </a>
-  </div>
 
-  <!-- ─── STATISTIQUES ────────────────────────────────────── -->
-  <div class="row g-3 mb-4">
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon purple">
-            <svg data-lucide="building" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ nb_total }}</div>
-            <div class="stat-label">Total</div>
-          </div>
+    <span class="adm-side-label mt-3">Mes biens</span>
+    <a href="{% url 'accounts:mes_annonces' %}" class="adm-link">
+      <svg data-lucide="building"></svg> Mes annonces
+      {% if nb_total > 0 %}<span class="adm-count violet">{{ nb_total }}</span>{% endif %}
+    </a>
+    <a href="{% url 'logements:creer' %}" class="adm-link">
+      <svg data-lucide="plus-circle"></svg> Publier une annonce
+    </a>
+    <a href="{% url 'accounts:mes_annonces' %}?statut=EN_ATTENTE" class="adm-link">
+      <svg data-lucide="clock"></svg> En validation
+      {% if nb_en_attente > 0 %}<span class="adm-count warn">{{ nb_en_attente }}</span>{% endif %}
+    </a>
+
+    <span class="adm-side-label mt-3">Activité</span>
+    <a href="{% url 'accounts:gerer_reservations' %}?type=VISITE" class="adm-link">
+      <svg data-lucide="eye"></svg> Demandes de visite
+      {% if visites_attente > 0 %}<span class="adm-count">{{ visites_attente }}</span>{% endif %}
+    </a>
+    <a href="{% url 'accounts:gerer_reservations' %}?type=RESERVATION" class="adm-link">
+      <svg data-lucide="bookmark-check"></svg> Réservations
+      {% if resa_attente > 0 %}<span class="adm-count">{{ resa_attente }}</span>{% endif %}
+    </a>
+    <a href="{% url 'chat:conversations' %}" class="adm-link">
+      <svg data-lucide="message-circle"></svg> Messages
+    </a>
+    <a href="{% url 'paiements:abonnements' %}" class="adm-link">
+      <svg data-lucide="crown"></svg> Abonnements
+    </a>
+    <a href="{% url 'paiements:historique' %}" class="adm-link">
+      <svg data-lucide="credit-card"></svg> Paiements
+    </a>
+
+    <span class="adm-side-label mt-3">Compte</span>
+    <a href="{% url 'accounts:profil' %}" class="adm-link">
+      <svg data-lucide="user"></svg> Profil
+    </a>
+    <a href="{% url 'accounts:deconnexion' %}" class="adm-link logout">
+      <svg data-lucide="log-out"></svg> Déconnexion
+    </a>
+  </aside>
+
+  <!-- ═════════════ CONTENU ═════════════ -->
+  <div class="adm-main">
+
+    <button type="button" id="admToggle"
+            class="btn btn-sm adm-btn-violet mb-3 d-lg-none d-inline-flex align-items-center gap-2">
+      <svg data-lucide="menu"></svg> Menu
+    </button>
+
+    <!-- ─── Bannière ─── -->
+    <div class="adm-hero mb-4">
+      <div class="adm-hero-user">
+        <img src="{{ user.get_avatar_url }}" alt="{{ user.get_full_name }}" class="adm-hero-avatar">
+        <div>
+          <p>Espace bailleur</p>
+          <h2>Bonjour, {{ user.prenom|default:user.get_full_name }}</h2>
+          <p>
+            {% if reservations_attente > 0 %}
+              {{ reservations_attente }} demande{{ reservations_attente|pluralize }} de réservation à traiter
+            {% else %}
+              Aucune demande en attente
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="adm-hero-pills">
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="building"></svg></div>
+          <div><div class="adm-pill-val">{{ nb_total }}</div><div class="adm-pill-lbl">Annonces</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="eye"></svg></div>
+          <div><div class="adm-pill-val">{{ total_vues|intcomma }}</div><div class="adm-pill-lbl">Vues</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="heart"></svg></div>
+          <div><div class="adm-pill-val">{{ total_favoris }}</div><div class="adm-pill-lbl">Favoris</div></div>
+        </div>
+        <div class="adm-pill">
+          <div class="adm-pill-ico"><svg data-lucide="calendar-clock"></svg></div>
+          <div><div class="adm-pill-val">{{ reservations_attente }}</div><div class="adm-pill-lbl">Demandes</div></div>
         </div>
       </div>
     </div>
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon green">
-            <svg data-lucide="check-circle" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ nb_publie }}</div>
-            <div class="stat-label">Publiées</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon orange">
-            <svg data-lucide="clock" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ nb_en_attente }}</div>
-            <div class="stat-label">En attente</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon blue">
-            <svg data-lucide="eye" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ total_vues|intcomma }}</div>
-            <div class="stat-label">Vues</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon red">
-            <svg data-lucide="heart" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ total_favoris }}</div>
-            <div class="stat-label">Favoris</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-6 animate-in">
-      <div class="stat-card-modern">
-        <div class="d-flex align-items-center gap-3">
-          <div class="stat-icon orange">
-            <svg data-lucide="calendar" style="width:22px;height:22px;"></svg>
-          </div>
-          <div>
-            <div class="stat-number">{{ reservations_attente }}</div>
-            <div class="stat-label">Demandes</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- ─── ACTIONS RAPIDES ────────────────────────────────── -->
-  <div class="quick-action-grid">
-    <a href="{% url 'logements:creer' %}" class="quick-action-item">
-      <div class="qa-icon purple">📝</div>
-      <div class="qa-title">Publier</div>
-      <div class="qa-sub">Nouvelle annonce</div>
-    </a>
-    <a href="{% url 'paiements:abonnements' %}" class="quick-action-item">
-      <div class="qa-icon pink">⭐</div>
-      <div class="qa-title">Premium</div>
-      <div class="qa-sub">{% if user.premium_actif %}Actif{% else %}Upgrade{% endif %}</div>
-    </a>
-    <a href="{% url 'accounts:mes_annonces' %}" class="quick-action-item">
-      <div class="qa-icon blue">📋</div>
-      <div class="qa-title">Mes annonces</div>
-      <div class="qa-sub">{{ nb_total }} annonce{{ nb_total|pluralize }}</div>
-    </a>
-    <a href="{% url 'accounts:gerer_reservations' %}" class="quick-action-item">
-      <div class="qa-icon orange">📅</div>
-      <div class="qa-title">Réservations</div>
-      <div class="qa-sub">
-        {% if reservations_attente > 0 %}
-        {{ reservations_attente }} en attente
-        {% else %}
-        Gérer les demandes
-        {% endif %}
-      </div>
-      {% if reservations_attente > 0 %}
-      <div class="qa-badge">{{ reservations_attente }}</div>
-      {% endif %}
-    </a>
-    <a href="{% url 'chat:conversations' %}" class="quick-action-item">
-      <div class="qa-icon green">💬</div>
-      <div class="qa-title">Messages</div>
-      <div class="qa-sub">Locataires</div>
-    </a>
-  </div>
+    <!-- ─── Cartes statistiques ─── -->
+    {% widthratio nb_publie nb_total 100 as p_publie %}
+    {% widthratio nb_en_attente nb_total 100 as p_attente %}
+    {% widthratio nb_loue nb_total 100 as p_loue %}
+    <div class="row g-3 mb-4">
 
-  <div class="row g-4">
-
-    <!-- ─── MES ANNONCES ──────────────────────────────────── -->
-    <div class="col-lg-8">
-      <div class="card-modern">
-        <div class="card-header-modern">
-          <div class="title">
-            <svg data-lucide="building"></svg>
-            Mes annonces récentes
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c1">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ total_vues|intcomma }}</div>
+              <div class="adm-stat-lbl">Vues cumulées</div>
+            </div>
+            <div class="adm-ring" style="--p:100"><span>{{ nb_total }}</span></div>
           </div>
-          <a href="{% url 'accounts:mes_annonces' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold" style="font-size:0.75rem;">
-            Voir toutes
-            <svg data-lucide="arrow-right" style="width:14px;height:14px;margin-left:4px;display:inline;"></svg>
+          <div class="adm-stat-bar"><span style="width:100%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c2">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_publie }}</div>
+              <div class="adm-stat-lbl">Annonces publiées</div>
+            </div>
+            <div class="adm-ring" style="--p:{{ p_publie }}" title="Part d'annonces publiées">
+              <span>{{ p_publie }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_publie }}%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c3">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_en_attente }}</div>
+              <div class="adm-stat-lbl">En attente de validation</div>
+            </div>
+            <div class="adm-ring" style="--p:{{ p_attente }}" title="Part d'annonces en attente">
+              <span>{{ p_attente }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_attente }}%"></span></div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="adm-stat c4">
+          <div class="adm-stat-top">
+            <div>
+              <div class="adm-stat-val">{{ nb_loue }}</div>
+              <div class="adm-stat-lbl">Logements loués</div>
+            </div>
+            <div class="adm-ring" style="--p:{{ p_loue }}" title="Taux d'occupation">
+              <span>{{ p_loue }}%</span>
+            </div>
+          </div>
+          <div class="adm-stat-bar"><span style="width:{{ p_loue }}%"></span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── Graphique performance des annonces ─── -->
+    <div class="adm-card mb-4">
+      <div class="adm-card-head">
+        <h5>Performance de mes annonces</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:mes_annonces' %}" class="btn btn-outline-secondary btn-sm adm-btn-outline">
+            <svg data-lucide="building"></svg>Mes annonces
+          </a>
+          <a href="{% url 'logements:creer' %}" class="btn btn-sm adm-btn-violet">
+            <svg data-lucide="plus"></svg>Nouvelle annonce
           </a>
         </div>
-        <div class="card-body-modern">
-          {% if logements %}
+      </div>
+      {% if chart_data %}
+        <div class="adm-chart-box"><canvas id="perfChart"></canvas></div>
+        {{ chart_data|json_script:"perf-data" }}
+      {% else %}
+        <div class="text-center text-muted small py-5">
+          Publiez votre première annonce pour suivre ses vues et ses favoris ici.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ─── Actions rapides ─── -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <a href="{% url 'logements:creer' %}" class="adm-quick">
+          <div class="adm-quick-ico indigo"><svg data-lucide="plus-circle"></svg></div>
+          Publier
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:mes_annonces' %}" class="adm-quick">
+          <div class="adm-quick-ico green"><svg data-lucide="building"></svg></div>
+          Mes annonces
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'accounts:gerer_reservations' %}" class="adm-quick">
+          {% if reservations_attente > 0 %}<span class="adm-count">{{ reservations_attente }}</span>{% endif %}
+          <div class="adm-quick-ico red"><svg data-lucide="calendar-check"></svg></div>
+          Réservations
+        </a>
+      </div>
+      <div class="col-md-3 col-6">
+        <a href="{% url 'chat:conversations' %}" class="adm-quick">
+          <div class="adm-quick-ico amber"><svg data-lucide="message-circle"></svg></div>
+          Messages
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ─── Colonne gauche ─── -->
+      <div class="col-xl-7">
+
+        <!-- Demandes de réservation -->
+        <div class="adm-card mb-4">
+          <div class="adm-card-head">
+            <h5>
+              <svg data-lucide="calendar-clock" class="adm-amber"></svg>
+              Demandes de réservation
+              {% if reservations_attente > 0 %}
+              <span class="adm-badge warn">{{ reservations_attente }}</span>
+              {% endif %}
+            </h5>
+            <a href="{% url 'accounts:gerer_reservations' %}">Voir toutes</a>
+          </div>
+          <div>
+            {% for res in reservations %}
+            <div class="adm-row d-flex gap-3 align-items-center flex-wrap">
+              <img src="{{ res.locataire.get_avatar_url }}" class="adm-avatar"
+                   width="42" height="42" alt="{{ res.locataire.get_full_name }}">
+
+              <div class="flex-grow-1 overflow-hidden" style="min-width:140px">
+                <div class="adm-name text-truncate">{{ res.locataire.get_full_name }}</div>
+                <div class="adm-meta">
+                  <svg data-lucide="home" class="adm-violet"></svg>
+                  {{ res.logement.titre|truncatechars:30 }}
+                </div>
+                <div class="adm-meta">
+                  <svg data-lucide="calendar"></svg>
+                  {{ res.date_debut|date:"d/m/Y" }} &nbsp;·&nbsp; il y a {{ res.cree_le|timesince }}
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 flex-shrink-0 align-items-center">
+                {% if res.statut == 'EN_ATTENTE' %}
+                <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="confirmer">
+                  <button type="submit" class="btn btn-sm adm-btn ok">Accepter</button>
+                </form>
+                <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="refuser">
+                  <button type="submit" class="btn btn-sm adm-btn ko">Refuser</button>
+                </form>
+                {% elif res.statut == 'CONFIRME' %}
+                <span class="adm-badge ok">Confirmée</span>
+                {% elif res.statut == 'REFUSE' %}
+                <span class="adm-badge ko">Refusée</span>
+                {% else %}
+                <span class="adm-badge neutral">{{ res.get_statut_display }}</span>
+                {% endif %}
+                <a href="{% url 'chat:demarrer' res.logement.pk %}" class="btn btn-sm btn-outline-secondary adm-icon-btn" title="Contacter">
+                  <svg data-lucide="message-circle"></svg>
+                </a>
+              </div>
+            </div>
+            {% empty %}
+            <div class="adm-empty">
+              <svg data-lucide="calendar-x"></svg>
+              Aucune demande de réservation pour le moment.
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Mes annonces -->
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h5>
+              <svg data-lucide="building" class="adm-violet"></svg>
+              Mes dernières annonces
+            </h5>
+            <a href="{% url 'accounts:mes_annonces' %}">Voir toutes</a>
+          </div>
           <div class="table-responsive">
-            <table class="table table-dash">
+            <table class="table table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  <th>Logement</th>
-                  <th>Prix</th>
-                  <th>Statut</th>
-                  <th>Vues</th>
-                  <th class="text-center">Actions</th>
-                </tr>
+                <tr><th>Logement</th><th>Prix</th><th>Statut</th><th>Vues</th><th></th></tr>
               </thead>
               <tbody>
-                {% for l in logements %}
+                {% for logement in logements %}
                 <tr>
                   <td>
-                    <div class="d-flex align-items-center gap-3">
-                      {% with photo=l.get_photo_principale %}
-                      <img src="{% if photo %}{{ photo.image.url }}{% else %}/static/images/no-image.jpg{% endif %}"
-                           class="rounded-2 flex-shrink-0"
-                           style="width:48px;height:40px;object-fit:cover;border:1px solid var(--gray-100);">
+                    <div class="d-flex align-items-center gap-2">
+                      {% with photo=logement.get_photo_principale %}
+                      {% if photo %}
+                      <img src="{{ photo.image.url }}" class="adm-thumb" alt="">
+                      {% else %}
+                      <div class="adm-thumb"><svg data-lucide="home"></svg></div>
+                      {% endif %}
                       {% endwith %}
-                      <div>
-                        <div class="fw-semibold" style="font-size:0.85rem;color:var(--gray-800);">
-                          {{ l.titre|truncatechars:30 }}
-                        </div>
-                        <div class="d-flex align-items-center gap-1" style="font-size:0.7rem;color:var(--gray-400);">
-                          <svg data-lucide="map-pin" style="width:11px;height:11px;"></svg>
-                          {% if l.quartier %}{{ l.quartier.nom }}, {% endif %}
-                          {{ l.ville.nom }}
-                        </div>
+                      <div class="overflow-hidden">
+                        <div class="adm-name text-truncate">{{ logement.titre|truncatechars:28 }}</div>
+                        <div class="adm-meta">{% if logement.quartier %}{{ logement.quartier.nom }}, {% endif %}{{ logement.ville.nom }}</div>
                       </div>
                     </div>
                   </td>
-                  <td class="fw-bold" style="font-size:0.85rem;color:var(--primary);">
-                    {{ l.prix_formate }}
-                  </td>
+                  <td class="adm-price">{{ logement.prix_formate }}</td>
                   <td>
-                    {% if l.statut == 'PUBLIE' %}
-                    <span class="badge-status publie">✅ Publié</span>
-                    {% elif l.statut == 'EN_ATTENTE' %}
-                    <span class="badge-status attente">⏳ En attente</span>
-                    {% elif l.statut == 'SUSPENDU' %}
-                    <span class="badge-status suspendu">⛔ Suspendu</span>
-                    {% elif l.statut == 'LOUE' %}
-                    <span class="badge-status loue">🏠 Loué</span>
+                    {% if logement.statut == 'PUBLIE' %}
+                    <span class="adm-badge ok">Publié</span>
+                    {% elif logement.statut == 'EN_ATTENTE' %}
+                    <span class="adm-badge warn">En attente</span>
+                    {% elif logement.statut == 'LOUE' %}
+                    <span class="adm-badge info">Loué</span>
+                    {% elif logement.statut == 'SUSPENDU' %}
+                    <span class="adm-badge ko">Suspendu</span>
                     {% else %}
-                    <span class="badge-status default">{{ l.get_statut_display }}</span>
+                    <span class="adm-badge neutral">{{ logement.get_statut_display }}</span>
                     {% endif %}
                   </td>
-                  <td style="font-size:0.8rem;color:var(--gray-400);">
-                    <div class="d-flex align-items-center gap-1">
-                      <svg data-lucide="eye" style="width:13px;height:13px;"></svg>
-                      {{ l.nb_vues|intcomma }}
-                    </div>
-                  </td>
-                  <td>
-                    <div class="d-flex gap-1 justify-content-center">
-                      <a href="{% url 'logements:detail' l.slug %}" class="btn-icon view" title="Voir">
-                        <svg data-lucide="eye"></svg>
-                      </a>
-                      <a href="{% url 'logements:modifier' l.slug %}" class="btn-icon edit" title="Modifier">
-                        <svg data-lucide="pencil"></svg>
-                      </a>
-                      <form method="post" action="{% url 'logements:supprimer' l.slug %}" class="d-inline" onsubmit="return confirm('Archiver cette annonce ?')">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-icon delete" title="Archiver">
-                          <svg data-lucide="trash-2"></svg>
-                        </button>
-                      </form>
-                    </div>
+                  <td class="small text-muted">{{ logement.nb_vues|intcomma }}</td>
+                  <td class="text-end" style="white-space:nowrap">
+                    <a href="{% url 'logements:detail' logement.slug %}" target="_blank" class="btn btn-sm btn-outline-secondary adm-icon-btn" title="Voir"><svg data-lucide="eye"></svg></a>
+                    <a href="{% url 'logements:modifier' logement.slug %}" class="btn btn-sm btn-outline-secondary adm-icon-btn" title="Modifier"><svg data-lucide="pencil"></svg></a>
                   </td>
                 </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted small py-4">
+                  Vous n'avez encore publié aucune annonce.
+                  <a href="{% url 'logements:creer' %}" class="adm-violet fw-semibold">Publier maintenant</a>
+                </td></tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
-          {% else %}
-          <div class="text-center py-5">
-            <svg data-lucide="building" style="width:48px;height:48px;color:var(--gray-200);margin-bottom:1rem;"></svg>
-            <p class="text-muted mb-3" style="font-size:0.9rem;">Vous n'avez pas encore d'annonces.</p>
-            <a href="{% url 'logements:creer' %}" class="btn btn-primary rounded-pill px-4">
-              Publier ma première annonce
+        </div>
+      </div>
+
+      <!-- ─── Colonne droite ─── -->
+      <div class="col-xl-5">
+
+        <!-- Profil -->
+        <div class="adm-card mb-4">
+          <div class="adm-card-head">
+            <h6>
+              <svg data-lucide="user" class="adm-violet"></svg>
+              Mon profil
+            </h6>
+            <a href="{% url 'accounts:profil' %}">Modifier</a>
+          </div>
+          <div class="adm-row d-flex align-items-center gap-3">
+            <img src="{{ user.get_avatar_url }}" class="adm-avatar" width="52" height="52" alt="{{ user.get_full_name }}">
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="adm-name text-truncate">{{ user.get_full_name }}</div>
+              <div class="adm-meta d-block text-truncate">{{ user.email }}</div>
+            </div>
+            <span class="adm-badge info">{{ user.get_role_display }}</span>
+          </div>
+        </div>
+
+        <!-- Répartition des annonces -->
+        <div class="adm-card mb-4">
+          <div class="adm-card-head">
+            <h6>
+              <svg data-lucide="pie-chart" class="adm-violet"></svg>
+              Répartition des annonces
+            </h6>
+          </div>
+          <div class="p-3">
+            <div class="d-flex justify-content-between small mb-1"><span>Publiées</span><b>{{ nb_publie }}</b></div>
+            <div class="adm-progress mb-3"><span style="width:{{ p_publie }}%;background:#10b981"></span></div>
+            <div class="d-flex justify-content-between small mb-1"><span>En attente</span><b>{{ nb_en_attente }}</b></div>
+            <div class="adm-progress mb-3"><span style="width:{{ p_attente }}%;background:#f59e0b"></span></div>
+            <div class="d-flex justify-content-between small mb-1"><span>Louées</span><b>{{ nb_loue }}</b></div>
+            <div class="adm-progress"><span style="width:{{ p_loue }}%;background:#3b82f6"></span></div>
+          </div>
+        </div>
+
+        <!-- Abonnement -->
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h6>
+              <svg data-lucide="sparkles" class="adm-amber"></svg>
+              Booster vos annonces
+            </h6>
+          </div>
+          <div class="p-3">
+            <p class="small text-muted mb-3">
+              Des photos nettes et une description précise attirent plus de visites.
+              Un abonnement premium place vos annonces en tête des résultats.
+            </p>
+            <a href="{% url 'paiements:abonnements' %}" class="btn btn-sm adm-btn-violet w-100">
+              <svg data-lucide="crown"></svg>Voir les abonnements
             </a>
           </div>
-          {% endif %}
         </div>
+
       </div>
-    </div>
-
-    <!-- ─── SIDEBAR ────────────────────────────────────────── -->
-    <div class="col-lg-4">
-
-      <!-- Profil -->
-      <div class="profile-card-modern mb-3">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <img src="{{ user.get_avatar_url }}" class="avatar" width="60" height="60" style="object-fit:cover;">
-          <div>
-            <div class="name">{{ user.get_full_name }}</div>
-            <div class="email">{{ user.email }}</div>
-            <div class="d-flex gap-1 mt-1">
-              <span class="badge-role bailleur">Bailleur</span>
-              {% if user.is_verified %}
-              <span class="badge-role verified">
-                <svg data-lucide="badge-check" style="width:11px;height:11px;display:inline;margin-right:2px;"></svg>
-                Vérifié
-              </span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <div class="d-flex justify-content-between mb-1">
-            <small style="font-size:0.75rem;font-weight:600;color:var(--gray-600);">Score de profil</small>
-            <small style="font-size:0.75rem;color:var(--gray-400);">80%</small>
-          </div>
-          <div class="progress-track">
-            <div class="bar" style="width:80%;"></div>
-          </div>
-        </div>
-
-        <div class="profile-stats-grid mb-3">
-          <div class="stat-box">
-            <div class="num" style="color:var(--primary);">{{ nb_publie }}</div>
-            <div class="lbl">Publiées</div>
-          </div>
-          <div class="stat-box">
-            <div class="num" style="color:var(--warning);">{{ nb_en_attente }}</div>
-            <div class="lbl">Attente</div>
-          </div>
-          <div class="stat-box">
-            <div class="num" style="color:var(--success);">{{ nb_loue }}</div>
-            <div class="lbl">Loués</div>
-          </div>
-        </div>
-
-        <a href="{% url 'accounts:profil' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-semibold">
-          <svg data-lucide="pencil" style="width:14px;height:14px;margin-right:5px;display:inline;"></svg>
-          Modifier le profil
-        </a>
-      </div>
-
-      <!-- Demandes récentes -->
-      <div class="card-modern">
-        <div class="card-header-modern">
-          <div class="title">
-            <svg data-lucide="calendar"></svg>
-            Demandes récentes
-            {% if reservations_attente > 0 %}
-            <span style="background:var(--danger);color:white;width:20px;height:20px;border-radius:50%;font-size:0.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">
-              {{ reservations_attente }}
-            </span>
-            {% endif %}
-          </div>
-          <a href="{% url 'accounts:gerer_reservations' %}" class="text-primary small fw-semibold text-decoration-none">
-            Voir tout →
-          </a>
-        </div>
-        <div class="card-body-modern">
-          {% for res in reservations|slice:":5" %}
-          <div class="reservation-item-modern">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-              <div class="res-name">{{ res.locataire.get_full_name }}</div>
-              <span class="res-status-modern {% if res.statut == 'EN_ATTENTE' %}attente{% elif res.statut == 'CONFIRME' %}confirme{% elif res.statut == 'REFUSE' %}refuse{% else %}default{% endif %}">
-                {{ res.get_statut_display }}
-              </span>
-            </div>
-            <div class="res-property">{{ res.logement.titre|truncatechars:30 }}</div>
-            <div class="res-date d-flex align-items-center gap-1 mt-1">
-              <svg data-lucide="calendar" style="width:11px;height:11px;"></svg>
-              {{ res.date_debut|date:"d/m/Y" }}
-              · {{ res.cree_le|timesince }}
-            </div>
-            {% if res.statut == 'EN_ATTENTE' %}
-            <div class="d-flex gap-2 mt-2">
-              <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}" class="flex-fill">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="confirmer">
-                <button type="submit" class="btn-response confirm w-100">✅ Confirmer</button>
-              </form>
-              <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}" class="flex-fill">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="refuser">
-                <button type="submit" class="btn-response refuse w-100">❌ Refuser</button>
-              </form>
-            </div>
-            {% endif %}
-          </div>
-          {% empty %}
-          <div class="text-center py-4">
-            <svg data-lucide="inbox" style="width:32px;height:32px;color:var(--gray-200);margin-bottom:8px;"></svg>
-            <p class="text-muted small mb-0">Aucune demande reçue.</p>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-
     </div>
   </div>
-
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var side = document.getElementById('admSide');
+  var overlay = document.getElementById('admOverlay');
+  var btn = document.getElementById('admToggle');
+  function toggle(open) { side.classList.toggle('open', open); overlay.classList.toggle('show', open); }
+  if (btn) btn.addEventListener('click', function () { toggle(!side.classList.contains('open')); });
+  overlay.addEventListener('click', function () { toggle(false); });
+
+  if (window.lucide) lucide.createIcons();
+
+  /* Graphique : vues (barres) + favoris (courbe) par annonce */
+  var dataEl = document.getElementById('perf-data');
+  var canvas = document.getElementById('perfChart');
+  if (!dataEl || !canvas || !window.Chart) return;
+  var d = JSON.parse(dataEl.textContent);
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var tick = dark ? '#94a3b8' : '#64748b';
+  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+
+  new Chart(canvas.getContext('2d'), {
+    data: {
+      labels: d.labels,
+      datasets: [
+        { type: 'line', label: 'Favoris', data: d.favoris, yAxisID: 'y1',
+          borderColor: '#3b82f6', backgroundColor: '#3b82f6',
+          tension: .3, pointRadius: 3, borderWidth: 2, order: 0 },
+        { type: 'bar', label: 'Vues', data: d.vues,
+          backgroundColor: '#a855f7', borderRadius: 4, barPercentage: .55, order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom',
+                 labels: { usePointStyle: true, pointStyle: 'circle', color: tick, boxWidth: 8 } } },
+      scales: {
+        x:  { grid: { display: false }, ticks: { color: tick } },
+        y:  { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0 } },
+        y1: { beginAtZero: true, position: 'right', grid: { display: false }, ticks: { color: tick, precision: 0 } }
+      }
+    }
+  });
+})();
+</script>
 {% endblock %}

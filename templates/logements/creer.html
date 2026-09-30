@@ -4,1194 +4,1257 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    --dark-gradient: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.08);
-    --card-hover-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ── Jetons ─────────────────────────────────────────────────── */
+  .af {
+    --af-p: var(--primary, #6366f1);
+    --af-p2: var(--secondary, #8b5cf6);
+    --af-soft: var(--primary-light, #eef2ff);
+    --af-bd: var(--border, #e2e8f0);
+    --af-card: var(--bg-card, #fff);
+    --af-bg2: var(--gray-50, #f8fafc);
+    --af-tx: var(--text-primary, #1e1b3a);
+    --af-mut: var(--text-muted, #64748b);
+    --af-ok: #10b981;
+    --af-r: 20px;
   }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
+  /* ── En-tête ────────────────────────────────────────────────── */
+  .af-hero {
+    position: relative; overflow: hidden;
+    padding: 2rem 2rem 1.75rem; margin-bottom: 1.75rem;
+    border-radius: 24px; color: #fff;
+    background:
+      radial-gradient(circle at 90% 10%, rgba(255,255,255,.18) 0 90px, transparent 91px),
+      radial-gradient(circle at 75% 120%, rgba(255,255,255,.12) 0 120px, transparent 121px),
+      linear-gradient(135deg, var(--af-p), var(--af-p2));
+    box-shadow: 0 18px 40px -18px rgba(99,102,241,.55);
+  }
+  .af-back {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-size: .8125rem; font-weight: 600; color: rgba(255,255,255,.85);
+    text-decoration: none; margin-bottom: .9rem;
+  }
+  .af-back:hover { color: #fff; }
+  .af-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin: 0 0 .35rem; letter-spacing: -.02em; }
+  .af-hero p { margin: 0; opacity: .9; max-width: 560px; }
+  .af-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
+  .af-pill {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .35rem .8rem; border-radius: 50px;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.25);
+    font-size: .78rem; font-weight: 600; backdrop-filter: blur(4px);
   }
 
-  .page-wrapper {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 2rem;
+  /* ── Mise en page : navigation + sections ───────────────────── */
+  .af-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 2rem; align-items: start; }
+  .af-nav { position: sticky; top: 90px; }
+  .af-nav-title { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--af-mut); margin: 0 0 .75rem .25rem; }
+  .progress-steps { display: flex; flex-direction: column; gap: .25rem; position: relative; }
+  .progress-step {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .6rem .7rem; border-radius: 14px;
+    color: var(--af-tx); text-decoration: none;
+    transition: background-color .15s;
+  }
+  .progress-step:hover { background: var(--af-bg2); color: var(--af-tx); }
+  .progress-step.is-active { background: var(--af-soft); }
+  .ps-num {
+    flex: none; display: grid; place-items: center;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--af-bd); background: var(--af-card);
+    font-size: .8rem; font-weight: 800; color: var(--af-mut);
+    transition: all .2s;
+  }
+  .progress-step.is-active .ps-num { border-color: var(--af-p); color: var(--af-p); }
+  .ps-num .ps-check { display: none; }
+  .progress-step.done .ps-num { background: var(--af-ok); border-color: var(--af-ok); color: #fff; }
+  .progress-step.done .ps-num .ps-n { display: none; }
+  .progress-step.done .ps-num .ps-check { display: block; }
+  .ps-txt { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .ps-txt b { font-size: .875rem; font-weight: 700; }
+  .ps-txt small { font-size: .74rem; color: var(--af-mut); }
+  .af-nav-tip {
+    margin-top: 1.25rem; padding: .9rem 1rem; border-radius: 16px;
+    background: var(--af-bg2); border: 1px dashed var(--af-bd);
+    font-size: .78rem; color: var(--af-mut); line-height: 1.45;
   }
 
-  /* Header */
-  .page-header {
-    background: var(--primary-gradient);
-    border-radius: 1rem;
-    padding: 2rem;
-    color: white;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  /* ── Cartes de section ──────────────────────────────────────── */
+  .step-card {
+    background: var(--af-card); border: 1px solid var(--af-bd);
+    border-radius: var(--af-r); margin-bottom: 1.25rem;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(15,23,42,.08);
+    scroll-margin-top: 90px;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: .9rem;
+    padding: 1.15rem 1.5rem; border-bottom: 1px solid var(--af-bd);
+  }
+  .sh-icon {
+    flex: none; display: grid; place-items: center;
+    width: 42px; height: 42px; border-radius: 13px;
+    background: var(--af-soft); color: var(--af-p);
+  }
+  .sh-icon svg { width: 20px; height: 20px; }
+  .step-header h2 { font-size: 1.05rem; font-weight: 800; margin: 0; color: var(--af-tx); }
+  .step-header p { font-size: .8125rem; margin: 2px 0 0; color: var(--af-mut); }
+  .sh-tag {
+    margin-left: auto; flex: none; padding: .25rem .65rem; border-radius: 50px;
+    font-size: .72rem; font-weight: 700; background: var(--af-bg2); color: var(--af-mut);
+    border: 1px solid var(--af-bd);
+  }
+  .step-body { padding: 1.5rem; }
+
+  /* ── Champs ─────────────────────────────────────────────────── */
+  .af-label { display: block; font-size: .875rem; font-weight: 700; color: var(--af-tx); margin-bottom: .4rem; }
+  .af-label .req { color: #dc2626; margin-left: 2px; }
+  .af-label .opt { font-weight: 500; color: var(--af-mut); font-size: .78rem; }
+  .af-hint { display: block; margin-top: .4rem; font-size: .78rem; color: var(--af-mut); }
+  .af-field { margin-bottom: 1.25rem; }
+  .af-field:last-child { margin-bottom: 0; }
+
+  .af input[type=text], .af input[type=number], .af input[type=date], .af input[type=email],
+  .af input[type=url], .af input[type=tel], .af select, .af textarea,
+  .af .form-control, .af .form-select {
+    width: 100%; min-height: 48px;
+    padding: .7rem .95rem; font-size: .9375rem;
+    color: var(--af-tx); background-color: var(--af-bg2);
+    border: 1.5px solid var(--af-bd); border-radius: 13px;
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+  }
+  .af textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
+  .af input:focus, .af select:focus, .af textarea:focus,
+  .af .form-control:focus, .af .form-select:focus {
+    outline: 0; border-color: var(--af-p); background-color: var(--af-card);
+    box-shadow: 0 0 0 4px rgba(99,102,241,.14);
+  }
+  .af .loc-search-box input { min-height: 0; padding: .7rem 0; border: 0; background: transparent; box-shadow: none; }
+
+  .af-count { float: right; font-size: .75rem; font-weight: 600; color: var(--af-mut); font-variant-numeric: tabular-nums; }
+
+  /* Suffixe d'unité (FCFA, m²) */
+  .af-affix { position: relative; }
+  .af-affix > input { padding-right: 4.2rem; }
+  .af-affix-unit {
+    position: absolute; top: 0; right: .9rem; height: 48px;
+    display: flex; align-items: center; pointer-events: none;
+    font-size: .8rem; font-weight: 700; color: var(--af-mut);
   }
 
-  .page-header h1 {
-    font-weight: 800;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  /* Interrupteurs */
+  .af-switches { display: flex; flex-wrap: wrap; gap: .75rem; }
+  .af-switch {
+    display: flex; align-items: center; gap: .7rem; cursor: pointer;
+    padding: .7rem 1rem; border: 1.5px solid var(--af-bd); border-radius: 14px;
+    background: var(--af-bg2); font-size: .875rem; font-weight: 600; color: var(--af-tx);
+    transition: border-color .15s, background-color .15s;
   }
-
-  .page-header p {
-    opacity: 0.9;
-    font-size: 1rem;
+  .af-switch:has(input:checked) { border-color: var(--af-p); background: var(--af-soft); }
+  .af-switch input[type=checkbox] {
+    appearance: none; -webkit-appearance: none; flex: none;
+    position: relative; width: 38px; height: 22px; margin: 0; border-radius: 50px;
+    background: #cbd5e1; cursor: pointer; transition: background-color .2s;
   }
-
-  /* Progress Bar Exness-style */
-  .progress-container {
-    background: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--card-shadow);
+  .af-switch input[type=checkbox]::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s;
   }
+  .af-switch input:checked { background: var(--af-p); }
+  .af-switch input:checked::after { transform: translateX(16px); }
+  .af-switch input:focus-visible { outline: 3px solid rgba(99,102,241,.45); outline-offset: 2px; }
 
-  .progress-steps {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    margin-bottom: 2rem;
+  /* Équipements en pastilles */
+  .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: .6rem; }
+  .equip-check {
+    position: relative; display: flex; align-items: center; gap: .6rem;
+    padding: .75rem .9rem; border: 1.5px solid var(--af-bd); border-radius: 14px;
+    background: var(--af-card); cursor: pointer; user-select: none;
+    font-size: .85rem; font-weight: 600; color: var(--af-tx);
+    transition: border-color .15s, background-color .15s, transform .1s;
   }
-
-  .progress-steps::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: #e9ecef;
-    transform: translateY(-50%);
-    z-index: 1;
+  .equip-check:hover { border-color: var(--af-p); }
+  .equip-check:active { transform: scale(.98); }
+  .equip-check input { position: absolute; opacity: 0; pointer-events: none; }
+  .equip-ico {
+    flex: none; display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 10px; background: var(--af-bg2);
   }
-
-  .progress-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    height: 4px;
-    background: var(--primary-gradient);
-    transform: translateY(-50%);
-    z-index: 2;
-    transition: width 0.5s ease;
+  .equip-ico svg { width: 16px; height: 16px; }
+  .equip-check::after {
+    content: ""; margin-left: auto; flex: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--af-bd); background: var(--af-card) center/11px no-repeat;
+    transition: all .15s;
   }
-
-  .step-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: white;
-    border: 3px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 3;
-    transition: var(--transition);
-    cursor: pointer;
+  .equip-check:has(input:checked) { border-color: var(--af-p); background: var(--af-soft); }
+  .equip-check:has(input:checked) .equip-ico { background: var(--af-card); }
+  .equip-check:has(input:checked)::after {
+    border-color: var(--af-p);
+    background-color: var(--af-p);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
   }
+  .equip-check:has(input:focus-visible) { outline: 3px solid rgba(99,102,241,.45); outline-offset: 2px; }
 
-  .step-circle.active {
-    border-color: #667eea;
-    background: var(--primary-gradient);
-    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.2);
-  }
-
-  .step-circle.completed {
-    border-color: #10b981;
-    background: var(--success-gradient);
-  }
-
-  .step-circle svg {
-    width: 24px;
-    height: 24px;
-    color: #6c757d;
-  }
-
-  .step-circle.active svg,
-  .step-circle.completed svg {
-    color: white;
-  }
-
-  .step-label {
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #6c757d;
-    white-space: nowrap;
-    text-align: center;
-  }
-
-  .step-label.active {
-    color: #667eea;
-  }
-
-  .step-label.completed {
-    color: #10b981;
-  }
-
-  /* Section Cards */
-  .section-card {
-    background: white;
-    border-radius: 1rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--card-shadow);
-    transition: var(--transition);
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .section-header {
-    padding: 1.25rem 1.5rem;
-    color: white;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .section-body {
-    padding: 2rem;
-  }
-
-  /* Form Controls */
-  .form-control, .form-select {
-    border: 2px solid #e9ecef;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    transition: var(--transition);
-    font-weight: 500;
-  }
-
-  .form-control:focus, .form-select:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.1);
-  }
-
-  .form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.5rem;
-  }
-
-  /* Equipment Grid */
-  .equipment-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .equipment-item {
-    position: relative;
-  }
-
-  .equipment-item input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-  }
-
-  .equipment-label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: var(--transition);
-    font-weight: 500;
-  }
-
-  .equipment-label:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-  }
-
-  .equipment-item input:checked + .equipment-label {
-    background: linear-gradient(135deg, #667eea15, #764ba215);
-    border-color: #667eea;
-    color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-  }
-
-  .equipment-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Upload Zone */
+  /* ── Photos ─────────────────────────────────────────────────── */
   .upload-zone {
-    border: 3px dashed #dee2e6;
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition);
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 2.25rem 1.5rem; border: 2px dashed var(--af-bd); border-radius: 18px;
+    background: var(--af-bg2); cursor: pointer;
+    transition: border-color .15s, background-color .15s;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--af-p); background: var(--af-soft); }
+  .upload-ico {
+    display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: .9rem;
+    border-radius: 20px; color: #fff;
+    background: linear-gradient(135deg, var(--af-p), var(--af-p2));
+    box-shadow: 0 10px 22px -10px rgba(99,102,241,.7);
+  }
+  .upload-ico svg { width: 28px; height: 28px; }
+  .upload-title { font-weight: 800; color: var(--af-tx); }
+  .upload-sub { font-size: .8rem; color: var(--af-mut); margin: .25rem 0 1rem; }
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .55rem 1.1rem; border-radius: 12px; border: 1.5px solid var(--af-p);
+    background: var(--af-card); color: var(--af-p); font-weight: 700; font-size: .85rem; cursor: pointer;
+  }
+  .upload-btn:hover { background: var(--af-p); color: #fff; }
+
+  .photo-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .75rem; margin-top: 1rem; }
+  .photo-preview-grid:empty { display: none; }
+  .photo-preview-item {
+    position: relative; aspect-ratio: 4/3; overflow: hidden;
+    border-radius: 14px; border: 2px solid transparent;
+    box-shadow: 0 4px 12px -6px rgba(15,23,42,.3);
+  }
+  .photo-preview-item.principale { grid-column: span 2; grid-row: span 2; border-color: var(--af-p); }
+  .photo-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-preview-badge {
+    position: absolute; left: 8px; bottom: 8px;
+    padding: 3px 9px; border-radius: 50px; background: var(--af-p); color: #fff;
+    font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .photo-preview-remove {
+    position: absolute; top: 7px; right: 7px;
+    display: grid; place-items: center; width: 26px; height: 26px;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: rgba(15,23,42,.65); color: #fff; font-size: .75rem;
+    backdrop-filter: blur(4px); transition: background-color .15s;
+  }
+  .photo-preview-remove:hover { background: #dc2626; }
+  .photo-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; font-size: .78rem; color: var(--af-mut); }
+  .photo-meta #photoCount { font-weight: 700; color: var(--af-tx); }
+  .af-tips {
+    display: flex; gap: .85rem; margin-top: 1.1rem; padding: 1rem 1.1rem;
+    border-radius: 16px; background: #fffbeb; border: 1px solid #fde68a; color: #78350f;
+  }
+  .af-tips svg { flex: none; width: 18px; height: 18px; color: #d97706; margin-top: 2px; }
+  .af-tips ul { margin: .35rem 0 0; padding-left: 1.1rem; font-size: .8rem; line-height: 1.55; }
+
+  /* ── Erreurs serveur ────────────────────────────────────────── */
+  .af-alert {
+    display: flex; gap: .85rem; padding: 1rem 1.2rem; margin-bottom: 1.25rem;
+    border-radius: 16px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+  }
+  .af-alert svg { flex: none; width: 20px; height: 20px; margin-top: 1px; }
+  .af-alert ul { margin: .35rem 0 0; padding-left: 1.1rem; font-size: .85rem; }
+  .af .text-danger.small { margin-top: .4rem; font-weight: 500; }
+  .af input.lcm-invalid, .af select.lcm-invalid, .af textarea.lcm-invalid {
+    border-color: #dc2626; background-color: #fef2f2;
+  }
+  .af input.lcm-invalid:focus, .af select.lcm-invalid:focus, .af textarea.lcm-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(220,38,38,.14);
   }
 
-  .upload-zone:hover {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea10, #764ba210);
+  /* ── Barre d'actions ────────────────────────────────────────── */
+  .af-actions {
+    position: sticky; bottom: 12px; z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    margin-top: 1.5rem; padding: .8rem .9rem .8rem 1.2rem;
+    border: 1px solid var(--af-bd); border-radius: 18px;
+    background: color-mix(in srgb, var(--af-card) 88%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 32px -12px rgba(15,23,42,.25);
   }
-
-  .upload-zone.dragover {
-    border-color: #10b981;
-    background: linear-gradient(135deg, #10b98110, #05966910);
-    transform: scale(1.02);
+  .af-actions-note { display: flex; align-items: center; gap: .5rem; font-size: .8rem; color: var(--af-mut); }
+  .af-actions-note svg { width: 16px; height: 16px; color: var(--af-ok); }
+  .af-actions-btns { display: flex; gap: .6rem; margin-left: auto; }
+  .af-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+    min-height: 46px; padding: 0 1.2rem; border-radius: 13px;
+    font-weight: 700; font-size: .9rem; text-decoration: none; cursor: pointer;
+    border: 1.5px solid var(--af-bd); background: var(--af-card); color: var(--af-tx);
+    transition: all .15s;
   }
-
-  .upload-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--primary-gradient);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
+  .af-btn:hover { border-color: var(--af-mut); color: var(--af-tx); }
+  .af-btn svg { width: 17px; height: 17px; }
+  .af-btn-primary {
+    border: 0; color: #fff; padding: 0 1.6rem;
+    background: linear-gradient(135deg, var(--af-p), var(--af-p2));
+    box-shadow: 0 8px 20px -8px rgba(99,102,241,.7);
   }
+  .af-btn-primary:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 24px -8px rgba(99,102,241,.8); }
+  .af-btn-primary[disabled] { opacity: .75; transform: none; cursor: progress; }
 
-  /* Photo Grid */
-  .photo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-  .photo-card {
-    position: relative;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    aspect-ratio: 4/3;
-    border: 3px solid #e9ecef;
-    transition: var(--transition);
-  }
-
-  .photo-card.primary {
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  }
-
-  .photo-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .photo-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: var(--primary-gradient);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 50px;
-  }
-
-  .photo-remove {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    background: rgba(220, 53, 69, 0.95);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-  }
-
-  /* Map */
-  .map-container {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    border: 2px solid #e9ecef;
-    box-shadow: var(--card-shadow);
-    margin-top: 0.5rem;
-  }
-
-  /* Buttons */
-  .btn-primary {
-    background: var(--primary-gradient);
-    border: none;
-    padding: 0.875rem 2rem;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: var(--transition);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  }
-
-  .btn-outline-secondary {
-    border: 2px solid #dee2e6;
-    color: #6c757d;
-    padding: 0.875rem 2rem;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: var(--transition);
-  }
-
-  .btn-outline-secondary:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
-  }
-
-  /* Navigation Buttons */
-  .nav-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-    gap: 1rem;
-  }
-
-  .btn-back {
-    background: white;
-    border: 2px solid #dee2e6;
-    color: #6c757d;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: var(--transition);
-  }
-
-  .btn-back:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-  }
-
-  .btn-next {
-    background: var(--primary-gradient);
-    border: none;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    border-radius: 0.5rem;
-    transition: var(--transition);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  .btn-next:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  }
-
-  /* Error Alert */
-  .error-alert {
-    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
-    border: 2px solid #dc3545;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    animation: slideDown 0.3s ease;
-  }
-
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
+  /* ── Mobile ─────────────────────────────────────────────────── */
+  @media (max-width: 991.98px) {
+    .af-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .af-nav {
+      top: 60px; z-index: 1010; margin: 0 -12px 1rem; padding: .5rem 12px;
+      background: color-mix(in srgb, var(--af-card) 92%, transparent); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--af-bd);
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .af-nav-title, .af-nav-tip, .ps-txt small { display: none; }
+    .progress-steps { flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: .35rem; }
+    .progress-steps::-webkit-scrollbar { display: none; }
+    .progress-step { flex: none; padding: .4rem .7rem .4rem .45rem; border-radius: 50px; border: 1px solid var(--af-bd); }
+    .ps-num { width: 24px; height: 24px; font-size: .72rem; }
+    .ps-txt b { font-size: .8rem; }
+  }
+  @media (max-width: 575.98px) {
+    .af-hero { padding: 1.5rem 1.25rem; border-radius: 20px; }
+    .step-header, .step-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+    .sh-tag { display: none; }
+    .af-actions-note { display: none; }
+    .af-actions-btns { width: 100%; }
+    .af-actions-btns .af-btn { flex: 1; }
+    .af-actions-btns .af-btn-primary { flex: 2; }
+    .photo-preview-item.principale { grid-column: span 2; grid-row: span 1; }
   }
 
-  /* Loading Spinner */
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    display: inline-block;
-    margin-right: 8px;
-    vertical-align: middle;
+  /* ── Localisation : recherche d'adresse + carte ───────────────── */
+  .loc-finder { display: grid; grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+  .loc-help { margin: 0; font-size: .875rem; color: var(--text-muted, #64748b); }
+  .loc-search { position: relative; }
+  .loc-search-box {
+    display: flex; align-items: center; gap: .5rem;
+    min-height: 54px; padding: .35rem .4rem .35rem 1rem;
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 16px;
+    background: var(--gray-50, #f8fafc);
+    color: var(--text-muted, #64748b);
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
   }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  .loc-search-box:focus-within {
+    border-color: var(--primary, #6366f1);
+    background: var(--bg-card, #fff);
+    color: var(--primary, #6366f1);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, .16);
   }
-
-  /* Info Box */
-  .info-box {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border: 2px solid #bfdbfe;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+  .loc-search-box svg { flex: none; }
+  .loc-search-box input {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+    padding: .7rem 0; font-size: 1rem;
+    color: var(--text-primary, #1e1b3a);
   }
-
-  .icon-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #3b82f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+  .loc-search-box input::placeholder { color: var(--text-muted, #94a3b8); }
+  .loc-btn {
+    display: inline-flex; align-items: center; gap: .4rem; flex: none;
+    height: 42px; padding: 0 .9rem;
+    border: 1.5px solid var(--border, #e2e8f0); border-radius: 12px;
+    background: var(--bg-card, #fff); color: var(--text-primary, #1e1b3a);
+    font-size: .875rem; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, background-color .15s;
   }
-
-  /* Hidden sections */
-  .form-section {
-    display: none;
+  .loc-btn:hover { border-color: var(--primary, #6366f1); background: var(--primary-light, #eef2ff); }
+  .loc-btn[disabled] { opacity: .6; cursor: progress; }
+  .loc-icon-btn {
+    display: inline-grid; place-items: center; flex: none;
+    width: 32px; height: 32px; border: 0; border-radius: 50%;
+    background: transparent; color: var(--text-muted, #64748b); cursor: pointer;
   }
-
-  .form-section.active {
-    display: block;
+  .loc-icon-btn:hover { background: var(--gray-100, #f1f5f9); }
+  .loc-btn:focus-visible, .loc-icon-btn:focus-visible, .loc-link:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, .45); outline-offset: 2px;
   }
+  .loc-spinner {
+    flex: none; width: 18px; height: 18px; margin-right: .25rem;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; animation: spin .6s linear infinite;
+  }
+  .loc-spinner[hidden], .loc-icon-btn[hidden] { display: none; }
 
-  /* Responsive */
-  @media (max-width: 768px) {
-    .page-wrapper {
-      padding: 1rem;
-    }
-    
-    .page-header {
-      padding: 1.5rem;
-    }
-    
-    .page-header h1 {
-      font-size: 1.5rem;
-    }
-    
-    .section-body {
-      padding: 1.25rem;
-    }
-    
-    .equipment-grid {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
+  .loc-results {
+    position: absolute; z-index: 1200; left: 0; right: 0; top: calc(100% + 6px);
+    margin: 0; padding: .35rem; list-style: none;
+    max-height: 320px; overflow-y: auto;
+    background: var(--bg-card, #fff);
+    border: 1.5px solid var(--border, #e2e8f0); border-radius: 16px;
+    box-shadow: var(--dropdown-shadow, 0 12px 40px rgba(15, 23, 42, .14));
+  }
+  .loc-results[hidden] { display: none; }
+  .loc-option {
+    display: flex; gap: .7rem; align-items: flex-start;
+    padding: .65rem .7rem; border-radius: 11px; cursor: pointer;
+  }
+  .loc-option[aria-selected="true"] { background: var(--primary-light, #eef2ff); }
+  .loc-option svg { flex: none; margin-top: 2px; color: #059669; }
+  .loc-option-main { font-weight: 600; font-size: .9375rem; line-height: 1.3; color: var(--text-primary, #1e1b3a); }
+  .loc-option-sub { margin-top: 1px; font-size: .8125rem; line-height: 1.3; color: var(--text-muted, #64748b); }
+  .loc-note { padding: .8rem .9rem; font-size: .875rem; color: var(--text-muted, #64748b); }
 
-    .step-circle {
-      width: 40px;
-      height: 40px;
-    }
+  .loc-map-wrap {
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 16px; overflow: hidden;
+  }
+  #map-creer { height: 340px; width: 100%; background: #e5e7eb; }
 
-    .step-label {
-      font-size: 0.65rem;
-      top: 50px;
-    }
+  .loc-status {
+    display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
+    padding: .8rem 1rem;
+    border: 1.5px solid var(--border, #e2e8f0); border-left-width: 5px;
+    border-radius: 14px; background: var(--gray-50, #f8fafc);
+  }
+  .loc-status[data-state="loading"] { border-color: var(--primary, #6366f1); }
+  .loc-status[data-state="set"]     { border-color: #10b981; background: rgba(16, 185, 129, .08); }
+  .loc-status[data-state="error"]   { border-color: #dc2626; background: rgba(220, 38, 38, .07); }
+  .loc-status-icon {
+    flex: none; display: grid; place-items: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--bg-card, #fff); color: var(--text-muted, #64748b);
+  }
+  .loc-status[data-state="loading"] .loc-status-icon { color: var(--primary, #6366f1); }
+  .loc-status[data-state="set"] .loc-status-icon     { color: #059669; }
+  .loc-status[data-state="error"] .loc-status-icon   { color: #dc2626; }
+  .loc-status-text { flex: 1; min-width: 200px; }
+  .loc-status-title { font-weight: 700; font-size: .9375rem; overflow-wrap: anywhere; color: var(--text-primary, #1e1b3a); }
+  .loc-status-sub { margin-top: 2px; font-size: .8125rem; color: var(--text-muted, #64748b); }
+  .loc-coords { margin-right: .6rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-secondary, #475569); }
+  .loc-status-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .loc-link {
+    border: 0; background: none; padding: .35rem .6rem; border-radius: 8px;
+    font-size: .8125rem; font-weight: 600; cursor: pointer;
+    color: var(--primary, #6366f1);
+  }
+  .loc-link:hover { background: var(--primary-light, #eef2ff); }
+  .loc-link.danger { color: #dc2626; }
+  .loc-link[hidden] { display: none; }
 
-    .nav-buttons {
-      flex-direction: column;
-    }
+  /* Repère sur la carte */
+  .lcm-pin-wrap { background: none; border: 0; }
+  .lcm-pin { width: 34px; height: 44px; filter: drop-shadow(0 4px 5px rgba(15, 23, 42, .35)); cursor: grab; }
+  .lcm-pin svg { display: block; }
+  .lcm-pin.drop { animation: pin-drop .35s cubic-bezier(.2, .9, .3, 1.2); }
+  @keyframes pin-drop { from { transform: translateY(-20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .lcm-pin.drop { animation: none; } }
 
-    .btn-back,
-    .btn-next {
-      width: 100%;
-    }
+  /* ── Validation des champs ────────────────────────────────────── */
+  .lcm-error {
+    margin-top: .4rem; font-size: .8125rem; line-height: 1.35;
+    font-weight: 500; color: #c81e1e;
+  }
+  .lcm-error[hidden] { display: none; }
+  .lcm-invalid {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .12) !important;
+  }
+  .upload-zone.lcm-invalid { border-style: dashed; background: rgba(220, 38, 38, .05); }
+  .upload-zone:focus-visible { outline: 3px solid rgba(99, 102, 241, .45); outline-offset: 2px; }
+
+  @media (max-width: 575.98px) {
+    #map-creer { height: 300px; }
+    .loc-btn span { display: none; }
+    .loc-btn { padding: 0 .7rem; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-  
-  <!-- Header -->
-  <div class="page-header">
+<div class="container py-4 af">
+
+  <!-- En-tête -->
+  <header class="af-hero">
+    <a href="{% url 'accounts:dashboard_bailleur' %}" class="af-back">
+      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
+      Mon tableau de bord
+    </a>
+    <h1>Publier une annonce</h1>
+    <p>Présentez votre logement en quelques étapes. Plus l'annonce est complète, plus vite vous trouverez un locataire.</p>
+    <div class="af-pills">
+      <span class="af-pill"><svg data-lucide="clock" style="width:14px;height:14px"></svg> Vérifiée sous 24h</span>
+      <span class="af-pill"><svg data-lucide="map-pin" style="width:14px;height:14px"></svg> Visible sur la carte</span>
+      <span class="af-pill"><svg data-lucide="shield-check" style="width:14px;height:14px"></svg> Gratuit</span>
+    </div>
+  </header>
+
+  <div class="af-layout">
+
+    <!-- Navigation / progression -->
+    <aside class="af-nav">
+      <p class="af-nav-title">Étapes</p>
+      <nav class="progress-steps" aria-label="Progression du formulaire">
+        <a href="#sec-info" class="progress-step" data-step="info">
+          <span class="ps-num"><span class="ps-n">1</span><svg class="ps-check" data-lucide="check" style="width:14px;height:14px"></svg></span>
+          <span class="ps-txt"><b>Informations</b><small>Titre, type, description</small></span>
+        </a>
+        <a href="#sec-loc" class="progress-step" data-step="loc">
+          <span class="ps-num"><span class="ps-n">2</span><svg class="ps-check" data-lucide="check" style="width:14px;height:14px"></svg></span>
+          <span class="ps-txt"><b>Localisation</b><small>Ville, adresse, carte</small></span>
+        </a>
+        <a href="#sec-carac" class="progress-step" data-step="carac">
+          <span class="ps-num"><span class="ps-n">3</span><svg class="ps-check" data-lucide="check" style="width:14px;height:14px"></svg></span>
+          <span class="ps-txt"><b>Caractéristiques</b><small>Pièces, surface</small></span>
+        </a>
+        <a href="#sec-prix" class="progress-step" data-step="prix">
+          <span class="ps-num"><span class="ps-n">4</span><svg class="ps-check" data-lucide="check" style="width:14px;height:14px"></svg></span>
+          <span class="ps-txt"><b>Prix</b><small>Loyer, charges, caution</small></span>
+        </a>
+        <a href="#sec-equip" class="progress-step">
+          <span class="ps-num"><span class="ps-n">5</span></span>
+          <span class="ps-txt"><b>Équipements</b><small>Facultatif</small></span>
+        </a>
+        <a href="#sec-photos" class="progress-step" data-step="photos">
+          <span class="ps-num"><span class="ps-n">6</span><svg class="ps-check" data-lucide="check" style="width:14px;height:14px"></svg></span>
+          <span class="ps-txt"><b>Photos</b><small>1 à 10 images</small></span>
+        </a>
+      </nav>
+      <div class="af-nav-tip">
+        Les champs marqués d'un <b style="color:#dc2626">*</b> sont obligatoires. Chaque étape se coche automatiquement une fois complète.
+      </div>
+    </aside>
+
+    <!-- Formulaire -->
     <div>
-      <a href="{% url 'accounts:dashboard_bailleur' %}" 
-         class="text-white-50 d-inline-flex align-items-center gap-2 mb-3 text-decoration-none">
-        <svg data-lucide="arrow-left" style="width:16px;height:16px"></svg>
-        <span>Mon tableau de bord</span>
-      </a>
-      <h1>
-        <svg data-lucide="building-2" style="width:32px;height:32px"></svg>
-        Publier une annonce
-      </h1>
-      <p class="mb-0">Suivez les étapes pour créer votre annonce</p>
-    </div>
-  </div>
+      <!-- novalidate : les messages d'erreur sont gérés par le script de validation ci-dessous -->
+      <form method="post" enctype="multipart/form-data" id="annonce-form" novalidate>
+        {% csrf_token %}
 
-  <!-- Progress Steps -->
-  <div class="progress-container">
-    <div class="progress-steps" id="progressSteps">
-      <div class="progress-line" id="progressLine"></div>
-      
-      <div class="step-circle active" data-step="1">
-        <svg data-lucide="file-text"></svg>
-        <span class="step-label active">Informations</span>
-      </div>
-      
-      <div class="step-circle" data-step="2">
-        <svg data-lucide="map-pin"></svg>
-        <span class="step-label">Localisation</span>
-      </div>
-      
-      <div class="step-circle" data-step="3">
-        <svg data-lucide="layout-grid"></svg>
-        <span class="step-label">Caractéristiques</span>
-      </div>
-      
-      <div class="step-circle" data-step="4">
-        <svg data-lucide="calculator"></svg>
-        <span class="step-label">Prix</span>
-      </div>
-      
-      <div class="step-circle" data-step="5">
-        <svg data-lucide="settings"></svg>
-        <span class="step-label">Équipements</span>
-      </div>
-      
-      <div class="step-circle" data-step="6">
-        <svg data-lucide="camera"></svg>
-        <span class="step-label">Photos</span>
-      </div>
-    </div>
-  </div>
-
-  <form method="post" enctype="multipart/form-data" id="annonce-form">
-    {% csrf_token %}
-    
-    <!-- Error display -->
-    {% if form.errors %}
-    <div class="error-alert">
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <svg data-lucide="alert-triangle" style="width:24px;height:24px;color:#dc3545"></svg>
-        <h5 class="mb-0 fw-bold text-danger">Veuillez corriger les erreurs suivantes :</h5>
-      </div>
-      <ul class="mb-0 ps-4">
-        {% for field in form %}
-          {% if field.errors %}
-            {% for error in field.errors %}
-            <li class="mb-1">
-              <strong>{{ field.label }} :</strong> {{ error }}
-            </li>
-            {% endfor %}
-          {% endif %}
-        {% endfor %}
-        {% for error in form.non_field_errors %}
-        <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-    <!-- STEP 1 : Informations générales -->
-    <div class="form-section active" id="section-1">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--primary-gradient);">
-          <svg data-lucide="clipboard-list" style="width:20px;height:20px"></svg>
-          Étape 1 : Informations générales
-        </div>
-        <div class="section-body">
-          <div class="mb-4">
-            <label class="form-label">Titre de l'annonce *</label>
-            {{ form.titre }}
-            {% if form.titre.errors %}
-            <div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>
-            {% endif %}
-            <div class="info-box mt-3 d-flex align-items-start gap-3">
-              <div class="icon-circle">
-                <svg data-lucide="lightbulb" style="width:20px;height:20px;color:white"></svg>
-              </div>
-              <div>
-                <div class="fw-semibold mb-1">Conseil</div>
-                <div class="text-muted">Soyez précis et accrocheur. Ex: "Bel appartement F3 meublé à Bastos"</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <label class="form-label">Type de logement *</label>
-              {{ form.type_logement }}
-              {% if form.type_logement.errors %}
-              <div class="text-danger small mt-1">{{ form.type_logement.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Type d'offre *</label>
-              {{ form.type_offre }}
-              {% if form.type_offre.errors %}
-              <div class="text-danger small mt-1">{{ form.type_offre.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Standing</label>
-              {{ form.standing }}
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label">
-              Description détaillée *
-              <span class="text-muted fw-normal" id="charCount">(0/1000)</span>
-            </label>
-            {{ form.description }}
-            {% if form.description.errors %}
-            <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
-            {% endif %}
-          </div>
-
+        {% if form.errors %}
+        <div class="af-alert" role="alert">
+          <svg data-lucide="alert-circle"></svg>
           <div>
-            <label class="form-label d-block">Meublé ?</label>
-            {{ form.meuble }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 2 : Localisation -->
-    <div class="form-section" id="section-2">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--success-gradient);">
-          <svg data-lucide="map" style="width:20px;height:20px"></svg>
-          Étape 2 : Localisation
-        </div>
-        <div class="section-body">
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Ville *</label>
-              {{ form.ville }}
-              {% if form.ville.errors %}
-              <div class="text-danger small mt-1">{{ form.ville.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">
-                Quartier
-                <span class="text-muted fw-normal small">(optionnel)</span>
-              </label>
-              {{ form.quartier }}
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Adresse complète *</label>
-            {{ form.adresse }}
-            {% if form.adresse.errors %}
-            <div class="text-danger small mt-1">{{ form.adresse.errors.0 }}</div>
-            {% endif %}
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label">
-              Positionner sur la carte
-              <span class="text-muted fw-normal small">
-                (cliquez sur la carte pour marquer la position exacte)
-              </span>
-            </label>
-            <div class="map-container">
-              <div id="map-creer" style="height:350px;"></div>
-            </div>
-            <div class="d-flex align-items-center gap-2 mt-2 text-muted">
-              <svg data-lucide="info" style="width:14px;height:14px"></svg>
-              <small>La géolocalisation permet aux locataires de vous trouver sur la carte</small>
-            </div>
-          </div>
-
-          {{ form.latitude }}
-          {{ form.longitude }}
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 3 : Caractéristiques -->
-    <div class="form-section" id="section-3">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--info-gradient);">
-          <svg data-lucide="layout-grid" style="width:20px;height:20px"></svg>
-          Étape 3 : Caractéristiques
-        </div>
-        <div class="section-body">
-          <div class="row g-3">
-            <div class="col-md-3 col-6">
-              <label class="form-label">Chambres *</label>
-              {{ form.nb_chambres }}
-              {% if form.nb_chambres.errors %}
-              <div class="text-danger small mt-1">{{ form.nb_chambres.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label">Salles de bain</label>
-              {{ form.nb_salles_bain }}
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label">Toilettes</label>
-              {{ form.nb_toilettes }}
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label">Surface (m²)</label>
-              {{ form.surface }}
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label">Étage</label>
-              {{ form.etage }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 4 : Prix et conditions -->
-    <div class="form-section" id="section-4">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--warning-gradient);">
-          <svg data-lucide="calculator" style="width:20px;height:20px"></svg>
-          Étape 4 : Prix et conditions
-        </div>
-        <div class="section-body">
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Prix (FCFA) *</label>
-              {{ form.prix }}
-              {% if form.prix.errors %}
-              <div class="text-danger small mt-1">{{ form.prix.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">
-                Charges mensuelles
-                <span class="text-muted fw-normal">(FCFA)</span>
-              </label>
-              {{ form.charges }}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">
-                Caution
-                <span class="text-muted fw-normal">(FCFA)</span>
-              </label>
-              {{ form.caution }}
-            </div>
-          </div>
-
-          <div class="d-flex flex-wrap gap-4 mb-3">
-            <label class="d-flex align-items-center gap-2" style="cursor:pointer">
-              {{ form.prix_negociable }}
-              <span class="small fw-semibold">Prix négociable</span>
-            </label>
-            <label class="d-flex align-items-center gap-2" style="cursor:pointer">
-              {{ form.disponible }}
-              <span class="small fw-semibold">Disponible maintenant</span>
-            </label>
-          </div>
-
-          <div>
-            <label class="form-label">
-              Date de disponibilité
-              <span class="text-muted fw-normal small">(si pas immédiatement disponible)</span>
-            </label>
-            {{ form.date_disponibilite }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 5 : Équipements -->
-    <div class="form-section" id="section-5">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--danger-gradient);">
-          <svg data-lucide="settings" style="width:20px;height:20px"></svg>
-          Étape 5 : Équipements disponibles
-        </div>
-        <div class="section-body">
-          <div class="equipment-grid">
-            <div class="equipment-item">
-              {{ form.eau_courante }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="droplets" style="width:18px;height:18px;color:#3b82f6"></svg>
-                </span>
-                <span>Eau courante</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.electricite }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="zap" style="width:18px;height:18px;color:#f59e0b"></svg>
-                </span>
-                <span>Électricité</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.internet }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="wifi" style="width:18px;height:18px;color:#667eea"></svg>
-                </span>
-                <span>WiFi / Internet</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.climatisation }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="snowflake" style="width:18px;height:18px;color:#3b82f6"></svg>
-                </span>
-                <span>Climatisation</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.parking }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="car" style="width:18px;height:18px;color:#6b7280"></svg>
-                </span>
-                <span>Parking</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.gardien }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="shield" style="width:18px;height:18px;color:#10b981"></svg>
-                </span>
-                <span>Gardien</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.generateur }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="battery-charging" style="width:18px;height:18px;color:#f59e0b"></svg>
-                </span>
-                <span>Groupe électrogène</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.piscine }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="waves" style="width:18px;height:18px;color:#3b82f6"></svg>
-                </span>
-                <span>Piscine</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.cuisine_equipee }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="chef-hat" style="width:18px;height:18px;color:#f59e0b"></svg>
-                </span>
-                <span>Cuisine équipée</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.balcon }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="sun" style="width:18px;height:18px;color:#fbbf24"></svg>
-                </span>
-                <span>Balcon / Terrasse</span>
-              </label>
-            </div>
-            <div class="equipment-item">
-              {{ form.securite }}
-              <label class="equipment-label">
-                <span class="equipment-icon">
-                  <svg data-lucide="lock" style="width:18px;height:18px;color:#ef4444"></svg>
-                </span>
-                <span>Clôture / Sécurité</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 6 : Photos -->
-    <div class="form-section" id="section-6">
-      <div class="section-card">
-        <div class="section-header" style="background: var(--dark-gradient);">
-          <svg data-lucide="image" style="width:20px;height:20px"></svg>
-          Étape 6 : Photos du logement
-          <span style="font-size:0.75rem;opacity:0.8;font-weight:400;margin-left:auto">
-            Recommandé : 5 à 10 photos
-          </span>
-        </div>
-        <div class="section-body">
-          <!-- Zone de dépôt -->
-          <div class="upload-zone" id="uploadZone">
-            <div class="upload-icon">
-              <svg data-lucide="upload" style="width:32px;height:32px;color:white"></svg>
-            </div>
-            <div class="fw-bold mb-1" style="font-size:1.1rem;">
-              Cliquez ou glissez vos photos ici
-            </div>
-            <div class="text-muted small mb-3">
-              JPG, PNG, WebP · Max 5MB par photo · Max 10 photos
-            </div>
-            <input type="file"
-                   name="photos"
-                   id="photosInput"
-                   multiple
-                   accept="image/jpeg,image/png,image/webp"
-                   style="display:none">
-            <button type="button"
-                    class="btn btn-outline-primary px-4"
-                    onclick="document.getElementById('photosInput').click()">
-              <svg data-lucide="folder-open" style="width:16px;height:16px;margin-right:6px;vertical-align:-2px"></svg>
-              Choisir des photos
-            </button>
-          </div>
-
-          <!-- Prévisualisation -->
-          <div id="photosPreview" class="photo-grid"></div>
-
-          <!-- Compteur -->
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <small id="photoCount" class="text-muted">
-              0 photo sélectionnée
-            </small>
-            <small class="text-muted">
-              La 1ère photo = photo principale de l'annonce
-            </small>
-          </div>
-
-          <!-- Conseils -->
-          <div class="info-box mt-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <div class="icon-circle">
-                <svg data-lucide="sparkles" style="width:20px;height:20px;color:white"></svg>
-              </div>
-              <div class="fw-bold" style="color: #1e40af;">Conseils pour de meilleures photos</div>
-            </div>
-            <ul class="mb-0 text-muted ps-4" style="line-height:1.8;">
-              <li>Prenez des photos en bonne luminosité (lumière naturelle)</li>
-              <li>Montrez toutes les pièces : salon, chambres, cuisine, salle de bain</li>
-              <li>Incluez une photo de la façade et de l'environnement</li>
-              <li>Les annonces avec photos reçoivent <strong>5× plus de contacts</strong></li>
+            <strong>Veuillez corriger les erreurs suivantes :</strong>
+            <ul>
+              {% for field in form %}{% for error in field.errors %}
+              <li><strong>{{ field.label }} :</strong> {{ error }}</li>
+              {% endfor %}{% endfor %}
+              {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
             </ul>
           </div>
         </div>
-      </div>
-    </div>
+        {% endif %}
 
-    <!-- Navigation Buttons -->
-    <div class="nav-buttons">
-      <button type="button" class="btn-back" id="btnBack" onclick="changeStep(-1)" style="display:none;">
-        <svg data-lucide="arrow-left" style="width:16px;height:16px;margin-right:6px;vertical-align:-2px"></svg>
-        Retour
-      </button>
-      
-      <button type="button" class="btn-next" id="btnNext" onclick="changeStep(1)">
-        Suivant
-        <svg data-lucide="arrow-right" style="width:16px;height:16px;margin-left:6px;vertical-align:-2px"></svg>
-      </button>
-      
-      <button type="submit" class="btn-primary" id="btnSubmit" style="display:none;">
-        <svg data-lucide="send" style="width:18px;height:18px;margin-right:8px;vertical-align:-3px"></svg>
-        Soumettre l'annonce
-      </button>
-    </div>
+        <!-- 1. Informations générales -->
+        <section class="step-card" id="sec-info">
+          <header class="step-header">
+            <span class="sh-icon"><svg data-lucide="file-text"></svg></span>
+            <div><h2>Informations générales</h2><p>Ce que les locataires voient en premier.</p></div>
+          </header>
+          <div class="step-body">
+            <div class="af-field">
+              <label class="af-label" for="id_titre">Titre de l'annonce <span class="req">*</span></label>
+              {{ form.titre }}
+              {% if form.titre.errors %}<div class="text-danger small">{{ form.titre.errors.0 }}</div>{% endif %}
+              <span class="af-hint">Précis et accrocheur. Ex. « Bel appartement F3 meublé à Bastos »</span>
+            </div>
 
-  </form>
+            <div class="row g-3 af-field">
+              <div class="col-md-4">
+                <label class="af-label" for="id_type_logement">Type de logement <span class="req">*</span></label>
+                {{ form.type_logement }}
+                {% if form.type_logement.errors %}<div class="text-danger small">{{ form.type_logement.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="af-label" for="id_type_offre">Type d'offre <span class="req">*</span></label>
+                {{ form.type_offre }}
+                {% if form.type_offre.errors %}<div class="text-danger small">{{ form.type_offre.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="af-label" for="id_standing">Standing</label>
+                {{ form.standing }}
+              </div>
+            </div>
+
+            <div class="af-field">
+              <label class="af-label" for="id_description">
+                Description détaillée <span class="req">*</span>
+                <span class="af-count" id="charCount">(0/1000)</span>
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors.0 }}</div>{% endif %}
+              <span class="af-hint">État, environnement, accès, points forts…</span>
+            </div>
+
+            <div class="af-field">
+              <label class="af-label" for="id_meuble">Meublé ?</label>
+              {{ form.meuble }}
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Localisation -->
+        <section class="step-card" id="sec-loc">
+          <header class="step-header">
+            <span class="sh-icon" style="background:#d1fae5;color:#059669"><svg data-lucide="map-pin"></svg></span>
+            <div><h2>Localisation</h2><p>Aidez les locataires à trouver le logement.</p></div>
+          </header>
+          <div class="step-body">
+            <div class="row g-3 af-field">
+              <div class="col-md-6">
+                <label class="af-label" for="id_ville">Ville <span class="req">*</span></label>
+                {{ form.ville }}
+                {% if form.ville.errors %}<div class="text-danger small">{{ form.ville.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="af-label" for="id_quartier">Quartier <span class="opt">(facultatif)</span></label>
+                {{ form.quartier }}
+              </div>
+            </div>
+
+            <div class="af-field">
+              <label class="af-label" for="id_adresse">Adresse complète <span class="req">*</span></label>
+              {{ form.adresse }}
+              {% if form.adresse.errors %}<div class="text-danger small">{{ form.adresse.errors.0 }}</div>{% endif %}
+              <span class="af-hint">Ex. Rue Bastos, en face du supermarché, 2ème maison à droite</span>
+            </div>
+
+            <!-- Repère sur la carte : recherche au clavier + carte -->
+            <div class="loc-finder">
+              <div>
+                <label class="form-label fw-semibold mb-1" for="locSearch">Repère sur la carte *</label>
+                <p class="loc-help" id="locHelp">
+                  Tapez une adresse, un quartier ou un lieu connu, ou touchez la carte à l'endroit exact du logement.
+                  Les locataires vous trouveront sur la carte des logements.
+                </p>
+              </div>
+
+              <div class="loc-search">
+                <div class="loc-search-box" id="locSearchBox">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+                  </svg>
+                  <input type="text" id="locSearch"
+                         role="combobox" aria-expanded="false" aria-controls="locResults"
+                         aria-autocomplete="list" aria-describedby="locHelp"
+                         autocomplete="off" autocapitalize="off" spellcheck="false"
+                         enterkeyhint="search"
+                         placeholder="Ex. Carrefour Bastos, Yaoundé">
+                  <span class="loc-spinner" id="locSpinner" hidden></span>
+                  <button type="button" class="loc-icon-btn" id="locClearSearch" hidden
+                          aria-label="Effacer la recherche">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                      <path d="M18 6 6 18M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                  <button type="button" class="loc-btn" id="locGeo" aria-label="Utiliser ma position actuelle">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle>
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                    </svg>
+                    <span>Ma position</span>
+                  </button>
+                </div>
+                <ul class="loc-results" id="locResults" role="listbox"
+                    aria-label="Lieux suggérés" hidden></ul>
+              </div>
+
+              <div class="loc-map-wrap">
+                <div id="map-creer" role="application"
+                     aria-label="Carte : touchez l'endroit exact du logement"></div>
+              </div>
+
+              <div class="loc-status" id="locStatus" data-state="empty" role="status" aria-live="polite">
+                <span class="loc-status-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </span>
+                <div class="loc-status-text">
+                  <div class="loc-status-title" id="locTitle">Aucune position choisie</div>
+                  <div class="loc-status-sub" id="locSub"></div>
+                </div>
+                <div class="loc-status-actions">
+                  <button type="button" class="loc-link" id="locUseAddr" hidden>Utiliser comme adresse</button>
+                  <button type="button" class="loc-link danger" id="locClear" hidden>Effacer la position</button>
+                </div>
+              </div>
+              <div class="lcm-error" id="err-position" hidden></div>
+            </div>
+
+            {{ form.latitude }}
+            {{ form.longitude }}
+          </div>
+        </section>
+
+        <!-- 3. Caractéristiques -->
+        <section class="step-card" id="sec-carac">
+          <header class="step-header">
+            <span class="sh-icon" style="background:#e0f2fe;color:#0284c7"><svg data-lucide="layout-grid"></svg></span>
+            <div><h2>Caractéristiques</h2><p>Les pièces et la surface du logement.</p></div>
+          </header>
+          <div class="step-body">
+            <div class="row g-3">
+              <div class="col-md-4 col-6">
+                <label class="af-label" for="id_nb_chambres">Chambres <span class="req">*</span></label>
+                {{ form.nb_chambres }}
+                {% if form.nb_chambres.errors %}<div class="text-danger small">{{ form.nb_chambres.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-4 col-6">
+                <label class="af-label" for="id_nb_salles_bain">Salles de bain</label>
+                {{ form.nb_salles_bain }}
+              </div>
+              <div class="col-md-4 col-6">
+                <label class="af-label" for="id_nb_toilettes">Toilettes</label>
+                {{ form.nb_toilettes }}
+              </div>
+              <div class="col-md-6 col-6">
+                <label class="af-label" for="id_surface">Surface</label>
+                <div class="af-affix">{{ form.surface }}<span class="af-affix-unit">m²</span></div>
+              </div>
+              <div class="col-md-6 col-12">
+                <label class="af-label" for="id_etage">Étage</label>
+                {{ form.etage }}
+                <span class="af-hint">0 = rez-de-chaussée</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Prix et conditions -->
+        <section class="step-card" id="sec-prix">
+          <header class="step-header">
+            <span class="sh-icon" style="background:#fef3c7;color:#d97706"><svg data-lucide="wallet"></svg></span>
+            <div><h2>Prix et conditions</h2><p>Montants en francs CFA.</p></div>
+          </header>
+          <div class="step-body">
+            <div class="row g-3 af-field">
+              <div class="col-md-4">
+                <label class="af-label" for="id_prix">Prix <span class="req">*</span></label>
+                <div class="af-affix">
+                  {{ form.prix }}<span class="af-affix-unit">FCFA</span>
+                  {% if form.prix.errors %}<div class="text-danger small">{{ form.prix.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="af-label" for="id_charges">Charges mensuelles</label>
+                <div class="af-affix">{{ form.charges }}<span class="af-affix-unit">FCFA</span></div>
+              </div>
+              <div class="col-md-4">
+                <label class="af-label" for="id_caution">Caution</label>
+                <div class="af-affix">{{ form.caution }}<span class="af-affix-unit">FCFA</span></div>
+              </div>
+            </div>
+
+            <div class="af-switches af-field">
+              <label class="af-switch">{{ form.prix_negociable }} Prix négociable</label>
+              <label class="af-switch">{{ form.disponible }} Disponible maintenant</label>
+            </div>
+
+            <div class="af-field" style="max-width:320px">
+              <label class="af-label" for="id_date_disponibilite">Date de disponibilité</label>
+              {{ form.date_disponibilite }}
+              <span class="af-hint">Seulement si le logement n'est pas libre tout de suite.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. Équipements -->
+        <section class="step-card" id="sec-equip">
+          <header class="step-header">
+            <span class="sh-icon" style="background:#ede9fe;color:#7c3aed"><svg data-lucide="sparkles"></svg></span>
+            <div><h2>Équipements</h2><p>Cochez tout ce qui est disponible.</p></div>
+            <span class="sh-tag">Facultatif</span>
+          </header>
+          <div class="step-body">
+            <div class="equip-grid">
+              <label class="equip-check">{{ form.eau_courante }}<span class="equip-ico"><svg data-lucide="droplets" style="color:#0ea5e9"></svg></span>Eau courante</label>
+              <label class="equip-check">{{ form.electricite }}<span class="equip-ico"><svg data-lucide="zap" style="color:#f59e0b"></svg></span>Électricité</label>
+              <label class="equip-check">{{ form.internet }}<span class="equip-ico"><svg data-lucide="wifi" style="color:#6366f1"></svg></span>WiFi / Internet</label>
+              <label class="equip-check">{{ form.climatisation }}<span class="equip-ico"><svg data-lucide="snowflake" style="color:#0ea5e9"></svg></span>Climatisation</label>
+              <label class="equip-check">{{ form.parking }}<span class="equip-ico"><svg data-lucide="car" style="color:#64748b"></svg></span>Parking</label>
+              <label class="equip-check">{{ form.gardien }}<span class="equip-ico"><svg data-lucide="shield-check" style="color:#10b981"></svg></span>Gardien</label>
+              <label class="equip-check">{{ form.generateur }}<span class="equip-ico"><svg data-lucide="fuel" style="color:#f59e0b"></svg></span>Groupe électrogène</label>
+              <label class="equip-check">{{ form.piscine }}<span class="equip-ico"><svg data-lucide="waves" style="color:#0ea5e9"></svg></span>Piscine</label>
+              <label class="equip-check">{{ form.cuisine_equipee }}<span class="equip-ico"><svg data-lucide="utensils" style="color:#f59e0b"></svg></span>Cuisine équipée</label>
+              <label class="equip-check">{{ form.balcon }}<span class="equip-ico"><svg data-lucide="home" style="color:#6366f1"></svg></span>Balcon / Terrasse</label>
+              <label class="equip-check">{{ form.securite }}<span class="equip-ico"><svg data-lucide="lock" style="color:#ef4444"></svg></span>Clôture / Sécurité</label>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. Photos -->
+        <section class="step-card" id="sec-photos">
+          <header class="step-header">
+            <span class="sh-icon" style="background:#fce7f3;color:#db2777"><svg data-lucide="images"></svg></span>
+            <div><h2>Photos du logement <span class="req" style="color:#dc2626">*</span></h2><p>Recommandé : 5 à 10 photos.</p></div>
+          </header>
+          <div class="step-body">
+            <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-describedby="err-photos">
+              <span class="upload-ico"><svg data-lucide="upload-cloud"></svg></span>
+              <div class="upload-title">Glissez vos photos ici</div>
+              <div class="upload-sub">JPG, PNG ou WebP · 5 Mo max par photo · 10 photos max</div>
+              <input type="file" name="photos" id="photosInput" multiple
+                     accept="image/jpeg,image/png,image/webp" style="display:none">
+              <button type="button" class="upload-btn" onclick="document.getElementById('photosInput').click()">
+                <svg data-lucide="folder-open" style="width:15px;height:15px"></svg>
+                Parcourir
+              </button>
+            </div>
+            <div class="lcm-error" id="err-photos" hidden></div>
+
+            <div id="photosPreview" class="photo-preview-grid"></div>
+
+            <div class="photo-meta">
+              <span id="photoCount">0 photo sélectionnée</span>
+              <span>La 1ère photo devient la photo principale</span>
+            </div>
+
+            <div class="af-tips">
+              <svg data-lucide="lightbulb"></svg>
+              <div>
+                <strong style="font-size:.85rem">Conseils pour de belles photos</strong>
+                <ul>
+                  <li>Photographiez en lumière naturelle, fenêtres ouvertes.</li>
+                  <li>Montrez chaque pièce : salon, chambres, cuisine, salle de bain.</li>
+                  <li>Ajoutez la façade et les environs.</li>
+                  <li>Les annonces avec photos reçoivent <strong>5× plus de contacts</strong>.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Barre d'actions -->
+        <div class="af-actions">
+          <span class="af-actions-note"><svg data-lucide="shield-check"></svg> Votre annonce sera vérifiée sous 24h</span>
+          <div class="af-actions-btns">
+            <a href="{% url 'accounts:dashboard_bailleur' %}" class="af-btn">Annuler</a>
+            <button type="submit" class="af-btn af-btn-primary" id="submitBtn">
+              <svg data-lucide="send"></svg>
+              Publier l'annonce
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
 </div>
+
+<script>
+// Met en surbrillance l'étape visible dans la navigation
+(function () {
+  const links = document.querySelectorAll('.af-nav .progress-step');
+  const map = new Map([...links].map(a => [a.getAttribute('href').slice(1), a]));
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      links.forEach(l => l.classList.remove('is-active'));
+      const a = map.get(e.target.id);
+      if (a) { a.classList.add('is-active'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    });
+  }, { rootMargin: '-35% 0px -60% 0px' });
+  map.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
+})();
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ─── Gestion des étapes ────────────────────────────
-let currentStep = 1;
-const totalSteps = 6;
-
-function updateProgress() {
-  // Mettre à jour la ligne de progression
-  const progressLine = document.getElementById('progressLine');
-  const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
-  progressLine.style.width = progress + '%';
-
-  // Mettre à jour les cercles
-  const steps = document.querySelectorAll('.step-circle');
-  steps.forEach(step => {
-    const stepNumber = parseInt(step.dataset.step);
-    step.classList.remove('active', 'completed');
-    
-    if (stepNumber < currentStep) {
-      step.classList.add('completed');
-      step.querySelector('svg').outerHTML = '<svg data-lucide="check" style="width:24px;height:24px"></svg>';
-    } else if (stepNumber === currentStep) {
-      step.classList.add('active');
-    }
-    
-    // Mettre à jour les labels
-    const label = step.querySelector('.step-label');
-    if (label) {
-      label.classList.remove('active', 'completed');
-      if (stepNumber < currentStep) {
-        label.classList.add('completed');
-      } else if (stepNumber === currentStep) {
-        label.classList.add('active');
-      }
-    }
-  });
-
-  // Rafraîchir les icônes
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
-}
-
-function changeStep(direction) {
-  const newStep = currentStep + direction;
-  
-  if (newStep < 1 || newStep > totalSteps) return;
-  
-  // Masquer la section actuelle
-  document.getElementById(`section-${currentStep}`).classList.remove('active');
-  
-  // Afficher la nouvelle section
-  currentStep = newStep;
-  document.getElementById(`section-${currentStep}`).classList.add('active');
-  
-  // Mettre à jour les boutons
-  updateNavigationButtons();
-  
-  // Mettre à jour la progression
-  updateProgress();
-  
-  // Scroll en haut
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateNavigationButtons() {
-  const btnBack = document.getElementById('btnBack');
-  const btnNext = document.getElementById('btnNext');
-  const btnSubmit = document.getElementById('btnSubmit');
-  
-  // Bouton Retour
-  if (currentStep === 1) {
-    btnBack.style.display = 'none';
-  } else {
-    btnBack.style.display = 'block';
-  }
-  
-  // Boutons Suivant/Submit
-  if (currentStep === totalSteps) {
-    btnNext.style.display = 'none';
-    btnSubmit.style.display = 'block';
-  } else {
-    btnNext.style.display = 'block';
-    btnSubmit.style.display = 'none';
-  }
-}
-
-// Permettre le clic sur les cercles pour naviguer
-document.querySelectorAll('.step-circle').forEach(circle => {
-  circle.addEventListener('click', function() {
-    const targetStep = parseInt(this.dataset.step);
-    if (targetStep < currentStep) {
-      // Naviguer vers une étape précédente
-      document.getElementById(`section-${currentStep}`).classList.remove('active');
-      currentStep = targetStep;
-      document.getElementById(`section-${currentStep}`).classList.add('active');
-      updateNavigationButtons();
-      updateProgress();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  });
-});
+// ─── Constantes ───────────────────────────────────────
+// Emprise approximative du Cameroun : sert à refuser les positions hors du pays.
+const LOC_BOUNDS = { latMin: 1.5, latMax: 13.2, lngMin: 8.3, lngMax: 16.3 };
+const inCameroon = (lat, lng) =>
+  lat >= LOC_BOUNDS.latMin && lat <= LOC_BOUNDS.latMax &&
+  lng >= LOC_BOUNDS.lngMin && lng <= LOC_BOUNDS.lngMax;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const toast = (msg, type) => {
+  if (typeof LCM !== 'undefined' && LCM && typeof LCM.showToast === 'function') LCM.showToast(msg, type);
+};
 
 // ─── Compteur caractères description ─────────────────
 const descField = document.getElementById('id_description');
 const charCount = document.getElementById('charCount');
 if (descField && charCount) {
-  descField.addEventListener('input', function() {
-    charCount.textContent = `(${this.value.length}/1000)`;
-  });
+  descField.maxLength = 1000;
+  const updateCount = () => { charCount.textContent = `(${descField.value.length}/1000)`; };
+  descField.addEventListener('input', updateCount);
+  updateCount();
 }
 
 // ─── Carte Leaflet ────────────────────────────────────
-const mapCreer = L.map('map-creer').setView([3.848, 11.502], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap',
+const mapCreer = L.map('map-creer', { scrollWheelZoom: false }).setView([3.848, 11.502], 12);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   maxZoom: 19,
+  referrerPolicy: 'strict-origin-when-cross-origin',
 }).addTo(mapCreer);
+// Le zoom à la molette ne s'active qu'une fois la carte sélectionnée : on peut faire défiler la page sans zoomer par erreur.
+mapCreer.on('focus', () => mapCreer.scrollWheelZoom.enable());
+mapCreer.on('blur',  () => mapCreer.scrollWheelZoom.disable());
 
-let marker;
-mapCreer.on('click', function(e) {
-  if (marker) mapCreer.removeLayer(marker);
-  const icon = L.divIcon({
-    html: `<div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;
-                       width:40px;height:40px;border-radius:50%;
-                       display:flex;align-items:center;justify-content:center;
-                       font-size:1.2rem;box-shadow:0 4px 12px rgba(102,126,234,.5);
-                       border:3px solid white">
-              <svg data-lucide="home" style="width:20px;height:20px"></svg>
-            </div>`,
-    className: '',
-    iconAnchor: [20, 20],
-  });
-  marker = L.marker(e.latlng, { icon })
-    .addTo(mapCreer)
-    .bindPopup('<strong>Position du logement</strong>')
-    .openPopup();
-  document.getElementById('id_latitude').value  = e.latlng.lat.toFixed(6);
-  document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
-  
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+// ─── Recherche de position au clavier ─────────────────
+(function locationFinder() {
+  const $ = id => document.getElementById(id);
+  const searchEl = $('locSearch'), listEl = $('locResults'), spinnerEl = $('locSpinner');
+  const clearSearchBtn = $('locClearSearch'), geoBtn = $('locGeo');
+  const statusEl = $('locStatus'), titleEl = $('locTitle'), subEl = $('locSub');
+  const useAddrBtn = $('locUseAddr'), clearBtn = $('locClear');
+  const latEl = $('id_latitude'), lngEl = $('id_longitude');
+  const adresseEl = $('id_adresse'), villeEl = $('id_ville');
+  if (!searchEl || !latEl || !lngEl) return;
+
+  let marker = null;            // repère Leaflet
+  let state = null;             // { lat, lng, label }
+  let items = [], activeIndex = -1;
+  let timer = null, searchCtrl = null, reverseSeq = 0, autoAddress = '';
+
+  const PIN_SVG = '<div class="lcm-pin"><svg width="34" height="44" viewBox="0 0 34 44" aria-hidden="true">' +
+    '<path d="M17 43S3 28 3 16.5C3 8.5 9.3 2 17 2s14 6.5 14 14.5C31 28 17 43 17 43Z" fill="#059669" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>' +
+    '<circle cx="17" cy="16.5" r="5.5" fill="#fff"/></svg></div>';
+  const PIN_SM = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+  const pinIcon = L.divIcon({ className: 'lcm-pin-wrap', html: PIN_SVG, iconSize: [34, 44], iconAnchor: [17, 42] });
+
+  // ── Appels Nominatim (1 requête/seconde maximum, en file d'attente) ──
+  let queue = Promise.resolve(), lastCall = 0;
+  const abortError = () => new DOMException('Aborted', 'AbortError');
+  function nominatim(endpoint, params, signal) {
+    const job = queue.then(async () => {
+      if (signal && signal.aborted) throw abortError();
+      const wait = Math.max(0, 1050 - (Date.now() - lastCall));
+      if (wait) await new Promise(r => setTimeout(r, wait));
+      if (signal && signal.aborted) throw abortError();
+      lastCall = Date.now();
+      const res = await fetch(`https://nominatim.openstreetmap.org/${endpoint}?` + new URLSearchParams(params), {
+        signal, headers: { Accept: 'application/json' }, referrerPolicy: 'strict-origin-when-cross-origin',
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    });
+    queue = job.catch(() => {});
+    return job;
   }
-});
 
-// Géolocalisation navigateur
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    pos => mapCreer.setView([pos.coords.latitude, pos.coords.longitude], 15),
-    () => {}
-  );
-}
+  // ── Libellés lisibles ──
+  function labelFrom(r) {
+    const a = r.address || {};
+    const rue = r.name || a.road || a.pedestrian || a.neighbourhood;
+    const quartier = a.suburb || a.neighbourhood || a.city_district || a.quarter;
+    const ville = a.city || a.town || a.village || a.municipality || a.county;
+    const parts = [rue, quartier, ville].filter(Boolean);
+    const uniq = parts.filter((p, i) => parts.indexOf(p) === i);
+    if (uniq.length) return uniq.join(', ');
+    return (r.display_name || '').split(',').slice(0, 3).map(s => s.trim()).join(', ');
+  }
+  // Ligne secondaire : le contexte (région…) sans répéter ce qui figure déjà dans le titre.
+  function subFrom(r, label) {
+    return (r.display_name || '').split(',').map(s => s.trim())
+      .filter(p => p && p !== 'Cameroun' && !/^\d+$/.test(p) && !label.includes(p))
+      .slice(0, 3).join(', ');
+  }
+  const toItem = r => {
+    const label = labelFrom(r);
+    return { lat: parseFloat(r.lat), lng: parseFloat(r.lon), label, sub: subFrom(r, label), kind: r.addresstype || r.type || '' };
+  };
+
+  // ── Coordonnées tapées à la main (ex. « 3.848, 11.502 ») ──
+  function parseCoords(text) {
+    let t = text.trim();
+    if (t.includes(';')) t = t.replace(/,/g, '.').replace(';', ' ');
+    const m = t.match(/^(-?\d{1,2}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)$/);
+    return m ? { lat: parseFloat(m[1]), lng: parseFloat(m[2]) } : null;
+  }
+
+  // ── État de la carte et du formulaire ──
+  function placeMarker(lat, lng, drop) {
+    if (!marker) {
+      marker = L.marker([lat, lng], { icon: pinIcon, draggable: true, keyboard: false, title: 'Position du logement' })
+        .addTo(mapCreer);
+      marker.on('dragend', () => {
+        const p = marker.getLatLng();
+        setPosition(p.lat, p.lng, { pan: false });
+      });
+    } else {
+      marker.setLatLng([lat, lng]);
+    }
+    if (drop && !prefersReducedMotion) {
+      const el = marker.getElement() && marker.getElement().querySelector('.lcm-pin');
+      if (el) { el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop'); }
+    }
+  }
+
+  function showError(title, sub) {
+    statusEl.dataset.state = 'error';
+    titleEl.textContent = title;
+    subEl.textContent = sub || '';
+    useAddrBtn.hidden = true;
+    clearBtn.hidden = !state;
+  }
+
+  function renderStatus() {
+    if (!state) {
+      statusEl.dataset.state = 'empty';
+      titleEl.textContent = 'Aucune position choisie';
+      subEl.textContent = 'Cherchez une adresse ou touchez la carte à l\u2019endroit du logement.';
+      useAddrBtn.hidden = true;
+      clearBtn.hidden = true;
+      return;
+    }
+    statusEl.dataset.state = 'set';
+    titleEl.textContent = state.label || 'Position enregistrée';
+    subEl.replaceChildren();
+    const coords = document.createElement('span');
+    coords.className = 'loc-coords';
+    coords.textContent = `${state.lat.toFixed(6)}, ${state.lng.toFixed(6)}`;
+    subEl.append(coords, 'Faites glisser le repère pour ajuster.');
+    clearBtn.hidden = false;
+    const current = adresseEl ? adresseEl.value.trim() : '';
+    useAddrBtn.hidden = !(adresseEl && state.label && current !== state.label);
+  }
+
+  function fillAddress(label, force) {
+    if (!adresseEl || !label) return;
+    const current = adresseEl.value.trim();
+    if (force || !current || current === autoAddress) {
+      adresseEl.value = label;
+      autoAddress = label;
+      adresseEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function setPosition(lat, lng, opts = {}) {
+    const { label = '', zoom = null, pan = true, drop = true, reverse = true } = opts;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !inCameroon(lat, lng)) {
+      if (marker && state) marker.setLatLng([state.lat, state.lng]);   // annule un déplacement hors du pays
+      showError('Cette position est en dehors du Cameroun',
+                'Touchez la carte à l\u2019intérieur du pays ou modifiez votre recherche.');
+      return false;
+    }
+    latEl.value = lat.toFixed(6);
+    lngEl.value = lng.toFixed(6);
+    state = { lat, lng, label };
+    placeMarker(lat, lng, drop);
+    if (pan) mapCreer.setView([lat, lng], zoom || Math.max(mapCreer.getZoom(), 16), { animate: !prefersReducedMotion });
+    renderStatus();
+    if (label) fillAddress(label, false);
+    else if (reverse) reverseLookup(lat, lng);
+    latEl.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  async function reverseLookup(lat, lng) {
+    const seq = ++reverseSeq;
+    if (statusEl.dataset.state === 'set') titleEl.textContent = 'Recherche de l\u2019adresse\u2026';
+    try {
+      const r = await nominatim('reverse', {
+        format: 'jsonv2', lat: lat.toFixed(6), lon: lng.toFixed(6), zoom: 18,
+        addressdetails: 1, 'accept-language': 'fr',
+      });
+      if (seq !== reverseSeq || !state) return;
+      const label = r && !r.error ? labelFrom(r) : '';
+      if (label) { state.label = label; fillAddress(label, false); }
+    } catch (e) { /* l'adresse reste facultative : on garde les coordonnées */ }
+    if (seq === reverseSeq && state) renderStatus();
+  }
+
+  function clearPosition() {
+    reverseSeq++;
+    if (marker) { mapCreer.removeLayer(marker); marker = null; }
+    state = null;
+    latEl.value = '';
+    lngEl.value = '';
+    renderStatus();
+    latEl.dispatchEvent(new Event('change', { bubbles: true }));
+    document.dispatchEvent(new CustomEvent('lcm:position-touched'));
+  }
+
+  // ── Liste de suggestions (combobox accessible au clavier) ──
+  function openList()  { listEl.hidden = false; searchEl.setAttribute('aria-expanded', 'true'); }
+  function closeList() {
+    listEl.hidden = true;
+    searchEl.setAttribute('aria-expanded', 'false');
+    searchEl.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  }
+  function setActive(i) {
+    const opts = listEl.querySelectorAll('[role="option"]');
+    if (!opts.length) return;
+    activeIndex = (i + opts.length) % opts.length;
+    opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === activeIndex)));
+    searchEl.setAttribute('aria-activedescendant', opts[activeIndex].id);
+    opts[activeIndex].scrollIntoView({ block: 'nearest' });
+  }
+  function setBusy(on) {
+    spinnerEl.hidden = !on;
+    searchEl.setAttribute('aria-busy', String(on));
+  }
+  function note(text) {
+    items = [];
+    listEl.replaceChildren();
+    const li = document.createElement('li');
+    li.className = 'loc-note';
+    li.setAttribute('role', 'presentation');
+    li.textContent = text;
+    listEl.appendChild(li);
+    activeIndex = -1;
+    openList();
+  }
+  function renderResults(list) {
+    items = list;
+    listEl.replaceChildren();
+    list.forEach((it, i) => {
+      const li = document.createElement('li');
+      li.id = 'loc-opt-' + i;
+      li.className = 'loc-option';
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+      li.insertAdjacentHTML('afterbegin', PIN_SM);
+      const box = document.createElement('div');
+      const main = document.createElement('div');
+      main.className = 'loc-option-main';
+      main.textContent = it.label;
+      box.appendChild(main);
+      if (it.sub) {
+        const sub = document.createElement('div');
+        sub.className = 'loc-option-sub';
+        sub.textContent = it.sub;
+        box.appendChild(sub);
+      }
+      li.appendChild(box);
+      li.addEventListener('mousedown', e => { e.preventDefault(); choose(i); });
+      li.addEventListener('mousemove', () => { if (activeIndex !== i) setActive(i); });
+      listEl.appendChild(li);
+    });
+    activeIndex = -1;
+    openList();
+  }
+
+  function choose(i) {
+    const it = items[i];
+    if (!it) return;
+    closeList();
+    if (!it.coords) searchEl.value = it.label;
+    syncClearSearch();
+    const broad = /^(city|town|village|suburb|neighbourhood|quarter|administrative|county|state|region)$/.test(it.kind);
+    setPosition(it.lat, it.lng, { label: it.label, zoom: broad ? 15 : 17, drop: true });
+  }
+
+  async function runSearch(q) {
+    if (searchCtrl) searchCtrl.abort();
+    searchCtrl = new AbortController();
+    const { signal } = searchCtrl;
+    setBusy(true);
+    const base = { format: 'jsonv2', countrycodes: 'cm', limit: 6, addressdetails: 1, 'accept-language': 'fr' };
+    const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    try {
+      const ville = villeEl && villeEl.value ? villeEl.options[villeEl.selectedIndex].text.trim() : '';
+      let data = [];
+      if (ville && !norm(q).includes(norm(ville))) data = await nominatim('search', { ...base, q: `${q}, ${ville}` }, signal);
+      if (!data.length) data = await nominatim('search', { ...base, q }, signal);
+      const seen = new Set();
+      const list = data.map(toItem).filter(it => {
+        const key = it.label + it.lat.toFixed(4) + it.lng.toFixed(4);
+        if (!it.label || !Number.isFinite(it.lat) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (list.length) renderResults(list);
+      else note(`Aucun lieu trouvé pour « ${q} ». Essayez un quartier ou un repère proche, ou touchez la carte.`);
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      note('La recherche est indisponible pour le moment. Touchez la carte pour placer le repère.');
+    } finally {
+      if (!signal.aborted) setBusy(false);
+    }
+  }
+
+  function syncClearSearch() { clearSearchBtn.hidden = !searchEl.value; }
+
+  searchEl.addEventListener('input', () => {
+    syncClearSearch();
+    const q = searchEl.value.trim();
+    clearTimeout(timer);
+    if (searchCtrl) searchCtrl.abort();
+    setBusy(false);
+    if (q.length < 3) { closeList(); return; }
+    const c = parseCoords(q);
+    if (c) {
+      if (!inCameroon(c.lat, c.lng)) { note('Ces coordonnées sont en dehors du Cameroun.'); return; }
+      renderResults([{ lat: c.lat, lng: c.lng, label: 'Aller à ces coordonnées', sub: `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`, kind: 'point', coords: true }]);
+      return;
+    }
+    timer = setTimeout(() => runSearch(q), 450);
+  });
+
+  searchEl.addEventListener('keydown', e => {
+    const hasList = !listEl.hidden;
+    if (e.key === 'ArrowDown') {
+      if (hasList) { e.preventDefault(); setActive(activeIndex + 1); }
+      else if (items.length) { e.preventDefault(); openList(); setActive(0); }
+    } else if (e.key === 'ArrowUp') {
+      if (hasList) { e.preventDefault(); setActive(activeIndex === -1 ? items.length - 1 : activeIndex - 1); }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();   // ne jamais envoyer le formulaire depuis ce champ
+      if (hasList && items.length) choose(activeIndex >= 0 ? activeIndex : 0);
+      else if (searchEl.value.trim().length >= 3) { clearTimeout(timer); runSearch(searchEl.value.trim()); }
+    } else if (e.key === 'Escape') {
+      if (hasList) { e.preventDefault(); closeList(); }
+    } else if (e.key === 'Tab') {
+      closeList();
+    }
+  });
+  searchEl.addEventListener('focus', () => {
+    if (items.length && searchEl.value.trim().length >= 3) openList();
+  });
+  document.addEventListener('mousedown', e => {
+    if (!e.target.closest('.loc-search')) closeList();
+  });
+
+  clearSearchBtn.addEventListener('click', () => {
+    searchEl.value = '';
+    items = [];
+    closeList();
+    syncClearSearch();
+    searchEl.focus();
+  });
+
+  // ── Boutons : position actuelle, adresse, effacer ──
+  geoBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      showError('La localisation n\u2019est pas disponible sur cet appareil', 'Cherchez l\u2019adresse ou touchez la carte.');
+      return;
+    }
+    geoBtn.disabled = true;
+    statusEl.dataset.state = 'loading';
+    titleEl.textContent = 'Localisation en cours\u2026';
+    subEl.textContent = 'Autorisez l\u2019accès à votre position si votre navigateur le demande.';
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        geoBtn.disabled = false;
+        setPosition(pos.coords.latitude, pos.coords.longitude, { zoom: 17, drop: true });
+      },
+      err => {
+        geoBtn.disabled = false;
+        if (err.code === 1) showError('L\u2019accès à la position est bloqué', 'Autorisez-le dans votre navigateur, ou cherchez l\u2019adresse.');
+        else showError('Votre position est introuvable', 'Cherchez l\u2019adresse ou touchez la carte.');
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    );
+  });
+  useAddrBtn.addEventListener('click', () => { if (state) { fillAddress(state.label, true); renderStatus(); } });
+  clearBtn.addEventListener('click', () => { clearPosition(); searchEl.focus(); });
+  if (adresseEl) adresseEl.addEventListener('input', () => { if (state) renderStatus(); });
+
+  // ── Clic sur la carte ──
+  mapCreer.on('click', e => setPosition(e.latlng.lat, e.latlng.lng, { pan: false, drop: true }));
+
+  // ── Restauration (ex. formulaire renvoyé avec des erreurs) ──
+  renderStatus();
+  const lat0 = parseFloat((latEl.value || '').replace(',', '.'));
+  const lng0 = parseFloat((lngEl.value || '').replace(',', '.'));
+  if (Number.isFinite(lat0) && Number.isFinite(lng0) && inCameroon(lat0, lng0)) {
+    setPosition(lat0, lng0, { zoom: 16, drop: false });
+  }
+})();
 
 // ─── Chargement quartiers par ville (AJAX) ────────────
 const villeSelect    = document.getElementById('id_ville');
@@ -1245,7 +1308,13 @@ uploadZone.addEventListener('drop', e => {
   handleFiles(e.dataTransfer.files);
 });
 uploadZone.addEventListener('click', e => {
-  if (e.target.tagName !== 'BUTTON') {
+  if (!e.target.closest('button')) {
+    input.click();
+  }
+});
+uploadZone.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target === uploadZone) {
+    e.preventDefault();
     input.click();
   }
 });
@@ -1257,11 +1326,11 @@ input.addEventListener('change', function() {
 function handleFiles(files) {
   const newFiles = Array.from(files).filter(f => {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) {
-      LCM.showToast(`${f.name} : format non supporté`, 'error');
+      toast(`${f.name} : format non supporté`, 'error');
       return false;
     }
     if (f.size > 5 * 1024 * 1024) {
-      LCM.showToast(`${f.name} : trop volumineux (max 5MB)`, 'error');
+      toast(`${f.name} : trop volumineux (max 5MB)`, 'error');
       return false;
     }
     return true;
@@ -1269,7 +1338,7 @@ function handleFiles(files) {
 
   const total = selectedFiles.length + newFiles.length;
   if (total > 10) {
-    LCM.showToast('Maximum 10 photos autorisées', 'warning');
+    toast('Maximum 10 photos autorisées', 'warning');
     const available = 10 - selectedFiles.length;
     selectedFiles = [...selectedFiles, ...newFiles.slice(0, available)];
   } else {
@@ -1294,65 +1363,228 @@ function updatePreview() {
     const reader = new FileReader();
     reader.onload = e => {
       const item = document.createElement('div');
-      item.className = `photo-card${index === 0 ? ' primary' : ''}`;
+      item.className = `photo-preview-item${index === 0 ? ' principale' : ''}`;
       item.innerHTML = `
         <img src="${e.target.result}" alt="Photo ${index + 1}">
-        ${index === 0 ? '<span class="photo-badge">Principale</span>' : ''}
+        ${index === 0 ? '<span class="photo-preview-badge">Principale</span>' : ''}
         <button type="button"
-                class="photo-remove"
+                class="photo-preview-remove"
                 onclick="removePhoto(${index})"
                 title="Supprimer">
-          <svg data-lucide="x" style="width:14px;height:14px"></svg>
+          ✕
         </button>`;
       preview.appendChild(item);
-      
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-      }
     };
     reader.readAsDataURL(file);
   });
 }
 
 function updateInput() {
+  // Recréer le DataTransfer avec les fichiers sélectionnés
   const dt = new DataTransfer();
   selectedFiles.forEach(f => dt.items.add(f));
   input.files = dt.files;
+  document.dispatchEvent(new CustomEvent('lcm:photos'));
 }
 
-// ─── Validation avant soumission ─────────────────────
-document.getElementById('annonce-form').addEventListener('submit', function(e) {
-  const btn   = document.getElementById('btnSubmit');
-  const titre = document.getElementById('id_titre').value.trim();
-  const prix  = document.getElementById('id_prix').value.trim();
-  const ville = document.getElementById('id_ville').value;
+// ─── Validation des champs ────────────────────────────
+(function formValidation() {
+  // Réglages : passez à false / 0 pour rendre la position ou les photos facultatives.
+  const POSITION_REQUISE = true;
+  const PHOTOS_MIN = 1;
 
-  if (!titre || !prix || !ville) {
-    e.preventDefault();
-    LCM.showToast('Remplissez tous les champs obligatoires (*)', 'error');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
+  const $ = id => document.getElementById(id);
+  const form = $('annonce-form');
+  if (!form) return;
+
+  // Fabriques de règles : chacune renvoie un message d'erreur, ou '' si le champ est valide.
+  const text = o => el => {
+    const v = el.value.trim();
+    if (!v) return o.req ? o.need : '';
+    if (v.length < (o.min || 0)) return `${o.short} (${v.length}/${o.min} caractères minimum).`;
+    const max = el.maxLength > 0 ? Math.min(el.maxLength, o.max || Infinity) : (o.max || Infinity);
+    if (v.length > max) return `${o.long} (${max} caractères maximum).`;
+    return '';
+  };
+  const choice = need => el => (el.value ? '' : need);
+  const number = o => el => {
+    if (el.validity && el.validity.badInput) return 'Saisissez un nombre.';
+    const raw = el.value.trim();
+    if (raw === '') return o.req ? o.need : '';
+    const n = Number(raw.replace(/\s/g, '').replace(',', '.'));
+    if (!Number.isFinite(n)) return 'Saisissez un nombre.';
+    if (o.whole && !Number.isInteger(n)) return 'Saisissez un nombre entier, sans virgule.';
+    if (n < o.min) return o.low;
+    if (n > o.max) return o.high;
+    return '';
+  };
+  const todayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const RULES = {
+    id_titre: text({ req: true, min: 10, max: 120,
+      need: 'Donnez un titre à votre annonce.',
+      short: 'Le titre est trop court', long: 'Le titre est trop long' }),
+    id_type_logement: choice('Choisissez un type de logement.'),
+    id_type_offre:    choice('Choisissez le type d\u2019offre.'),
+    id_description: text({ req: true, min: 30, max: 1000,
+      need: 'Décrivez le logement : état, environnement, accès.',
+      short: 'La description est trop courte', long: 'La description est trop longue' }),
+    id_ville: choice('Choisissez la ville.'),
+    id_adresse: text({ req: true, min: 5, max: 255,
+      need: 'Indiquez l\u2019adresse du logement.',
+      short: 'L\u2019adresse est trop courte', long: 'L\u2019adresse est trop longue' }),
+    id_nb_chambres: number({ req: true, whole: true, min: 0, max: 50,
+      need: 'Indiquez le nombre de chambres (0 pour un studio).',
+      low: 'Le nombre de chambres ne peut pas être négatif.', high: 'Vérifiez ce nombre : 50 chambres maximum.' }),
+    id_nb_salles_bain: number({ whole: true, min: 0, max: 20,
+      low: 'Le nombre ne peut pas être négatif.', high: 'Vérifiez ce nombre : 20 maximum.' }),
+    id_nb_toilettes: number({ whole: true, min: 0, max: 20,
+      low: 'Le nombre ne peut pas être négatif.', high: 'Vérifiez ce nombre : 20 maximum.' }),
+    id_surface: number({ min: 1, max: 10000,
+      low: 'La surface doit être d\u2019au moins 1 m².', high: 'Vérifiez la surface : 10 000 m² maximum.' }),
+    id_etage: number({ whole: true, min: -2, max: 100,
+      low: 'L\u2019étage minimum est -2 (sous-sol).', high: 'Vérifiez l\u2019étage : 100 maximum.' }),
+    id_prix: number({ req: true, whole: true, min: 1, max: 1000000000,
+      need: 'Indiquez le prix en FCFA.',
+      low: 'Le prix doit être supérieur à 0.', high: 'Ce prix semble trop élevé : vérifiez les zéros.' }),
+    id_charges: number({ whole: true, min: 0, max: 1000000000,
+      low: 'Le montant ne peut pas être négatif.', high: 'Ce montant semble trop élevé : vérifiez les zéros.' }),
+    id_caution: number({ whole: true, min: 0, max: 1000000000,
+      low: 'Le montant ne peut pas être négatif.', high: 'Ce montant semble trop élevé : vérifiez les zéros.' }),
+    id_date_disponibilite: el => {
+      const dispo = $('id_disponible');
+      const v = el.value.trim();
+      if (!v) return (dispo && !dispo.checked) ? 'Indiquez à partir de quand le logement est libre.' : '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v) && v < todayISO()) return 'La date ne peut pas être dans le passé.';
+      return '';
+    },
+    position: () => {
+      if (!POSITION_REQUISE) return '';
+      const lat = parseFloat(($('id_latitude').value || '').replace(',', '.'));
+      const lng = parseFloat(($('id_longitude').value || '').replace(',', '.'));
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return 'Placez le logement sur la carte : cherchez une adresse ou touchez la carte.';
+      if (!inCameroon(lat, lng)) return 'Cette position est en dehors du Cameroun.';
+      return '';
+    },
+    photos: () => (selectedFiles.length >= PHOTOS_MIN
+      ? ''
+      : `Ajoutez au moins ${PHOTOS_MIN} photo${PHOTOS_MIN > 1 ? 's' : ''} du logement.`),
+  };
+
+  const SPECIAL = { position: { slot: 'err-position', box: 'locSearchBox', focus: 'locSearch' },
+                    photos:   { slot: 'err-photos',   box: 'uploadZone',   focus: 'uploadZone' } };
+  const KEYS = Object.keys(RULES).filter(k => SPECIAL[k] || $(k));
+  const touched = new Set();
+
+  // Emplacement du message : juste après le champ, ou dans la zone prévue pour la carte et les photos.
+  function slotFor(key) {
+    if (SPECIAL[key]) return $(SPECIAL[key].slot);
+    const id = 'err-' + key;
+    let slot = $(id);
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.id = id;
+      slot.className = 'lcm-error';
+      slot.hidden = true;
+      $(key).insertAdjacentElement('afterend', slot);
+    }
+    return slot;
+  }
+  const check = key => RULES[key](SPECIAL[key] ? null : $(key));
+
+  function paint(key, msg) {
+    const slot = slotFor(key);
+    slot.textContent = msg;
+    slot.hidden = !msg;
+    const box = $(SPECIAL[key] ? SPECIAL[key].box : key);
+    if (box) box.classList.toggle('lcm-invalid', !!msg);
+    if (!SPECIAL[key]) {
+      const el = $(key);
+      el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+      if (msg) el.setAttribute('aria-describedby', slot.id); else el.removeAttribute('aria-describedby');
+    }
+  }
+  function validate(key) { const msg = check(key); paint(key, msg); return msg; }
+
+  // Retire le message renvoyé par le serveur dès que la personne corrige le champ.
+  function dropServerError(el) {
+    const s = el.parentElement && el.parentElement.querySelector('.text-danger.small');
+    if (s) s.remove();
   }
 
-  // Afficher loading
-  btn.innerHTML = `
-    <span class="spinner"></span>
-    Envoi en cours...`;
-  btn.disabled = true;
-});
-
-// ─── Initialisation ────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  // Coche les étapes du haut de page quand leurs champs sont valides.
+  const STEPS = {
+    info:   ['id_titre', 'id_type_logement', 'id_type_offre', 'id_description'],
+    loc:    ['id_ville', 'id_adresse', 'position'],
+    carac:  ['id_nb_chambres', 'id_nb_salles_bain', 'id_nb_toilettes', 'id_surface', 'id_etage'],
+    prix:   ['id_prix', 'id_charges', 'id_caution', 'id_date_disponibilite'],
+    photos: ['photos'],
+  };
+  function refreshProgress() {
+    document.querySelectorAll('.progress-step[data-step]').forEach(step => {
+      const keys = (STEPS[step.dataset.step] || []).filter(k => KEYS.includes(k));
+      step.classList.toggle('done', keys.length > 0 && keys.every(k => check(k) === ''));
+    });
   }
-  updateProgress();
-  updateNavigationButtons();
-  
-  // Initialiser la carte après un petit délai (pour être sûr qu'elle est visible)
-  setTimeout(() => {
-    mapCreer.invalidateSize();
-  }, 100);
-});
+
+  // Écouteurs : on valide à la sortie du champ, puis en direct une fois le champ « touché ».
+  KEYS.filter(k => !SPECIAL[k]).forEach(key => {
+    const el = $(key);
+    el.addEventListener('blur', () => { touched.add(key); validate(key); refreshProgress(); });
+    ['input', 'change'].forEach(evt => el.addEventListener(evt, () => {
+      dropServerError(el);
+      if (touched.has(key) || el.classList.contains('lcm-invalid')) validate(key);
+      refreshProgress();
+    }));
+  });
+  const dispo = $('id_disponible');
+  if (dispo) dispo.addEventListener('change', () => {
+    if (KEYS.includes('id_date_disponibilite') && (touched.has('id_date_disponibilite') || $('id_date_disponibilite').classList.contains('lcm-invalid'))) validate('id_date_disponibilite');
+    refreshProgress();
+  });
+  $('id_latitude').addEventListener('change', () => {
+    if (touched.has('position') || $('locSearchBox').classList.contains('lcm-invalid')) validate('position');
+    else if (check('position') === '') touched.add('position');
+    refreshProgress();
+  });
+  document.addEventListener('lcm:position-touched', () => { touched.add('position'); validate('position'); refreshProgress(); });
+  document.addEventListener('lcm:photos', () => { touched.add('photos'); validate('photos'); refreshProgress(); });
+
+  // Envoi : on valide tout, on va au premier champ à corriger, sinon on affiche le chargement.
+  form.addEventListener('submit', e => {
+    const invalid = [];
+    KEYS.forEach(key => { touched.add(key); if (validate(key)) invalid.push(key); });
+    refreshProgress();
+
+    if (invalid.length) {
+      e.preventDefault();
+      toast(invalid.length === 1 ? '1 champ à corriger' : `${invalid.length} champs à corriger`, 'error');
+      const first = invalid[0];
+      const target = $(SPECIAL[first] ? SPECIAL[first].focus : first);
+      target.scrollIntoView({ block: 'center', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      target.focus({ preventScroll: true });
+      return;
+    }
+
+    const btn = $('submitBtn');
+    btn.innerHTML = `
+      <div style="width:18px;height:18px;border:2px solid white;
+                  border-top-color:transparent;border-radius:50%;
+                  animation:spin .6s linear infinite;
+                  display:inline-block;margin-right:8px;vertical-align:-3px">
+      </div>
+      Envoi en cours...`;
+    btn.disabled = true;
+  });
+
+  refreshProgress();
+})();
 </script>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}

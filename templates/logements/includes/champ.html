@@ -1,0 +1,6 @@
+<div class="mo-field">
+  <label for="{{ champ.id_for_label }}" class="mo-label">{{ label|default:champ.label }}{% if champ.field.required %} <span class="mo-req">*</span>{% endif %}</label>
+  {{ champ }}
+  {% if aide %}<div class="mo-help">{{ aide }}</div>{% endif %}
+  {% for erreur in champ.errors %}<div class="mo-error">{{ erreur }}</div>{% endfor %}
+</div>

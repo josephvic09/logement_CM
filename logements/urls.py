@@ -41,6 +41,10 @@ urlpatterns = [
          views.toggle_favori,
          name='toggle_favori'),
 
+    path('logements/<int:logement_id>/visite/',
+         views.demander_visite,
+         name='demander_visite'),
+
     path('logements/<int:logement_id>/reserver/',
          views.faire_reservation,
          name='reserver'),

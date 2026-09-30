@@ -3,6 +3,8 @@ import hashlib
 from datetime import timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -278,6 +280,7 @@ def dashboard_bailleur(request):
         messages.error(request, "Accès refusé.")
         return redirect('accounts:dashboard_locataire')
 
+    from django.db.models import Count, Q
     from logements.models import Logement, Reservation
 
     # ✅ Queryset de base sans slice
@@ -298,13 +301,24 @@ def dashboard_bailleur(request):
         logement__bailleur=request.user
     ).select_related('logement', 'locataire').order_by('-cree_le')
 
-    reservations_attente = reservations.filter(statut='EN_ATTENTE').count()
+    attentes = reservations.filter(statut='EN_ATTENTE').aggregate(
+        visites=Count('pk', filter=Q(type_demande='VISITE')),
+        reservations=Count('pk', filter=Q(type_demande='RESERVATION')),
+    )
+    visites_attente      = attentes['visites']
+    reservations_attente = visites_attente + attentes['reservations']
 
     # ✅ Slice uniquement pour l'affichage, à la fin
-    logements_affichage = logements_qs.order_by('-cree_le')[:8]
+    logements_affichage = list(logements_qs.order_by('-cree_le')[:8])
+    chart_data = {
+        'labels':  [l.titre[:18] for l in logements_affichage],
+        'vues':    [l.nb_vues or 0 for l in logements_affichage],
+        'favoris': [l.nb_favoris or 0 for l in logements_affichage],
+    } if logements_affichage else None
 
     context = {
         'logements':            logements_affichage,
+        'chart_data':           chart_data,
         'reservations':         reservations[:10],
         'nb_total':             nb_total,
         'nb_publie':            nb_publie,
@@ -313,6 +327,8 @@ def dashboard_bailleur(request):
         'total_vues':           total_vues,
         'total_favoris':        total_favoris,
         'reservations_attente': reservations_attente,
+        'visites_attente':      visites_attente,
+        'resa_attente':         attentes['reservations'],
     }
     return render(request, 'accounts/dashboard_bailleur.html', context)
 
@@ -397,6 +413,32 @@ def mes_reservations(request):
 
 
 @login_required
+@require_POST
+def annuler_reservation(request, reservation_id):
+    """Le locataire annule sa demande de visite ou sa réservation."""
+    from logements.models import Reservation
+    from notifs.utils import notif_reservation_annulee
+
+    res = get_object_or_404(
+        Reservation.objects.select_related('logement__bailleur', 'locataire'),
+        pk=reservation_id, locataire=request.user
+    )
+    if res.statut not in ('EN_ATTENTE', 'CONFIRME'):
+        messages.error(request, "Cette demande ne peut plus être annulée.")
+    elif res.paye:
+        messages.error(
+            request,
+            "Les frais de réservation sont payés : contactez le bailleur pour annuler."
+        )
+    else:
+        res.statut = 'ANNULE'
+        res.save(update_fields=['statut'])
+        notif_reservation_annulee(res, par_bailleur=False)
+        messages.success(request, "Votre demande a été annulée.")
+    return redirect('accounts:mes_reservations')
+
+
+@login_required
 def comparer_logements(request):
     from logements.models import Logement
     ids = request.GET.getlist('ids')
@@ -417,55 +459,85 @@ def gerer_reservations(request):
     if not request.user.est_bailleur:
         return redirect('accounts:tableau_de_bord')
 
+    from django.db.models import Count, Q
     from logements.models import Reservation
+
+    type_demande = request.GET.get('type', 'VISITE')
+    if type_demande not in ('VISITE', 'RESERVATION'):
+        type_demande = 'VISITE'
     statut = request.GET.get('statut', '')
 
-    reservations = Reservation.objects.filter(
-        logement__bailleur=request.user
-    ).select_related('logement', 'locataire').order_by('-cree_le')
+    demandes = Reservation.objects.filter(logement__bailleur=request.user)
+    compteurs = demandes.aggregate(
+        visites=Count('pk', filter=Q(type_demande='VISITE')),
+        reservations=Count('pk', filter=Q(type_demande='RESERVATION')),
+        visites_attente=Count('pk', filter=Q(type_demande='VISITE', statut='EN_ATTENTE')),
+        reservations_attente=Count('pk', filter=Q(type_demande='RESERVATION', statut='EN_ATTENTE')),
+    )
 
+    liste = demandes.filter(type_demande=type_demande).select_related(
+        'logement', 'locataire'
+    ).prefetch_related('logement__photos').order_by('-cree_le')
     if statut:
-        reservations = reservations.filter(statut=statut)
+        liste = liste.filter(statut=statut)
 
     return render(request, 'accounts/gerer_reservations.html', {
-        'reservations': reservations,
+        'demandes': liste,
+        'type_actuel': type_demande,
         'statut_actuel': statut,
+        'compteurs': compteurs,
     })
 
 
 @login_required
+@require_POST
 def repondre_reservation(request, reservation_id):
-    """Confirmer ou refuser une réservation."""
+    """Confirmer, refuser ou clôturer une demande de visite / une réservation."""
     if not request.user.est_bailleur:
         return redirect('accounts:tableau_de_bord')
 
     from logements.models import Reservation
-    from notifs.utils import notif_reservation_confirmee, notif_reservation_refusee
+    from notifs.utils import (
+        notif_reservation_confirmee, notif_reservation_refusee,
+        notif_reservation_annulee,
+    )
 
-    res    = get_object_or_404(
-        Reservation, pk=reservation_id,
-        logement__bailleur=request.user
+    res = get_object_or_404(
+        Reservation.objects.select_related('logement', 'locataire'),
+        pk=reservation_id, logement__bailleur=request.user
     )
     action = request.POST.get('action')
+    nom    = res.locataire.get_full_name()
+    objet  = 'Visite' if res.type_demande == 'VISITE' else 'Réservation'
 
-    if action == 'confirmer':
+    if action == 'confirmer' and res.statut == 'EN_ATTENTE':
         res.statut = 'CONFIRME'
-        res.save()
+        champs = ['statut']
+        lieu = request.POST.get('lieu_rencontre', '').strip()[:255]
+        if res.type_demande == 'VISITE' and lieu:
+            res.lieu_rencontre = lieu
+            champs.append('lieu_rencontre')
+        res.save(update_fields=champs)
         notif_reservation_confirmee(res)
-        messages.success(
-            request,
-            f"✅ Réservation de {res.locataire.get_full_name()} confirmée."
-        )
-    elif action == 'refuser':
+        messages.success(request, f"{objet} de {nom} confirmée.")
+    elif action == 'refuser' and res.statut == 'EN_ATTENTE':
         res.statut = 'REFUSE'
-        res.save()
+        res.save(update_fields=['statut'])
         notif_reservation_refusee(res)
-        messages.warning(
-            request,
-            f"Réservation de {res.locataire.get_full_name()} refusée."
-        )
+        messages.warning(request, f"{objet} de {nom} refusée.")
+    elif action == 'terminer' and res.statut == 'CONFIRME' and res.type_demande == 'VISITE':
+        res.statut = 'TERMINE'
+        res.save(update_fields=['statut'])
+        messages.success(request, f"Visite de {nom} marquée comme effectuée.")
+    elif action == 'annuler' and res.statut in ('EN_ATTENTE', 'CONFIRME'):
+        res.statut = 'ANNULE'
+        res.save(update_fields=['statut'])
+        notif_reservation_annulee(res, par_bailleur=True)
+        messages.warning(request, f"{objet} de {nom} annulée.")
+    else:
+        messages.error(request, "Action impossible pour cette demande.")
 
-    return redirect('accounts:gerer_reservations')
+    return redirect(f"{reverse('accounts:gerer_reservations')}?type={res.type_demande}")
 
 
 @login_required
@@ -474,22 +546,29 @@ def mes_annonces(request):
     if not request.user.est_bailleur:
         return redirect('accounts:tableau_de_bord')
 
+    from django.db.models import Count, Q, Sum
     from logements.models import Logement
     statut = request.GET.get('statut', '')
 
-    logements = Logement.objects.filter(
-        bailleur=request.user
-    ).select_related('ville', 'quartier').prefetch_related('photos')
+    annonces = Logement.objects.filter(bailleur=request.user)
+    compteurs = annonces.aggregate(
+        total=Count('pk'),
+        publie=Count('pk', filter=Q(statut='PUBLIE')),
+        en_attente=Count('pk', filter=Q(statut='EN_ATTENTE')),
+        suspendu=Count('pk', filter=Q(statut='SUSPENDU')),
+        loue=Count('pk', filter=Q(statut='LOUE')),
+        vues=Sum('nb_vues'),
+    )
 
+    logements = annonces.select_related('ville', 'quartier').prefetch_related('photos')
     if statut:
         logements = logements.filter(statut=statut)
 
-    logements = logements.order_by('-cree_le')
-
     return render(request, 'accounts/mes_annonces.html', {
-        'logements':     logements,
+        'logements':     logements.order_by('-cree_le'),
         'statut_actuel': statut,
-        'nb_total':      logements.count(),
+        'nb_total':      compteurs['total'],
+        'compteurs':     compteurs,
     })
     
     

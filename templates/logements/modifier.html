@@ -1,331 +1,317 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 {% block title %}Modifier l'annonce{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ═══════════ Modifier une annonce — même identité que les tableaux de bord ═══════════ */
+  :root {
+    --mo-bg: #f4f5fb; --mo-card: #ffffff; --mo-line: #e8eaf3;
+    --mo-violet: #6d3fe8; --mo-violet-2: #7c4dff; --mo-soft: rgba(109,63,232,.1);
+    --mo-err: #b91c1c; --mo-err-bg: #fee2e2;
+  }
+  [data-theme="dark"] {
+    --mo-bg: #0f0f13; --mo-card: #1a1a24; --mo-line: #2d2d3d; --mo-soft: rgba(124,77,255,.16);
+    --mo-err: #fca5a5; --mo-err-bg: rgba(239,68,68,.16);
+  }
+
+  .mo-page { background: var(--mo-bg); padding-block: 1.5rem 3rem; }
+  .mo-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--text-secondary); text-decoration: none; margin-bottom: .6rem; }
+  .mo-back:hover { color: var(--mo-violet); }
+
+  /* Bandeau */
+  .mo-hero {
+    display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
+    background: linear-gradient(120deg, #6d3fe8 0%, #7c4dff 60%, #8b5cf6 100%);
+    color: #fff; border-radius: 18px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .mo-hero::after { content: ""; position: absolute; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,.07); pointer-events: none; }
+  .mo-hero-img { width: 84px; height: 66px; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,.7); background: rgba(255,255,255,.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+  .mo-hero-txt { position: relative; z-index: 1; min-width: 0; flex: 1; }
+  .mo-hero small { opacity: .8; font-size: .78rem; }
+  .mo-hero h1 { font-size: 1.35rem; font-weight: 800; margin: .1rem 0 0; color: #fff; overflow-wrap: anywhere; }
+  .mo-status { position: relative; z-index: 1; font-size: .72rem; font-weight: 700; padding: 4px 14px; border-radius: 50px; background: rgba(255,255,255,.92); color: var(--mo-violet); }
+
+  /* Erreurs */
+  .mo-alert { background: var(--mo-err-bg); color: var(--mo-err); border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.25rem; font-size: .88rem; }
+  .mo-alert ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+
+  /* Sections */
+  .mo-section { background: var(--mo-card); border: 1px solid var(--mo-line); border-radius: 16px; padding: 1.4rem 1.5rem; margin-bottom: 1.25rem; scroll-margin-top: 90px; }
+  .mo-section h2 { font-size: 1.02rem; font-weight: 700; margin: 0 0 1.1rem; display: flex; align-items: center; gap: .6rem; color: var(--text-primary); }
+  .mo-ico { width: 32px; height: 32px; border-radius: 9px; background: var(--mo-soft); color: var(--mo-violet); display: inline-flex; align-items: center; justify-content: center; font-size: .95rem; }
+  .mo-field { display: flex; flex-direction: column; gap: .3rem; height: 100%; }
+  .mo-label { font-size: .8rem; font-weight: 600; color: var(--text-secondary); }
+  .mo-req { color: #ef4444; }
+  .mo-help { font-size: .74rem; color: var(--text-muted); }
+  .mo-error { font-size: .78rem; color: var(--mo-err); font-weight: 600; }
+  .mo-page .form-control, .mo-page .form-select { border-radius: 10px; }
+  .mo-page .form-control:focus, .mo-page .form-select:focus { border-color: var(--mo-violet); box-shadow: 0 0 0 3px var(--mo-soft); }
+
+  /* Équipements en pastilles cochables */
+  .mo-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .6rem; }
+  .mo-chip { display: flex; align-items: center; gap: .55rem; padding: .6rem .85rem; border: 1.5px solid var(--mo-line); border-radius: 12px; cursor: pointer; font-size: .85rem; font-weight: 600; color: var(--text-secondary); transition: .15s; margin: 0; }
+  .mo-chip:hover { border-color: var(--mo-violet); }
+  .mo-chip input { accent-color: var(--mo-violet); width: 1rem; height: 1rem; margin: 0; flex-shrink: 0; }
+  .mo-chip:has(input:checked) { border-color: var(--mo-violet); background: var(--mo-soft); color: var(--mo-violet); }
+  .mo-chip:has(input:focus-visible) { outline: 2px solid var(--mo-violet); outline-offset: 2px; }
+
+  /* Position */
+  .mo-position { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; padding: .65rem .9rem; border-radius: 10px; background: var(--mo-soft); color: var(--mo-violet); font-size: .8rem; font-weight: 600; }
+
+  /* Photos */
+  .mo-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .6rem; }
+  .mo-photo { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; border: 2px solid var(--mo-line); }
+  .mo-photo.principale { border-color: var(--mo-violet); }
+  .mo-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mo-photo span { position: absolute; left: 6px; bottom: 6px; font-size: .62rem; font-weight: 700; padding: 2px 8px; border-radius: 50px; background: var(--mo-violet); color: #fff; }
+  .mo-drop { display: flex; flex-direction: column; align-items: center; gap: .3rem; text-align: center; padding: 1.5rem 1rem; border: 2px dashed var(--mo-line); border-radius: 14px; cursor: pointer; color: var(--text-secondary); transition: .15s; }
+  .mo-drop:hover, .mo-drop.over { border-color: var(--mo-violet); background: var(--mo-soft); }
+  .mo-drop i { font-size: 1.6rem; color: var(--mo-violet); }
+  .mo-drop b { font-size: .9rem; color: var(--text-primary); }
+  .mo-drop small { font-size: .74rem; color: var(--text-muted); }
+  .mo-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .mo-drop:focus-within { outline: 2px solid var(--mo-violet); outline-offset: 2px; }
+  #apercuPhotos { margin-top: .8rem; }
+  #apercuPhotos:empty { display: none; }
+
+  /* Panneau latéral */
+  .mo-side { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 1rem; }
+  .mo-side .mo-section { margin-bottom: 0; padding: 1.2rem; }
+  .mo-nav { display: flex; flex-direction: column; gap: 2px; }
+  .mo-nav a { display: flex; align-items: center; gap: .6rem; padding: .5rem .7rem; border-radius: 9px; font-size: .84rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; }
+  .mo-nav a:hover { background: var(--mo-soft); color: var(--mo-violet); }
+  .mo-nav i { font-size: .95rem; }
+  .mo-btn { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; padding: .7rem 1rem; border-radius: 12px; border: 1.5px solid transparent; font-size: .88rem; font-weight: 700; text-decoration: none; cursor: pointer; transition: .15s; }
+  .mo-btn.primary { background: linear-gradient(135deg, var(--mo-violet), var(--mo-violet-2)); color: #fff; box-shadow: 0 6px 16px rgba(109,63,232,.28); }
+  .mo-btn.primary:hover { transform: translateY(-1px); color: #fff; }
+  .mo-btn.ghost { background: transparent; border-color: var(--mo-line); color: var(--text-secondary); }
+  .mo-btn.ghost:hover { border-color: var(--mo-violet); color: var(--mo-violet); }
+  .mo-btn + .mo-btn { margin-top: .5rem; }
+  .mo-actions-mobile { display: none; }
+
+  @media (max-width: 991.98px) {
+    .mo-side { position: static; }
+    .mo-nav { display: none; }
+  }
+  @media (max-width: 575.98px) {
+    .mo-section { padding: 1.15rem; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-9">
+<div class="mo-page">
+<div class="container">
 
-      <!-- En-tête -->
-      <div class="mb-4">
-        <h2 class="fw-bold mb-0">✏️ Modifier l'annonce</h2>
-        <p class="text-muted small">{{ logement.titre }}</p>
-      </div>
+  <a href="{% url 'accounts:mes_annonces' %}" class="mo-back"><i class="bi bi-arrow-left"></i>Mes annonces</a>
 
-      <!-- Afficher les erreurs détaillées -->
-      {% if form.errors %}
-      <div class="alert mb-4"
-           style="background:#fee2e2;border-left:4px solid #ef4444;
-                  border-right:none;border-top:none;border-bottom:none;
-                  color:#991b1b">
-        <div class="d-flex align-items-center gap-2 mb-1">
-          <i class="bi bi-exclamation-circle"></i>
-          <strong>Veuillez corriger les erreurs suivantes :</strong>
-        </div>
-        <ul class="mb-0 ps-4 small">
-          {% for field in form %}
-            {% if field.errors %}
-              {% for error in field.errors %}
-              <li><strong>{{ field.label }} :</strong> {{ error }}</li>
-              {% endfor %}
-            {% endif %}
-          {% endfor %}
-          {% for error in form.non_field_errors %}
-          <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-
-      <form method="post" enctype="multipart/form-data" novalidate id="modifierForm">
-        {% csrf_token %}
-
-        <!-- ─── Informations générales ──────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-primary text-white fw-bold py-3 rounded-top-4">
-            <i class="bi bi-info-circle me-2"></i>Informations générales
-          </div>
-          <div class="card-body p-4">
-
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Titre *</label>
-              {{ form.titre }}
-              {% if form.titre.errors %}<div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Type de logement</label>
-                {{ form.type_logement }}
-                {% if form.type_logement.errors %}<div class="text-danger small mt-1">{{ form.type_logement.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Type d'offre</label>
-                {{ form.type_offre }}
-                {% if form.type_offre.errors %}<div class="text-danger small mt-1">{{ form.type_offre.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Standing</label>
-                {{ form.standing }}
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Description</label>
-              {{ form.description }}
-              {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
-            </div>
-
-            <div>
-              <label class="form-label fw-semibold">Meublé ?</label>
-              {{ form.meuble }}
-            </div>
-
-          </div>
-        </div>
-
-        <!-- ─── Localisation ───────────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-success text-white fw-bold py-3 rounded-top-4">
-            <i class="bi bi-geo-alt me-2"></i>Localisation
-          </div>
-          <div class="card-body p-4">
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">Ville</label>
-                {{ form.ville }}
-                {% if form.ville.errors %}<div class="text-danger small mt-1">{{ form.ville.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">Quartier</label>
-                {{ form.quartier }}
-              </div>
-            </div>
-            <div>
-              <label class="form-label fw-semibold">Adresse</label>
-              {{ form.adresse }}
-              {% if form.adresse.errors %}<div class="text-danger small mt-1">{{ form.adresse.errors.0 }}</div>{% endif %}
-            </div>
-
-            <!-- Position sur la carte : conservée telle quelle (non modifiable ici) -->
-            {{ form.latitude }}
-            {{ form.longitude }}
-            {% if logement.latitude and logement.longitude %}
-            <small class="text-muted d-block mt-2">
-              <i class="bi bi-pin-map me-1"></i>
-              Position actuelle conservée ({{ logement.latitude }}, {{ logement.longitude }})
-            </small>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- ─── Caractéristiques ───────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-info text-white fw-bold py-3 rounded-top-4">
-            <i class="bi bi-list-check me-2"></i>Caractéristiques
-          </div>
-          <div class="card-body p-4">
-            <div class="row g-3">
-              <div class="col-md-3 col-6">
-                <label class="form-label fw-semibold">Chambres</label>
-                {{ form.nb_chambres }}
-                {% if form.nb_chambres.errors %}<div class="text-danger small mt-1">{{ form.nb_chambres.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-3 col-6">
-                <label class="form-label fw-semibold">Salles de bain</label>
-                {{ form.nb_salles_bain }}
-              </div>
-              <div class="col-md-3 col-6">
-                <label class="form-label fw-semibold">Toilettes</label>
-                {{ form.nb_toilettes }}
-                {% if form.nb_toilettes.errors %}<div class="text-danger small mt-1">{{ form.nb_toilettes.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-3 col-6">
-                <label class="form-label fw-semibold">Surface (m²)</label>
-                {{ form.surface }}
-              </div>
-              <div class="col-md-3 col-6 mt-3">
-                <label class="form-label fw-semibold">Étage</label>
-                {{ form.etage }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── Prix ───────────────────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-warning text-dark fw-bold py-3 rounded-top-4">
-            <i class="bi bi-currency-dollar me-2"></i>Prix
-          </div>
-          <div class="card-body p-4">
-            <div class="row g-3 mb-3">
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Prix (FCFA) *</label>
-                {{ form.prix }}
-                {% if form.prix.errors %}<div class="text-danger small mt-1">{{ form.prix.errors.0 }}</div>{% endif %}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Charges</label>
-                {{ form.charges }}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold">Caution</label>
-                {{ form.caution }}
-              </div>
-            </div>
-            <div class="d-flex gap-4">
-              <div class="form-check">
-                {{ form.prix_negociable }}
-                <label class="form-check-label">Prix négociable</label>
-              </div>
-              <div class="form-check">
-                {{ form.disponible }}
-                <label class="form-check-label">Disponible</label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── Équipements ────────────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-secondary text-white fw-bold py-3 rounded-top-4">
-            <i class="bi bi-tools me-2"></i>Équipements
-          </div>
-          <div class="card-body p-4">
-            <div class="row g-3">
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.eau_courante }}
-                  <label class="form-check-label small">Eau courante</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.electricite }}
-                  <label class="form-check-label small">Électricité</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.internet }}
-                  <label class="form-check-label small">WiFi</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.climatisation }}
-                  <label class="form-check-label small">Climatisation</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.parking }}
-                  <label class="form-check-label small">Parking</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.gardien }}
-                  <label class="form-check-label small">Gardien</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.generateur }}
-                  <label class="form-check-label small">Groupe électrogène</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.piscine }}
-                  <label class="form-check-label small">Piscine</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.balcon }}
-                  <label class="form-check-label small">Balcon</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.securite }}
-                  <label class="form-check-label small">Sécurité</label>
-                </div>
-              </div>
-              <div class="col-md-3 col-6">
-                <div class="form-check">
-                  {{ form.cuisine_equipee }}
-                  <label class="form-check-label small">Cuisine équipée</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ─── Disponibilité ──────────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-light fw-bold py-3 rounded-top-4">
-            <i class="bi bi-calendar-event me-2"></i>Disponibilité
-          </div>
-          <div class="card-body p-4">
-            <label class="form-label fw-semibold">
-              Date de disponibilité
-              <span class="text-muted fw-normal small">(si pas immédiatement disponible)</span>
-            </label>
-            {{ form.date_disponibilite }}
-          </div>
-        </div>
-
-        <!-- ─── Photos ─────────────────────────────────── -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-header bg-dark text-white fw-bold py-3 rounded-top-4">
-            <i class="bi bi-images me-2"></i>Photos
-          </div>
-          <div class="card-body p-4">
-
-            <!-- Photos actuelles -->
-            {% if logement.photos.exists %}
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Photos actuelles</label>
-              <div class="d-flex flex-wrap gap-2">
-                {% for photo in logement.photos.all %}
-                <img src="{{ photo.image.url }}"
-                     style="width:90px;height:70px;object-fit:cover;
-                            border-radius:8px;border:2px solid
-                            {% if photo.principale %}#2563eb{% else %}#e2e8f0{% endif %}">
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-
-            <label class="form-label fw-semibold">
-              Ajouter de nouvelles photos
-              <span class="text-muted fw-normal small">(JPG, PNG, WebP — max 5 Mo chacune)</span>
-            </label>
-            <input type="file"
-                   name="photos"
-                   class="form-control"
-                   multiple
-                   accept="image/jpeg,image/png,image/webp">
-
-          </div>
-        </div>
-
-        <!-- Boutons -->
-        <div class="d-flex gap-3 justify-content-end">
-          <a href="{% url 'accounts:dashboard_bailleur' %}"
-             class="btn btn-outline-secondary px-4">
-            Annuler
-          </a>
-          <button type="submit" class="btn btn-primary px-5 fw-semibold">
-            <i class="bi bi-check-circle me-2"></i>Enregistrer les modifications
-          </button>
-        </div>
-
-      </form>
+  <header class="mo-hero">
+    {% with photo=logement.get_photo_principale %}
+    {% if photo %}<img src="{{ photo.image.url }}" alt="" class="mo-hero-img">
+    {% else %}<div class="mo-hero-img"><i class="bi bi-house"></i></div>{% endif %}
+    {% endwith %}
+    <div class="mo-hero-txt">
+      <small>Modifier l'annonce</small>
+      <h1>{{ logement.titre }}</h1>
     </div>
+    <span class="mo-status">{{ logement.get_statut_display }}</span>
+  </header>
+
+  {% if form.errors %}
+  <div class="mo-alert" role="alert">
+    <strong><i class="bi bi-exclamation-circle me-1"></i>Veuillez corriger les erreurs suivantes :</strong>
+    <ul>
+      {% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }} :</strong> {{ error }}</li>{% endfor %}{% endfor %}
+      {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
   </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate id="modifierForm">
+    {% csrf_token %}
+    <div class="row g-4">
+
+      <!-- ─── Formulaire ─── -->
+      <div class="col-lg-8">
+
+        <section class="mo-section" id="general">
+          <h2><span class="mo-ico"><i class="bi bi-info-circle"></i></span>Informations générales</h2>
+          <div class="row g-3">
+            <div class="col-12">{% include 'logements/includes/champ.html' with champ=form.titre label="Titre" %}</div>
+            <div class="col-md-4">{% include 'logements/includes/champ.html' with champ=form.type_logement label="Type de logement" %}</div>
+            <div class="col-md-4">{% include 'logements/includes/champ.html' with champ=form.type_offre label="Type d'offre" %}</div>
+            <div class="col-md-4">{% include 'logements/includes/champ.html' with champ=form.standing label="Standing" %}</div>
+            <div class="col-md-8">{% include 'logements/includes/champ.html' with champ=form.description label="Description" %}</div>
+            <div class="col-md-4">{% include 'logements/includes/champ.html' with champ=form.meuble label="Meublé ?" %}</div>
+          </div>
+        </section>
+
+        <section class="mo-section" id="localisation">
+          <h2><span class="mo-ico"><i class="bi bi-geo-alt"></i></span>Localisation</h2>
+          <div class="row g-3">
+            <div class="col-md-6">{% include 'logements/includes/champ.html' with champ=form.ville label="Ville" %}</div>
+            <div class="col-md-6">{% include 'logements/includes/champ.html' with champ=form.quartier label="Quartier" %}</div>
+            <div class="col-12">{% include 'logements/includes/champ.html' with champ=form.adresse label="Adresse" %}</div>
+          </div>
+          {{ form.latitude }}
+          {{ form.longitude }}
+          {% if logement.latitude and logement.longitude %}
+          <div class="mo-position">
+            <i class="bi bi-pin-map"></i>Position sur la carte conservée
+          </div>
+          {% endif %}
+        </section>
+
+        <section class="mo-section" id="caracteristiques">
+          <h2><span class="mo-ico"><i class="bi bi-list-check"></i></span>Caractéristiques</h2>
+          <div class="row g-3">
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.nb_chambres label="Chambres" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.nb_salles_bain label="Salles de bain" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.nb_toilettes label="Toilettes" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.surface label="Surface (m²)" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.etage label="Étage" %}</div>
+            <div class="col-md-4 col-12">{% include 'logements/includes/champ.html' with champ=form.date_disponibilite label="Disponible à partir du" aide="Laissez vide si le logement est disponible tout de suite." %}</div>
+          </div>
+        </section>
+
+        <section class="mo-section" id="prix">
+          <h2><span class="mo-ico"><i class="bi bi-cash-coin"></i></span>Prix et conditions</h2>
+          <div class="row g-3">
+            <div class="col-md-4">{% include 'logements/includes/champ.html' with champ=form.prix label="Prix (FCFA)" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.charges label="Charges (FCFA)" %}</div>
+            <div class="col-md-4 col-6">{% include 'logements/includes/champ.html' with champ=form.caution label="Caution (FCFA)" %}</div>
+          </div>
+          <div class="mo-chips mt-3">
+            <label class="mo-chip" for="{{ form.prix_negociable.id_for_label }}">{{ form.prix_negociable }}Prix négociable</label>
+            <label class="mo-chip" for="{{ form.disponible.id_for_label }}">{{ form.disponible }}Disponible</label>
+          </div>
+        </section>
+
+        <section class="mo-section" id="equipements">
+          <h2><span class="mo-ico"><i class="bi bi-tools"></i></span>Équipements</h2>
+          <div class="mo-chips">
+            <label class="mo-chip" for="{{ form.eau_courante.id_for_label }}">{{ form.eau_courante }}<i class="bi bi-droplet-half"></i>Eau courante</label>
+            <label class="mo-chip" for="{{ form.electricite.id_for_label }}">{{ form.electricite }}<i class="bi bi-lightning"></i>Électricité</label>
+            <label class="mo-chip" for="{{ form.internet.id_for_label }}">{{ form.internet }}<i class="bi bi-wifi"></i>WiFi</label>
+            <label class="mo-chip" for="{{ form.climatisation.id_for_label }}">{{ form.climatisation }}<i class="bi bi-thermometer-snow"></i>Climatisation</label>
+            <label class="mo-chip" for="{{ form.parking.id_for_label }}">{{ form.parking }}<i class="bi bi-car-front"></i>Parking</label>
+            <label class="mo-chip" for="{{ form.gardien.id_for_label }}">{{ form.gardien }}<i class="bi bi-shield-check"></i>Gardien</label>
+            <label class="mo-chip" for="{{ form.generateur.id_for_label }}">{{ form.generateur }}<i class="bi bi-fuel-pump"></i>Groupe électrogène</label>
+            <label class="mo-chip" for="{{ form.piscine.id_for_label }}">{{ form.piscine }}<i class="bi bi-water"></i>Piscine</label>
+            <label class="mo-chip" for="{{ form.balcon.id_for_label }}">{{ form.balcon }}<i class="bi bi-house-up"></i>Balcon</label>
+            <label class="mo-chip" for="{{ form.securite.id_for_label }}">{{ form.securite }}<i class="bi bi-lock"></i>Sécurité</label>
+            <label class="mo-chip" for="{{ form.cuisine_equipee.id_for_label }}">{{ form.cuisine_equipee }}<i class="bi bi-cup-hot"></i>Cuisine équipée</label>
+          </div>
+        </section>
+
+        <section class="mo-section" id="photos">
+          <h2><span class="mo-ico"><i class="bi bi-images"></i></span>Photos</h2>
+
+          {% with photos=logement.photos.all %}
+          {% if photos %}
+          <div class="mo-mb">
+            <div class="mo-label mb-2">Photos actuelles ({{ photos|length }})</div>
+            <div class="mo-photos mb-3">
+              {% for photo in photos %}
+              <div class="mo-photo{% if photo.principale %} principale{% endif %}">
+                <img src="{{ photo.image.url }}" alt="Photo {{ forloop.counter }}" loading="lazy">
+                {% if photo.principale %}<span>Principale</span>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <label class="mo-drop" id="zoneDepot" for="champPhotos">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <b>Ajouter de nouvelles photos</b>
+            <small>Glissez-les ici ou cliquez pour choisir · JPG, PNG, WebP · 5 Mo maximum chacune</small>
+            <input type="file" name="photos" id="champPhotos" multiple accept="image/jpeg,image/png,image/webp">
+          </label>
+          <div class="mo-photos" id="apercuPhotos" aria-live="polite"></div>
+        </section>
+
+      </div>
+
+      <!-- ─── Panneau latéral ─── -->
+      <div class="col-lg-4">
+        <div class="mo-side">
+
+          <div class="mo-section">
+            <button type="submit" class="mo-btn primary"><i class="bi bi-check-circle"></i>Enregistrer les modifications</button>
+            <a href="{% url 'logements:detail' logement.slug %}" target="_blank" class="mo-btn ghost"><i class="bi bi-eye"></i>Voir l'annonce</a>
+            <a href="{% url 'accounts:dashboard_bailleur' %}" class="mo-btn ghost"><i class="bi bi-x-lg"></i>Annuler</a>
+          </div>
+
+          <nav class="mo-section" aria-label="Sections du formulaire">
+            <div class="mo-nav">
+              <a href="#general"><i class="bi bi-info-circle"></i>Informations générales</a>
+              <a href="#localisation"><i class="bi bi-geo-alt"></i>Localisation</a>
+              <a href="#caracteristiques"><i class="bi bi-list-check"></i>Caractéristiques</a>
+              <a href="#prix"><i class="bi bi-cash-coin"></i>Prix et conditions</a>
+              <a href="#equipements"><i class="bi bi-tools"></i>Équipements</a>
+              <a href="#photos"><i class="bi bi-images"></i>Photos</a>
+            </div>
+          </nav>
+
+          <div class="mo-section">
+            <div class="mo-label">Prix actuel</div>
+            <div class="fw-bold" style="font-size:1.4rem;color:var(--mo-violet)">{{ logement.prix_formate }}</div>
+            <div class="mo-help mt-1">{{ logement.nb_vues|intcomma }} vue{{ logement.nb_vues|pluralize }} · publiée le {{ logement.cree_le|date:"d/m/Y" }}</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
 </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const champ = document.getElementById('champPhotos');
+  const zone = document.getElementById('zoneDepot');
+  const apercu = document.getElementById('apercuPhotos');
+  const TAILLE_MAX = 5 * 1024 * 1024;
+
+  function afficher() {
+    apercu.replaceChildren();
+    Array.from(champ.files).forEach(function (fichier) {
+      const trop = fichier.size > TAILLE_MAX;
+      const cadre = document.createElement('div');
+      cadre.className = 'mo-photo' + (trop ? '' : ' principale');
+      const img = document.createElement('img');
+      img.alt = fichier.name;
+      img.src = URL.createObjectURL(fichier);
+      img.onload = function () { URL.revokeObjectURL(img.src); };
+      const badge = document.createElement('span');
+      badge.textContent = trop ? 'Trop lourde (> 5 Mo)' : 'Nouvelle';
+      if (trop) badge.style.background = '#ef4444';
+      cadre.append(img, badge);
+      apercu.appendChild(cadre);
+    });
+  }
+
+  champ.addEventListener('change', afficher);
+  ['dragenter', 'dragover'].forEach(function (nom) {
+    zone.addEventListener(nom, function (e) { e.preventDefault(); zone.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (nom) {
+    zone.addEventListener(nom, function () { zone.classList.remove('over'); });
+  });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files.length) {
+      champ.files = e.dataTransfer.files;
+      afficher();
+    }
+  });
+})();
+</script>
 {% endblock %}

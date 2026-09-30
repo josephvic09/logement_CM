@@ -46,7 +46,9 @@ class Paiement(models.Model):
                         )
     telephone         = models.CharField(max_length=20, blank=True)
     transaction_id    = models.CharField(max_length=100, blank=True)
-    code_confirmation = models.CharField(max_length=10, blank=True)
+    plan              = models.CharField(max_length=20, blank=True)
+    campay_reference  = models.CharField(max_length=100, blank=True, db_index=True)
+    ussd_code         = models.CharField(max_length=30, blank=True)
     message_operateur = models.TextField(blank=True)
     cree_le           = models.DateTimeField(auto_now_add=True)
     traite_le         = models.DateTimeField(null=True, blank=True)
@@ -63,10 +65,6 @@ class Paiement(models.Model):
             self.reference = 'LCM' + ''.join(
                 random.choices(string.digits, k=10)
             )
-        if not self.code_confirmation:
-            self.code_confirmation = ''.join(
-                random.choices(string.digits, k=6)
-            )
         super().save(*args, **kwargs)
 
     @property
@@ -77,10 +75,9 @@ class Paiement(models.Model):
     def est_reussi(self):
         return self.statut == 'REUSSI'
 
-    def generer_transaction_id(self):
-        """Simule un ID de transaction opérateur."""
-        prefix = 'MTN' if self.methode == 'MTN_MOMO' else 'ORG'
-        return prefix + ''.join(random.choices(string.digits, k=12))
+    @property
+    def en_cours(self):
+        return self.statut in ('EN_ATTENTE', 'TRAITEMENT')
 
 
 class Abonnement(models.Model):

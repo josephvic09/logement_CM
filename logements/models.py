@@ -257,6 +257,8 @@ class Reservation(models.Model):
     statut       = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_ATTENTE')
     date_debut   = models.DateField()
     date_fin     = models.DateField(null=True, blank=True)
+    heure_visite = models.TimeField(null=True, blank=True)
+    lieu_rencontre = models.CharField(max_length=255, blank=True)
     message      = models.TextField(blank=True)
     montant      = models.PositiveBigIntegerField(default=0)
     paye         = models.BooleanField(default=False)

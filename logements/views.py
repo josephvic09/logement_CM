@@ -16,7 +16,9 @@ from .models import (
     Logement, Ville, Quartier, Favori,
     Reservation, Avis, Signalement, PhotoLogement
 )
-from .forms import LogementForm, RechercheForm, AvisForm, ReservationForm
+from .forms import (
+    LogementForm, RechercheForm, AvisForm, ReservationForm, VisiteForm
+)
 from accounts.models import Utilisateur
 FRAIS_RESERVATION = 1000  # FCFA — frais fixes pour confirmer une réservation
 
@@ -229,25 +231,11 @@ def detail_logement(request, slug):
         )
 
     # ─── Vérifier visite + droit de réserver ────────────────────
-    visite_confirmee  = False
-    peut_reserver     = False
-
-    if request.user.is_authenticated and not est_proprietaire and not est_admin:
-        visite_confirmee = Reservation.objects.filter(
-            locataire=request.user,
-            logement=logement,
-            type_demande='VISITE',
-            statut__in=['CONFIRME', 'PAYEE', 'TERMINEE']
-        ).exists()
-
-        reservation_active = Reservation.objects.filter(
-            locataire=request.user,
-            logement=logement,
-            type_demande='RESERVATION',
-            statut__in=['EN_ATTENTE', 'CONFIRME', 'PAYEE']
-        ).exists()
-
-        peut_reserver = visite_confirmee and not reservation_active
+    reservation_active = (
+        request.user.is_authenticated and not est_proprietaire and not est_admin
+        and _reservation_active(request.user, logement)
+    )
+    peut_reserver = not reservation_active
 
     # ─── Données de la page ──────────────────────────────────────
     photos    = logement.photos.order_by('ordre', '-principale')
@@ -255,8 +243,6 @@ def detail_logement(request, slug):
     note_moy  = avis_list.aggregate(Avg('note'))['note__avg']
     if note_moy is not None:
         note_moy = round(note_moy, 1)
-
-    form_reserv = ReservationForm()
 
     similaires = Logement.objects.filter(
         statut='PUBLIE',
@@ -277,11 +263,12 @@ def detail_logement(request, slug):
         'avis_list':         avis_list,
         'note_moy':          note_moy,
         'avis_form':         form_avis,
-        'form_reservation':  form_reserv,
+        'form_visite':       VisiteForm(auto_id='visite_%s'),
+        'form_reservation':  ReservationForm(auto_id='resa_%s'),
         'similaires':        similaires,
         'est_favori':        est_favori,
-        'visite_confirmee':  visite_confirmee,   # ← nouveau
-        'peut_reserver':     peut_reserver,       # ← nouveau
+        'reservation_active': reservation_active,
+        'peut_reserver':     peut_reserver,
     })
 # ─── Créer logement ───────────────────────────────────
 
@@ -415,65 +402,84 @@ def toggle_favori(request, logement_id):
 
 
 
+def _reservation_active(utilisateur, logement):
+    """Ce locataire a-t-il déjà une réservation en cours sur ce logement ?"""
+    return Reservation.objects.filter(
+        locataire=utilisateur, logement=logement,
+        type_demande='RESERVATION', statut__in=['EN_ATTENTE', 'CONFIRME'],
+    ).exists()
+
+
+def _enregistrer_demande(request, logement, form_class, type_demande, montant):
+    """Valide et enregistre une demande ; renvoie la réservation ou None."""
+    form = form_class(request.POST)
+    if not form.is_valid():
+        erreurs = " ".join(e for liste in form.errors.values() for e in liste)
+        messages.error(request, f"Demande non enregistrée. {erreurs}")
+        return None
+
+    res              = form.save(commit=False)
+    res.locataire    = request.user
+    res.logement     = logement
+    res.type_demande = type_demande
+    res.montant      = montant
+    if type_demande == 'VISITE' and not res.lieu_rencontre:
+        res.lieu_rencontre = f"{logement.adresse}, {logement.ville.nom}"
+    res.save()
+
+    try:
+        from notifs.utils import notif_nouvelle_reservation
+        notif_nouvelle_reservation(res)
+    except Exception:
+        pass
+    return res
+
+
 @login_required
-def faire_reservation(request, logement_id):
-    logement = get_object_or_404(
-        Logement, pk=logement_id, statut='PUBLIE'
-    )
+@require_POST
+def demander_visite(request, logement_id):
+    logement = get_object_or_404(Logement, pk=logement_id, statut='PUBLIE')
 
     if request.user == logement.bailleur:
-        messages.error(
-            request,
-            "Vous ne pouvez pas réserver votre propre logement."
-        )
+        messages.error(request, "Vous ne pouvez pas visiter votre propre logement.")
         return redirect('logements:detail', slug=logement.slug)
 
-    if request.method == 'POST':
-        form = ReservationForm(request.POST)
-        if form.is_valid():
-            res           = form.save(commit=False)
-            res.locataire = request.user
-            res.logement  = logement
+    res = _enregistrer_demande(request, logement, VisiteForm, 'VISITE', 0)
+    if res is None:
+        return redirect('logements:detail', slug=logement.slug)
 
-            # Frais de réservation uniquement pour une vraie réservation,
-            # pas pour une simple demande de visite.
-            if res.type_demande == 'RESERVATION':
-                res.montant = FRAIS_RESERVATION
-            else:
-                res.montant = 0
+    messages.success(
+        request,
+        "✅ Demande de visite envoyée ! Le bailleur vous répondra sous 24h."
+    )
+    return redirect('accounts:mes_reservations')
 
-            res.save()
 
-            try:
-                from notifs.utils import notif_nouvelle_reservation
-                notif_nouvelle_reservation(res)
-            except Exception:
-                pass
+@login_required
+@require_POST
+def faire_reservation(request, logement_id):
+    logement = get_object_or_404(Logement, pk=logement_id, statut='PUBLIE')
 
-            if res.type_demande == 'RESERVATION':
-                messages.success(
-                    request,
-                    f"Demande de réservation envoyée. Réglez les "
-                    f"{FRAIS_RESERVATION} FCFA de frais de réservation "
-                    f"pour la confirmer."
-                )
-                return redirect('paiements:payer', reservation_id=res.pk)
+    if request.user == logement.bailleur:
+        messages.error(request, "Vous ne pouvez pas réserver votre propre logement.")
+        return redirect('logements:detail', slug=logement.slug)
 
-            messages.success(
-                request,
-                "✅ Demande de visite envoyée ! Le bailleur vous répondra sous 24h."
-            )
-            return redirect('accounts:mes_reservations')
-        else:
-            messages.error(request, "Veuillez corriger les erreurs du formulaire.")
-    else:
-        form = ReservationForm()
+    if _reservation_active(request.user, logement):
+        messages.error(request, "Vous avez déjà une réservation en cours pour ce logement.")
+        return redirect('logements:detail', slug=logement.slug)
 
-    return render(request, 'logements/reserver.html', {
-        'form':     form,
-        'logement': logement,
-        'frais_reservation': FRAIS_RESERVATION,
-    })
+    res = _enregistrer_demande(
+        request, logement, ReservationForm, 'RESERVATION', FRAIS_RESERVATION
+    )
+    if res is None:
+        return redirect('logements:detail', slug=logement.slug)
+
+    messages.success(
+        request,
+        f"Demande de réservation envoyée. Réglez les {FRAIS_RESERVATION} FCFA "
+        f"de frais de réservation pour la confirmer."
+    )
+    return redirect('paiements:payer', reservation_id=res.pk)
 # ─── Signaler un logement ─────────────────────────────
 
 @login_required

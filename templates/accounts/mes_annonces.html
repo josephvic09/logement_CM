@@ -2,232 +2,205 @@
 {% load static humanize %}
 {% block title %}Mes annonces{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ═══════════ Mes annonces — même identité que les tableaux de bord ═══════════ */
+  :root {
+    --ma-bg: #f4f5fb; --ma-card: #ffffff; --ma-line: #e8eaf3;
+    --ma-violet: #6d3fe8; --ma-violet-2: #7c4dff; --ma-soft: rgba(109,63,232,.1);
+    --ma-ok: #065f46;   --ma-ok-bg: #d1fae5;
+    --ma-warn: #92400e; --ma-warn-bg: #fef3c7;
+    --ma-ko: #991b1b;   --ma-ko-bg: #fee2e2;
+    --ma-info: #1e40af; --ma-info-bg: #dbeafe;
+  }
+  [data-theme="dark"] {
+    --ma-bg: #0f0f13; --ma-card: #1a1a24; --ma-line: #2d2d3d; --ma-soft: rgba(124,77,255,.16);
+    --ma-ok: #6ee7b7;   --ma-ok-bg: rgba(16,185,129,.16);
+    --ma-warn: #fcd34d; --ma-warn-bg: rgba(245,158,11,.16);
+    --ma-ko: #fca5a5;   --ma-ko-bg: rgba(239,68,68,.16);
+    --ma-info: #93c5fd; --ma-info-bg: rgba(59,130,246,.16);
+  }
+
+  .ma-page { background: var(--ma-bg); min-height: calc(100vh - 70px); padding-block: 1.5rem 3rem; }
+  .ma-back { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--text-secondary); text-decoration: none; }
+  .ma-back:hover { color: var(--ma-violet); }
+  .ma-back svg { width: 14px; height: 14px; }
+
+  /* En-tête */
+  .ma-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin: .5rem 0 1.4rem; }
+  .ma-title { font-size: 1.7rem; font-weight: 800; margin: 0; color: var(--text-primary); }
+  .ma-sub { margin: .2rem 0 0; font-size: .88rem; color: var(--text-secondary); }
+  .ma-cta {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.2rem; border-radius: 12px;
+    background: linear-gradient(135deg, var(--ma-violet), var(--ma-violet-2)); color: #fff;
+    font-size: .88rem; font-weight: 700; text-decoration: none; box-shadow: 0 6px 16px rgba(109,63,232,.28); transition: .15s;
+  }
+  .ma-cta:hover { color: #fff; transform: translateY(-1px); }
+  .ma-cta svg { width: 16px; height: 16px; }
+
+  /* Filtres */
+  .ma-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .ma-tab {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .5rem 1rem;
+    background: var(--ma-card); border: 1px solid var(--ma-line); border-radius: 50px;
+    font-size: .84rem; font-weight: 600; color: var(--text-secondary); text-decoration: none; transition: .15s;
+  }
+  .ma-tab:hover { border-color: var(--ma-violet); color: var(--ma-violet); }
+  .ma-tab.active { background: var(--ma-violet); border-color: var(--ma-violet); color: #fff; }
+  .ma-tab b { font-size: .72rem; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; background: var(--ma-soft); color: var(--ma-violet); font-variant-numeric: tabular-nums; }
+  .ma-tab.active b { background: rgba(255,255,255,.25); color: #fff; }
+
+  /* Ligne d'annonce */
+  .ma-list { display: flex; flex-direction: column; gap: .9rem; }
+  .ma-item { display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; background: var(--ma-card); border: 1px solid var(--ma-line); border-radius: 16px; overflow: hidden; transition: box-shadow .2s; }
+  .ma-item:hover { box-shadow: 0 10px 28px rgba(0,0,0,.07); }
+  .ma-photo { position: relative; background: var(--ma-line); min-height: 140px; }
+  .ma-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ma-photo .vide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+  .ma-photo .vide svg { width: 30px; height: 30px; }
+  .ma-badge { position: absolute; left: .6rem; top: .6rem; font-size: .68rem; font-weight: 700; padding: 3px 11px; border-radius: 50px; backdrop-filter: blur(4px); }
+  .ma-badge.ok { background: var(--ma-ok-bg); color: var(--ma-ok); }
+  .ma-badge.warn { background: var(--ma-warn-bg); color: var(--ma-warn); }
+  .ma-badge.ko { background: var(--ma-ko-bg); color: var(--ma-ko); }
+  .ma-badge.info { background: var(--ma-info-bg); color: var(--ma-info); }
+  .ma-badge.neutral { background: var(--ma-card); color: var(--text-secondary); }
+
+  .ma-body { padding: 1rem 1.3rem; min-width: 0; display: flex; flex-direction: column; gap: .45rem; justify-content: center; }
+  .ma-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0; overflow-wrap: anywhere; }
+  .ma-place { display: flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--text-secondary); }
+  .ma-place svg { width: 13px; height: 13px; color: var(--ma-violet); flex-shrink: 0; }
+  .ma-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .ma-chip { font-size: .72rem; font-weight: 600; padding: 3px 10px; border-radius: 50px; background: var(--ma-soft); color: var(--ma-violet); display: inline-flex; align-items: center; gap: .3rem; }
+  .ma-chip svg { width: 11px; height: 11px; }
+  .ma-date { font-size: .74rem; color: var(--text-muted); }
+
+  .ma-side { padding: 1rem 1.3rem; border-left: 1px solid var(--ma-line); display: flex; flex-direction: column; gap: .8rem; justify-content: center; min-width: 250px; }
+  .ma-price { font-size: 1.25rem; font-weight: 800; color: var(--ma-violet); font-variant-numeric: tabular-nums; }
+  .ma-stats { display: flex; gap: 1rem; font-size: .8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .ma-stats span { display: inline-flex; align-items: center; gap: .3rem; }
+  .ma-stats svg { width: 14px; height: 14px; }
+  .ma-stats .fav svg { color: #ef4444; }
+  .ma-stats .ctc svg { color: #10b981; }
+  .ma-actions { display: flex; gap: .4rem; }
+  .ma-actions form { display: contents; }
+  .ma-act { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; padding: .45rem .6rem; border-radius: 10px; border: 1px solid var(--ma-line); background: transparent; font-size: .78rem; font-weight: 600; color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: .15s; }
+  .ma-act svg { width: 14px; height: 14px; }
+  .ma-act:hover { border-color: var(--ma-violet); color: var(--ma-violet); background: var(--ma-soft); }
+  .ma-act.danger { flex: 0 0 auto; }
+  .ma-act.danger:hover { border-color: #ef4444; color: #ef4444; background: var(--ma-ko-bg); }
+
+  .ma-empty { text-align: center; padding: 3.5rem 1rem; background: var(--ma-card); border: 1px dashed var(--ma-line); border-radius: 16px; }
+  .ma-empty svg.ico { width: 40px; height: 40px; color: var(--ma-violet); margin-bottom: .8rem; }
+  .ma-empty h2 { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); }
+  .ma-empty p { color: var(--text-secondary); font-size: .9rem; margin-bottom: 1.2rem; }
+
+  @media (max-width: 991.98px) {
+    .ma-item { grid-template-columns: 150px minmax(0, 1fr); }
+    .ma-side { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--ma-line); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; min-width: 0; }
+    .ma-actions { flex: 1 1 260px; }
+  }
+  @media (max-width: 575.98px) {
+    .ma-item { grid-template-columns: 1fr; }
+    .ma-photo { height: 170px; min-height: 0; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
+<div class="ma-page">
+<div class="container">
 
-  <!-- En-tête -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <a href="{% url 'accounts:dashboard_bailleur' %}" class="ma-back"><svg data-lucide="arrow-left"></svg>Tableau de bord</a>
+
+  <div class="ma-head">
     <div>
-      <a href="{% url 'accounts:tableau_de_bord' %}"
-         class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
-        <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
-        Tableau de bord
-      </a>
-      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
-        <svg data-lucide="building"
-             style="width:24px;height:24px;color:var(--primary)">
-        </svg>
-        Mes annonces
-        <span class="badge rounded-pill"
-              style="background:var(--primary-light);color:var(--primary);
-                     font-size:.8rem;font-weight:700">
-          {{ nb_total }}
-        </span>
-      </h2>
+      <h1 class="ma-title">Mes annonces</h1>
+      <p class="ma-sub">
+        {{ compteurs.total }} annonce{{ compteurs.total|pluralize }} · {{ compteurs.vues|default:0|intcomma }} vue{{ compteurs.vues|default:0|pluralize }} au total
+      </p>
     </div>
-    <a href="{% url 'logements:creer' %}" class="btn btn-primary">
-      <svg data-lucide="plus-circle"
-           style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
-      </svg>
-      Nouvelle annonce
-    </a>
+    <a href="{% url 'logements:creer' %}" class="ma-cta"><svg data-lucide="plus-circle"></svg>Nouvelle annonce</a>
   </div>
 
-  <!-- Filtres par statut -->
-  <div class="d-flex gap-2 flex-wrap mb-4">
-    <a href="{% url 'accounts:mes_annonces' %}"
-       class="btn btn-sm {% if not statut_actuel %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      Toutes
-    </a>
-    <a href="?statut=PUBLIE"
-       class="btn btn-sm {% if statut_actuel == 'PUBLIE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      ✅ Publiées
-    </a>
-    <a href="?statut=EN_ATTENTE"
-       class="btn btn-sm {% if statut_actuel == 'EN_ATTENTE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      ⏳ En attente
-    </a>
-    <a href="?statut=SUSPENDU"
-       class="btn btn-sm {% if statut_actuel == 'SUSPENDU' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      ⛔ Suspendues
-    </a>
-    <a href="?statut=LOUE"
-       class="btn btn-sm {% if statut_actuel == 'LOUE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      🏠 Louées
-    </a>
-  </div>
+  <nav class="ma-tabs" aria-label="Filtrer par statut">
+    <a href="{% url 'accounts:mes_annonces' %}" class="ma-tab{% if not statut_actuel %} active{% endif %}">Toutes <b>{{ compteurs.total }}</b></a>
+    <a href="?statut=PUBLIE" class="ma-tab{% if statut_actuel == 'PUBLIE' %} active{% endif %}">Publiées <b>{{ compteurs.publie }}</b></a>
+    <a href="?statut=EN_ATTENTE" class="ma-tab{% if statut_actuel == 'EN_ATTENTE' %} active{% endif %}">En attente <b>{{ compteurs.en_attente }}</b></a>
+    <a href="?statut=SUSPENDU" class="ma-tab{% if statut_actuel == 'SUSPENDU' %} active{% endif %}">Suspendues <b>{{ compteurs.suspendu }}</b></a>
+    <a href="?statut=LOUE" class="ma-tab{% if statut_actuel == 'LOUE' %} active{% endif %}">Louées <b>{{ compteurs.loue }}</b></a>
+  </nav>
 
   {% if logements %}
-
-  <!-- Grille annonces -->
-  <div class="row g-3">
+  <div class="ma-list">
     {% for l in logements %}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="row g-0">
+    <article class="ma-item">
 
-          <!-- Image -->
-          <div class="col-md-2">
-            {% with photo=l.get_photo_principale %}
-            {% if photo %}
-            <img src="{{ photo.image.url }}"
-                 style="width:100%;height:130px;object-fit:cover">
-            {% else %}
-            <div style="height:130px;background:var(--gray-100);
-                        display:flex;align-items:center;justify-content:center">
-              <svg data-lucide="image"
-                   style="width:28px;height:28px;color:var(--gray-300)">
-              </svg>
-            </div>
-            {% endif %}
-            {% endwith %}
+      <div class="ma-photo">
+        {% with photo=l.get_photo_principale %}
+        {% if photo %}<img src="{{ photo.image.url }}" alt="" loading="lazy">
+        {% else %}<div class="vide"><svg data-lucide="image"></svg></div>{% endif %}
+        {% endwith %}
+        {% if l.statut == 'PUBLIE' %}<span class="ma-badge ok">Publiée</span>
+        {% elif l.statut == 'EN_ATTENTE' %}<span class="ma-badge warn">En attente</span>
+        {% elif l.statut == 'SUSPENDU' %}<span class="ma-badge ko">Suspendue</span>
+        {% elif l.statut == 'LOUE' %}<span class="ma-badge info">Louée</span>
+        {% else %}<span class="ma-badge neutral">{{ l.get_statut_display }}</span>{% endif %}
+      </div>
+
+      <div class="ma-body">
+        <h2 class="ma-name">{{ l.titre|truncatechars:60 }}</h2>
+        <div class="ma-place"><svg data-lucide="map-pin"></svg>{% if l.quartier %}{{ l.quartier.nom }}, {% endif %}{{ l.ville.nom }}</div>
+        <div class="ma-chips">
+          <span class="ma-chip">{{ l.get_type_offre_display }}</span>
+          <span class="ma-chip">{{ l.get_type_logement_display }}</span>
+          <span class="ma-chip"><svg data-lucide="door-open"></svg>{{ l.nb_chambres }} ch.</span>
+        </div>
+        <div class="ma-date">Publiée le {{ l.cree_le|date:"d/m/Y" }}</div>
+      </div>
+
+      <div class="ma-side">
+        <div>
+          <div class="ma-price">{{ l.prix_formate }}</div>
+          <div class="ma-stats">
+            <span title="Vues"><svg data-lucide="eye"></svg>{{ l.nb_vues }}</span>
+            <span class="fav" title="Favoris"><svg data-lucide="heart"></svg>{{ l.nb_favoris }}</span>
+            <span class="ctc" title="Contacts"><svg data-lucide="message-circle"></svg>{{ l.nb_contacts }}</span>
           </div>
-
-          <!-- Infos -->
-          <div class="col-md-6 p-3">
-            <div class="d-flex align-items-start gap-2 mb-1">
-              {% if l.statut == 'PUBLIE' %}
-              <span style="background:#d1fae5;color:#065f46;font-size:.68rem;
-                           font-weight:700;padding:2px 10px;border-radius:50px;
-                           white-space:nowrap;flex-shrink:0">✅ Publié</span>
-              {% elif l.statut == 'EN_ATTENTE' %}
-              <span style="background:#fef3c7;color:#92400e;font-size:.68rem;
-                           font-weight:700;padding:2px 10px;border-radius:50px;
-                           white-space:nowrap;flex-shrink:0">⏳ En attente</span>
-              {% elif l.statut == 'SUSPENDU' %}
-              <span style="background:#fee2e2;color:#991b1b;font-size:.68rem;
-                           font-weight:700;padding:2px 10px;border-radius:50px;
-                           white-space:nowrap;flex-shrink:0">⛔ Suspendu</span>
-              {% else %}
-              <span style="background:var(--gray-100);color:var(--gray-500);font-size:.68rem;
-                           font-weight:700;padding:2px 10px;border-radius:50px;
-                           white-space:nowrap;flex-shrink:0">{{ l.get_statut_display }}</span>
-              {% endif %}
-              <div class="fw-bold" style="font-size:.9rem">
-                {{ l.titre|truncatechars:50 }}
-              </div>
-            </div>
-
-            <div class="text-muted d-flex align-items-center gap-1 mb-2"
-                 style="font-size:.78rem">
-              <svg data-lucide="map-pin"
-                   style="width:12px;height:12px;color:var(--primary)">
-              </svg>
-              {% if l.quartier %}{{ l.quartier.nom }}, {% endif %}
-              {{ l.ville.nom }}
-            </div>
-
-            <div class="d-flex flex-wrap gap-2" style="font-size:.75rem">
-              <span style="background:var(--gray-50);border:1px solid var(--border);
-                           padding:2px 8px;border-radius:50px;color:var(--text-muted);
-                           display:flex;align-items:center;gap:3px">
-                <svg data-lucide="door-open" style="width:11px;height:11px"></svg>
-                {{ l.nb_chambres }} ch.
-              </span>
-              <span style="background:var(--gray-50);border:1px solid var(--border);
-                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
-                {{ l.get_type_logement_display }}
-              </span>
-              <span style="background:var(--gray-50);border:1px solid var(--border);
-                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
-                {{ l.get_type_offre_display }}
-              </span>
-              <span style="background:var(--gray-50);border:1px solid var(--border);
-                           padding:2px 8px;border-radius:50px;color:var(--text-muted)">
-                Publié le {{ l.cree_le|date:"d/m/Y" }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Stats + actions -->
-          <div class="col-md-4 p-3 border-start">
-            <div class="text-center mb-3"
-                 style="font-size:1.3rem;font-weight:800;
-                        background:linear-gradient(135deg,var(--primary),var(--secondary));
-                        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-                        background-clip:text">
-              {{ l.prix_formate }}
-            </div>
-
-            <!-- Mini stats -->
-            <div class="row g-2 mb-3 text-center">
-              <div class="col-4">
-                <div style="font-size:1rem;font-weight:700;color:var(--text)">
-                  {{ l.nb_vues }}
-                </div>
-                <div style="font-size:.68rem;color:var(--text-muted)">Vues</div>
-              </div>
-              <div class="col-4">
-                <div style="font-size:1rem;font-weight:700;color:#ef4444">
-                  {{ l.nb_favoris }}
-                </div>
-                <div style="font-size:.68rem;color:var(--text-muted)">Favoris</div>
-              </div>
-              <div class="col-4">
-                <div style="font-size:1rem;font-weight:700;color:#10b981">
-                  {{ l.nb_contacts }}
-                </div>
-                <div style="font-size:.68rem;color:var(--text-muted)">Contacts</div>
-              </div>
-            </div>
-
-            <div class="d-flex gap-2">
-              <a href="{% url 'logements:detail' l.slug %}"
-                 class="btn btn-outline-secondary btn-sm flex-fill"
-                 style="font-size:.78rem">
-                <svg data-lucide="eye" style="width:13px;height:13px;margin-right:3px"></svg>
-                Voir
-              </a>
-              <a href="{% url 'logements:modifier' l.slug %}"
-                 class="btn btn-outline-primary btn-sm flex-fill"
-                 style="font-size:.78rem">
-                <svg data-lucide="pencil" style="width:13px;height:13px;margin-right:3px"></svg>
-                Modifier
-              </a>
-              <form method="post"
-                    action="{% url 'logements:supprimer' l.slug %}"
-                    onsubmit="return confirm('Archiver ?')">
-                {% csrf_token %}
-                <button type="submit"
-                        class="btn btn-outline-danger btn-sm"
-                        style="font-size:.78rem;padding:.35rem .65rem">
-                  <svg data-lucide="trash-2" style="width:13px;height:13px"></svg>
-                </button>
-              </form>
-            </div>
-          </div>
-
+        </div>
+        <div class="ma-actions">
+          <a href="{% url 'logements:detail' l.slug %}" class="ma-act"><svg data-lucide="eye"></svg>Voir</a>
+          <a href="{% url 'logements:modifier' l.slug %}" class="ma-act"><svg data-lucide="pencil"></svg>Modifier</a>
+          <form method="post" action="{% url 'logements:supprimer' l.slug %}" data-confirm="Archiver cette annonce ?">
+            {% csrf_token %}
+            <button type="submit" class="ma-act danger" aria-label="Archiver l'annonce"><svg data-lucide="trash-2"></svg></button>
+          </form>
         </div>
       </div>
-    </div>
+
+    </article>
     {% endfor %}
   </div>
 
   {% else %}
-  <div class="text-center py-5">
-    <div style="width:80px;height:80px;background:var(--gray-100);
-                border-radius:50%;display:flex;align-items:center;
-                justify-content:center;margin:0 auto 1.5rem">
-      <svg data-lucide="building"
-           style="width:36px;height:36px;color:var(--gray-300)">
-      </svg>
-    </div>
-    <h4 class="fw-bold mb-2">Aucune annonce</h4>
-    <p class="text-muted mb-4">
-      {% if statut_actuel %}
-      Aucune annonce avec ce statut.
-      {% else %}
-      Vous n'avez pas encore publié d'annonce.
-      {% endif %}
-    </p>
-    <a href="{% url 'logements:creer' %}" class="btn btn-primary px-4">
-      <svg data-lucide="plus-circle"
-           style="width:16px;height:16px;margin-right:6px;vertical-align:-2px">
-      </svg>
-      Publier ma première annonce
-    </a>
+  <div class="ma-empty">
+    <svg data-lucide="building" class="ico"></svg>
+    <h2>Aucune annonce</h2>
+    <p>{% if statut_actuel %}Aucune annonce avec ce statut.{% else %}Vous n'avez pas encore publié d'annonce.{% endif %}</p>
+    <a href="{% url 'logements:creer' %}" class="ma-cta"><svg data-lucide="plus-circle"></svg>Publier ma première annonce</a>
   </div>
   {% endif %}
 
 </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  if (window.lucide) lucide.createIcons();
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!confirm(form.dataset.confirm)) e.preventDefault();
+    });
+  });
+</script>
 {% endblock %}

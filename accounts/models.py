@@ -111,7 +111,9 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     def get_avatar_url(self):
         if self.avatar:
             return self.avatar.url
-        return '/static/images/avatar_default.png'
+        return '/static/images/avatar_default.jpg'
+    
+    
 
 
 class LogActivite(models.Model):

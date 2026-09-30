@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import authenticate
 from .models import Utilisateur
@@ -58,7 +60,47 @@ class InscriptionForm(forms.ModelForm):
         if p1 and len(p1) < 8:
             raise forms.ValidationError("Minimum 8 caractères requis.")
         return cleaned
-
+    def clean_nom(self):
+        nom = self.cleaned_data.get('nom', '').strip()
+        if not nom:
+            raise forms.ValidationError("Le nom est obligatoire.")
+        if re.search(r'\d', nom):
+            raise forms.ValidationError("Le nom ne doit pas contenir de chiffres.")
+        if not re.match(r"^[A-Za-zÀ-ÿ\s\-']+$", nom):
+            raise forms.ValidationError(
+                "Le nom ne doit contenir que des lettres, espaces ou tirets.")
+        return nom.title()   # capitalise chaque mot : "jean dupont" → "Jean Dupont"
+ 
+    # ── Validation PRÉNOM : lettres, espaces et tirets uniquement ──
+    def clean_prenom(self):
+        prenom = self.cleaned_data.get('prenom', '').strip()
+        if not prenom:
+            raise forms.ValidationError("Le prénom est obligatoire.")
+        if re.search(r'\d', prenom):
+            raise forms.ValidationError("Le prénom ne doit pas contenir de chiffres.")
+        if not re.match(r"^[A-Za-zÀ-ÿ\s\-']+$", prenom):
+            raise forms.ValidationError(
+                "Le prénom ne doit contenir que des lettres, espaces ou tirets.")
+        return prenom.title()
+ 
+    # ── Validation TÉLÉPHONE : +237 suivi de 9 chiffres ──────────
+    def clean_telephone(self):
+        telephone = self.cleaned_data.get('telephone', '').strip()
+        if not telephone:
+            raise forms.ValidationError("Le numéro de téléphone est obligatoire.")
+ 
+        # Normaliser : retirer les espaces pour la validation
+        telephone_clean = telephone.replace(' ', '').replace('-', '')
+ 
+        # Format accepté : +237XXXXXXXXX (13 caractères au total)
+        if not re.match(r'^\+237[0-9]{9}$', telephone_clean):
+            raise forms.ValidationError(
+                "Numéro invalide. Format requis : +237 suivi de 9 chiffres. "
+                "Exemple : +237 691234567"
+            )
+ 
+        return telephone_clean   # stocker sans espaces
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
@@ -162,3 +204,4 @@ class ResetPasswordConfirmForm(forms.Form):
         if p1 and len(p1) < 8:
             raise forms.ValidationError("Minimum 8 caractères requis.")
         return cleaned
+    

@@ -1,311 +1,198 @@
 {% extends 'base.html' %}
 {% load humanize %}
-{% block title %}Gérer les réservations{% endblock %}
+{% block title %}Demandes de visite et réservations{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root { --gr-bg: #f4f5fb; --gr-card: #fff; --gr-line: #e8eaf3; --gr-violet: #6d3fe8; }
+  [data-theme="dark"] { --gr-bg: #0f0f13; --gr-card: #1a1a24; --gr-line: #2d2d3d; }
+
+  .gr-page { background: var(--gr-bg); min-height: calc(100vh - 70px); padding-block: 1.5rem 3rem; }
+  .gr-back { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--text-secondary); text-decoration: none; margin-bottom: .4rem; }
+  .gr-back svg { width: 14px; height: 14px; }
+  .gr-title { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 0 0 1.25rem; }
+
+  .gr-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .gr-tab {
+    display: inline-flex; align-items: center; gap: .55rem; padding: .65rem 1.1rem;
+    background: var(--gr-card); border: 1px solid var(--gr-line); border-radius: 12px;
+    color: var(--text-secondary); font-weight: 600; font-size: .9rem; text-decoration: none; transition: .15s;
+  }
+  .gr-tab svg { width: 17px; height: 17px; }
+  .gr-tab:hover { color: var(--gr-violet); border-color: var(--gr-violet); }
+  .gr-tab.active { background: linear-gradient(135deg, #6d3fe8, #7c4dff); border-color: transparent; color: #fff; box-shadow: 0 6px 16px rgba(109,63,232,.3); }
+  .gr-pill { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 50px; font-size: .68rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: #f59e0b; color: #fff; }
+
+  .gr-filters { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .gr-filter { font-size: .78rem; font-weight: 600; padding: .3rem .85rem; border-radius: 50px; border: 1px solid var(--gr-line); color: var(--text-secondary); text-decoration: none; background: var(--gr-card); }
+  .gr-filter.active { background: rgba(109,63,232,.12); border-color: var(--gr-violet); color: var(--gr-violet); }
+
+  .gr-card { display: grid; grid-template-columns: 150px minmax(0, 1fr) 230px; background: var(--gr-card); border: 1px solid var(--gr-line); border-radius: 14px; overflow: hidden; margin-bottom: 1rem; }
+  .gr-photo { width: 100%; height: 100%; min-height: 130px; object-fit: cover; background: var(--gr-line); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+  .gr-body { padding: 1rem 1.2rem; min-width: 0; }
+  .gr-logement { font-weight: 700; color: var(--text-primary); }
+  .gr-prix { font-weight: 800; font-size: .9rem; color: var(--gr-violet); margin-bottom: .6rem; }
+  .gr-user { display: flex; align-items: center; gap: .6rem; }
+  .gr-user .min-w-0 { min-width: 0; }
+  .gr-user img { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .gr-user b { font-size: .85rem; color: var(--text-primary); }
+  .gr-user small { display: block; font-size: .73rem; color: var(--text-muted); }
+  .gr-msg { margin-top: .6rem; padding: .5rem .7rem; font-size: .78rem; color: var(--text-secondary); background: var(--gr-bg); border-radius: 8px; }
+  .gr-meta { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: .7rem; }
+  .gr-meta div span { display: block; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+  .gr-meta div b { font-size: .82rem; color: var(--text-primary); }
+
+  .gr-side { padding: 1rem 1.1rem; border-left: 1px solid var(--gr-line); display: flex; flex-direction: column; gap: .5rem; justify-content: center; }
+  .gr-badge { align-self: flex-start; font-size: .72rem; font-weight: 700; padding: 3px 12px; border-radius: 50px; }
+  .gr-badge.warn { background: #fef3c7; color: #92400e; }
+  .gr-badge.ok { background: #d1fae5; color: #065f46; }
+  .gr-badge.info { background: #dbeafe; color: #1e40af; }
+  .gr-badge.ko { background: #fee2e2; color: #991b1b; }
+  .gr-badge.neutral { background: rgba(148,163,184,.18); color: var(--text-secondary); }
+  .gr-btn { width: 100%; border: 0; border-radius: 10px; padding: .5rem; font-size: .8rem; font-weight: 700; }
+  .gr-btn.ok { background: #d1fae5; color: #065f46; }
+  .gr-btn.ko { background: #fee2e2; color: #991b1b; }
+  .gr-btn.violet { background: rgba(109,63,232,.12); color: var(--gr-violet); }
+  .gr-btn.ghost { background: transparent; border: 1px solid var(--gr-line); color: var(--text-secondary); text-align: center; text-decoration: none; display: block; }
+  .gr-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); background: var(--gr-card); border: 1px dashed var(--gr-line); border-radius: 14px; }
+  .gr-empty svg { width: 36px; height: 36px; margin-bottom: .6rem; color: var(--gr-violet); }
+
+  @media (max-width: 767.98px) {
+    .gr-card { grid-template-columns: 1fr; }
+    .gr-photo { height: 150px; }
+    .gr-side { border-left: 0; border-top: 1px solid var(--gr-line); }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="gr-page">
+<div class="container">
 
-  <!-- En-tête -->
-  <div class="mb-4">
-    <a href="{% url 'accounts:tableau_de_bord' %}"
-       class="text-muted small d-flex align-items-center gap-1 mb-1 text-decoration-none">
-      <svg data-lucide="arrow-left" style="width:14px;height:14px"></svg>
-      Tableau de bord
-    </a>
-    <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">
-      <svg data-lucide="calendar-check"
-           style="width:24px;height:24px;color:var(--primary)">
-      </svg>
-      Gérer les réservations
-    </h2>
-  </div>
+  <a href="{% url 'accounts:tableau_de_bord' %}" class="gr-back">
+    <svg data-lucide="arrow-left"></svg>Tableau de bord
+  </a>
+  <h1 class="gr-title">Demandes de visite et réservations</h1>
 
-  <!-- Filtres par statut -->
-  <div class="d-flex gap-2 flex-wrap mb-4">
-    <a href="{% url 'accounts:gerer_reservations' %}"
-       class="btn btn-sm
-       {% if not statut_actuel %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      Toutes
+  <div class="gr-tabs">
+    <a href="?type=VISITE" class="gr-tab{% if type_actuel == 'VISITE' %} active{% endif %}">
+      <svg data-lucide="eye"></svg>Demandes de visite
+      {% if compteurs.visites_attente %}<span class="gr-pill">{{ compteurs.visites_attente }}</span>{% endif %}
     </a>
-    <a href="?statut=EN_ATTENTE"
-       class="btn btn-sm
-       {% if statut_actuel == 'EN_ATTENTE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      En attente
-    </a>
-    <a href="?statut=CONFIRME"
-       class="btn btn-sm
-       {% if statut_actuel == 'CONFIRME' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      Confirmées
-    </a>
-    <a href="?statut=REFUSE"
-       class="btn btn-sm
-       {% if statut_actuel == 'REFUSE' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-      Refusées
+    <a href="?type=RESERVATION" class="gr-tab{% if type_actuel == 'RESERVATION' %} active{% endif %}">
+      <svg data-lucide="bookmark-check"></svg>Réservations
+      {% if compteurs.reservations_attente %}<span class="gr-pill">{{ compteurs.reservations_attente }}</span>{% endif %}
     </a>
   </div>
 
-  {% if reservations %}
-  <div class="d-flex flex-column gap-3">
-    {% for res in reservations %}
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-      <div class="row g-0">
+  <div class="gr-filters">
+    <a href="?type={{ type_actuel }}" class="gr-filter{% if not statut_actuel %} active{% endif %}">Toutes</a>
+    <a href="?type={{ type_actuel }}&statut=EN_ATTENTE" class="gr-filter{% if statut_actuel == 'EN_ATTENTE' %} active{% endif %}">En attente</a>
+    <a href="?type={{ type_actuel }}&statut=CONFIRME" class="gr-filter{% if statut_actuel == 'CONFIRME' %} active{% endif %}">Confirmées</a>
+    {% if type_actuel == 'VISITE' %}
+    <a href="?type=VISITE&statut=TERMINE" class="gr-filter{% if statut_actuel == 'TERMINE' %} active{% endif %}">Effectuées</a>
+    {% endif %}
+    <a href="?type={{ type_actuel }}&statut=REFUSE" class="gr-filter{% if statut_actuel == 'REFUSE' %} active{% endif %}">Refusées</a>
+    <a href="?type={{ type_actuel }}&statut=ANNULE" class="gr-filter{% if statut_actuel == 'ANNULE' %} active{% endif %}">Annulées</a>
+  </div>
 
-        <!-- Photo logement -->
-        <div class="col-md-2">
-          {% with photo=res.logement.get_photo_principale %}
-          {% if photo %}
-          <img src="{{ photo.image.url }}"
-               alt="Photo logement"
-               style="width:100%;height:140px;object-fit:cover">
-          {% else %}
-          <div style="height:140px;background:var(--gray-100);
-                      display:flex;align-items:center;justify-content:center">
-            <svg data-lucide="home"
-                 style="width:28px;height:28px;color:var(--gray-300)">
-            </svg>
-          </div>
-          {% endif %}
-          {% endwith %}
+  {% for res in demandes %}
+  <article class="gr-card">
+
+    {% with photo=res.logement.get_photo_principale %}
+    {% if photo %}
+    <img src="{{ photo.image.url }}" alt="" class="gr-photo">
+    {% else %}
+    <div class="gr-photo"><svg data-lucide="home" style="width:28px;height:28px"></svg></div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="gr-body">
+      <div class="gr-logement text-truncate">{{ res.logement.titre }}</div>
+      <div class="gr-prix">{{ res.logement.prix_formate }}</div>
+
+      <div class="gr-user">
+        <img src="{{ res.locataire.get_avatar_url }}" width="34" height="34" alt="">
+        <div class="min-w-0">
+          <b>{{ res.locataire.get_full_name }}</b>
+          <small>{{ res.locataire.email }}{% if res.locataire.telephone %} · {{ res.locataire.telephone }}{% endif %}</small>
         </div>
+      </div>
 
-        <!-- Infos logement + locataire -->
-        <div class="col-md-5 p-3">
-          <div class="fw-bold mb-1">
-            {{ res.logement.titre|truncatechars:45 }}
-          </div>
-          <div class="fw-bold mb-2"
-               style="font-size:.95rem;
-                      background:linear-gradient(135deg,var(--primary),var(--secondary));
-                      -webkit-background-clip:text;
-                      -webkit-text-fill-color:transparent;
-                      background-clip:text">
-            {{ res.logement.prix_formate }}
-          </div>
+      {% if res.message %}<div class="gr-msg">{{ res.message|truncatechars:160 }}</div>{% endif %}
 
-          <hr class="my-2">
-
-          <!-- Locataire -->
-          <div class="d-flex align-items-center gap-2">
-            <img src="{{ res.locataire.get_avatar_url }}"
-                 class="rounded-circle flex-shrink-0"
-                 width="32" height="32"
-                 style="object-fit:cover"
-                 alt="{{ res.locataire.get_full_name }}">
-            <div>
-              <div class="fw-semibold small">
-                {{ res.locataire.get_full_name }}
-              </div>
-              <div class="text-muted" style="font-size:.73rem">
-                {{ res.locataire.email }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Message locataire -->
-          {% if res.message %}
-          <div class="mt-2 p-2 rounded-2"
-               style="background:var(--gray-50);
-                      font-size:.78rem;
-                      border-left:3px solid var(--primary);
-                      color:var(--text-muted)">
-            {{ res.message|truncatechars:100 }}
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Dates + statut + actions -->
-        <div class="col-md-5 p-3 border-start">
-
-          <!-- Informations -->
-          <div class="d-flex gap-3 mb-3">
-            <div>
-              <div style="font-size:.7rem;
-                          color:var(--text-muted);
-                          font-weight:600;
-                          text-transform:uppercase;
-                          letter-spacing:.5px">
-                Type
-              </div>
-              <div class="fw-semibold small">
-                {{ res.get_type_demande_display }}
-              </div>
-            </div>
-            <div>
-              <div style="font-size:.7rem;
-                          color:var(--text-muted);
-                          font-weight:600;
-                          text-transform:uppercase;
-                          letter-spacing:.5px">
-                Date
-              </div>
-              <div class="fw-semibold small">
-                {{ res.date_debut|date:"d/m/Y" }}
-              </div>
-            </div>
-            <div>
-              <div style="font-size:.7rem;
-                          color:var(--text-muted);
-                          font-weight:600;
-                          text-transform:uppercase;
-                          letter-spacing:.5px">
-                Reçu
-              </div>
-              <div class="fw-semibold small">
-                {{ res.cree_le|timesince }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Badge statut -->
-          <div class="mb-3">
-            {% if res.statut == 'EN_ATTENTE' %}
-            <span style="font-size:.78rem;font-weight:700;
-                         padding:4px 14px;border-radius:50px;
-                         background:#fef3c7;color:#92400e">
-              En attente
-            </span>
-            {% elif res.statut == 'CONFIRME' %}
-            <span style="font-size:.78rem;font-weight:700;
-                         padding:4px 14px;border-radius:50px;
-                         background:#d1fae5;color:#065f46">
-              Confirmée
-            </span>
-            {% elif res.statut == 'REFUSE' %}
-            <span style="font-size:.78rem;font-weight:700;
-                         padding:4px 14px;border-radius:50px;
-                         background:#fee2e2;color:#991b1b">
-              Refusée
-            </span>
-            {% elif res.statut == 'ANNULE' %}
-            <span style="font-size:.78rem;font-weight:700;
-                         padding:4px 14px;border-radius:50px;
-                         background:var(--gray-100);color:var(--gray-500)">
-              Annulée
-            </span>
-            {% else %}
-            <span style="font-size:.78rem;font-weight:700;
-                         padding:4px 14px;border-radius:50px;
-                         background:var(--primary-light);color:var(--primary)">
-              {{ res.get_statut_display }}
-            </span>
-            {% endif %}
-          </div>
-
-          <!-- Actions -->
-          <div class="d-flex flex-column gap-2">
-
-            {% if res.statut == 'EN_ATTENTE' %}
-
-            <!-- Bouton Confirmer -->
-            <form method="post"
-                  action="{% url 'accounts:repondre_reservation' res.pk %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="confirmer">
-              <button type="submit"
-                      class="btn w-100"
-                      style="background:#d1fae5;
-                             color:#065f46;
-                             border:none;
-                             font-weight:600;
-                             font-size:.82rem;
-                             border-radius:var(--radius-sm);
-                             padding:.5rem">
-                Confirmer la demande
-              </button>
-            </form>
-
-            <!-- Bouton Refuser -->
-            <form method="post"
-                  action="{% url 'accounts:repondre_reservation' res.pk %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="refuser">
-              <button type="submit"
-                      class="btn w-100"
-                      style="background:#fee2e2;
-                             color:#991b1b;
-                             border:none;
-                             font-weight:600;
-                             font-size:.82rem;
-                             border-radius:var(--radius-sm);
-                             padding:.5rem">
-                Refuser la demande
-              </button>
-            </form>
-
-            {% endif %}
-
-            <!-- Bouton Contacter -->
-            <a href="{% url 'chat:demarrer' res.logement.pk %}"
-               class="btn btn-outline-secondary btn-sm w-100"
-               style="font-size:.78rem">
-              <svg data-lucide="message-circle"
-                   style="width:14px;height:14px;margin-right:4px;vertical-align:-2px">
-              </svg>
-              Contacter le locataire
-            </a>
-
-          </div>
-        </div>
-
+      <div class="gr-meta">
+        <div><span>{% if res.type_demande == 'VISITE' %}Visite souhaitée le{% else %}Entrée le{% endif %}</span><b>{{ res.date_debut|date:"d/m/Y" }}{% if res.heure_visite %} à {{ res.heure_visite|time:"H\hi" }}{% endif %}</b></div>
+        {% if res.type_demande == 'VISITE' and res.lieu_rencontre %}
+        <div><span>Lieu de rencontre</span><b>{{ res.lieu_rencontre }}</b></div>
+        {% endif %}
+        <div><span>Reçue</span><b>il y a {{ res.cree_le|timesince }}</b></div>
+        {% if res.type_demande == 'RESERVATION' %}
+        <div><span>Frais</span><b>{{ res.montant|intcomma }} FCFA · {% if res.paye %}payés{% else %}non payés{% endif %}</b></div>
+        {% endif %}
       </div>
     </div>
-    {% endfor %}
-  </div>
 
-  {% else %}
+    <div class="gr-side">
+      {% if res.statut == 'EN_ATTENTE' %}<span class="gr-badge warn">En attente</span>
+      {% elif res.statut == 'CONFIRME' %}<span class="gr-badge ok">Confirmée</span>
+      {% elif res.statut == 'TERMINE' %}<span class="gr-badge info">Effectuée</span>
+      {% elif res.statut == 'REFUSE' %}<span class="gr-badge ko">Refusée</span>
+      {% elif res.statut == 'ANNULE' %}<span class="gr-badge neutral">Annulée</span>
+      {% else %}<span class="gr-badge neutral">{{ res.get_statut_display }}</span>{% endif %}
 
-  <!-- État vide -->
-  <div class="text-center py-5">
-    <div style="width:80px;height:80px;
-                background:var(--gray-100);
-                border-radius:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                margin:0 auto 1.5rem">
-      <svg data-lucide="calendar"
-           style="width:36px;height:36px;color:var(--gray-300)">
-      </svg>
-    </div>
-    <h4 class="fw-bold mb-2">Aucune réservation</h4>
-    <p class="text-muted">
-      {% if statut_actuel %}
-        Aucune réservation avec ce statut.
-      {% else %}
-        Vous n'avez pas encore reçu de demandes.
+      {% if res.statut == 'EN_ATTENTE' %}
+      <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}">
+        {% csrf_token %}<input type="hidden" name="action" value="confirmer">
+        {% if res.type_demande == 'VISITE' %}
+        <input type="text" name="lieu_rencontre" class="form-control form-control-sm mb-2"
+               value="{{ res.lieu_rencontre }}" maxlength="255" aria-label="Lieu de rencontre"
+               placeholder="Lieu de rencontre">
+        {% endif %}
+        <button type="submit" class="gr-btn ok">Confirmer</button>
+      </form>
+      <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}" data-confirm="Refuser cette demande ?">
+        {% csrf_token %}<input type="hidden" name="action" value="refuser">
+        <button type="submit" class="gr-btn ko">Refuser</button>
+      </form>
+      {% elif res.statut == 'CONFIRME' %}
+      {% if res.type_demande == 'VISITE' %}
+      <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}">
+        {% csrf_token %}<input type="hidden" name="action" value="terminer">
+        <button type="submit" class="gr-btn violet">Marquer comme effectuée</button>
+      </form>
       {% endif %}
-    </p>
-    <a href="{% url 'accounts:tableau_de_bord' %}"
-       class="btn btn-outline-primary mt-2">
-      Retour au tableau de bord
-    </a>
-  </div>
+      <form method="post" action="{% url 'accounts:repondre_reservation' res.pk %}"
+            data-confirm="Annuler cette demande ? Le locataire sera prévenu.">
+        {% csrf_token %}<input type="hidden" name="action" value="annuler">
+        <button type="submit" class="gr-btn ko">Annuler</button>
+      </form>
+      {% endif %}
 
-  {% endif %}
+      <a href="{% url 'chat:demarrer' res.logement.pk %}" class="gr-btn ghost">Contacter le locataire</a>
+    </div>
+  </article>
+  {% empty %}
+  <div class="gr-empty">
+    <svg data-lucide="{% if type_actuel == 'VISITE' %}eye{% else %}bookmark-check{% endif %}"></svg>
+    <div class="fw-semibold">
+      {% if type_actuel == 'VISITE' %}Aucune demande de visite{% else %}Aucune réservation{% endif %}
+    </div>
+    <div class="small">{% if statut_actuel %}Aucun résultat avec ce statut.{% else %}Vous n'avez pas encore reçu de demande.{% endif %}</div>
+  </div>
+  {% endfor %}
 
 </div>
+</div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
-  // Réinitialiser les icônes Lucide après chargement
-  document.addEventListener('DOMContentLoaded', function() {
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
-  });
-
-  // Confirmation avant refus
-  document.querySelectorAll('form').forEach(function(form) {
-    var actionInput = form.querySelector('input[name="action"]');
-    if (actionInput && actionInput.value === 'refuser') {
-      form.addEventListener('submit', function(e) {
-        if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) {
-          e.preventDefault();
-        }
-      });
-    }
+  if (window.lucide) lucide.createIcons();
+  document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!confirm(form.dataset.confirm)) e.preventDefault();
+    });
   });
 </script>
-{% endblock %}
-
 {% endblock %}
