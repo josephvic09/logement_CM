@@ -998,3 +998,7 @@ footer li { margin-bottom: .4rem; }
   .card-logement-img { height: 180px; }
   .chatbot-messages { padding: 1rem; }
 }
+
+/* Logos Mobile Money (MTN / Orange) */
+.logo-operateur { display:block; height:44px; width:auto; margin:0 auto .5rem; border-radius:8px; }
+.logo-operateur--sm { height:30px; border-radius:6px; }

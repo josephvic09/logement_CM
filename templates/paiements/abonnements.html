@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 {% block title %}Abonnements{% endblock %}
 
 {% block content %}
@@ -148,7 +148,8 @@
                   <div class="p-2 border rounded-3 text-center"
                        style="border-color:var(--primary) !important;
                               background:var(--primary-light)">
-                    <div style="font-size:1.5rem">📱</div>
+                    <img src="{% static 'images/paiements/mtn-momo.jpg' %}"
+                         alt="MTN Mobile Money" class="logo-operateur logo-operateur--sm">
                     <div style="font-size:.72rem;font-weight:700">MTN MoMo</div>
                   </div>
                 </label>
@@ -158,7 +159,8 @@
                   <input type="radio" name="methode"
                          value="ORANGE_MONEY" class="d-none">
                   <div class="p-2 border rounded-3 text-center">
-                    <div style="font-size:1.5rem">🔶</div>
+                    <img src="{% static 'images/paiements/orange-money.jpg' %}"
+                         alt="Orange Money" class="logo-operateur logo-operateur--sm">
                     <div style="font-size:.72rem;font-weight:700">Orange Money</div>
                   </div>
                 </label>

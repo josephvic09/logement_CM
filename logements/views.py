@@ -27,7 +27,10 @@ FRAIS_RESERVATION = 1000  # FCFA — frais fixes pour confirmer une réservation
 # ─── Accueil ─────────────────────────────────────────
 
 def accueil(request):
-    logements_vedette = Logement.objects.filter(
+    if request.user.is_authenticated:
+        return redirect('accounts:tableau_de_bord')
+
+    logements_vedette =Logement.objects.filter(
         statut='PUBLIE', disponible=True, est_vedette=True
     ).select_related(
         'ville', 'quartier'

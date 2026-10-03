@@ -56,13 +56,6 @@
           Saisissez votre code secret Mobile Money pour confirmer.
           Cette page se met à jour automatiquement.
         </p>
-        {% if paiement.ussd_code %}
-        <p class="text-center text-muted small mb-0">
-          Pas de demande reçue ? Composez
-          <strong style="font-family:monospace">{{ paiement.ussd_code }}</strong>
-          sur votre téléphone.
-        </p>
-        {% endif %}
       </div>
 
       <!-- Échec / annulation -->

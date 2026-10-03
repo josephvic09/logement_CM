@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 {% block title %}Paiement{% endblock %}
 
 {% block content %}
@@ -111,7 +111,8 @@
                      style="border-color:var(--primary) !important;
                             background:var(--primary-light);
                             transition:.2s">
-                  <div style="font-size:2rem;margin-bottom:.5rem">📱</div>
+                  <img src="{% static 'images/paiements/mtn-momo.jpg' %}"
+                       alt="MTN Mobile Money" class="logo-operateur">
                   <div class="fw-bold small">MTN Mobile Money</div>
                   <div class="text-muted" style="font-size:.72rem">
                     MTN Cameroun
@@ -136,7 +137,8 @@
                 <div class="p-3 border rounded-3 text-center"
                      id="cardOrange"
                      style="transition:.2s">
-                  <div style="font-size:2rem;margin-bottom:.5rem">🔶</div>
+                  <img src="{% static 'images/paiements/orange-money.jpg' %}"
+                       alt="Orange Money" class="logo-operateur">
                   <div class="fw-bold small">Orange Money</div>
                   <div class="text-muted" style="font-size:.72rem">
                     Orange Cameroun
@@ -215,15 +217,11 @@
   <!-- Logos opérateurs -->
   <div class="text-center mt-3">
     <small class="text-muted">Paiements acceptés :</small>
-    <div class="d-flex justify-content-center gap-3 mt-2">
-      <span style="background:#ffd200;color:#000;font-size:.7rem;
-                   font-weight:800;padding:3px 10px;border-radius:6px">
-        MTN MoMo
-      </span>
-      <span style="background:#ff6600;color:white;font-size:.7rem;
-                   font-weight:800;padding:3px 10px;border-radius:6px">
-        Orange Money
-      </span>
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-2">
+      <img src="{% static 'images/paiements/mtn-momo.jpg' %}"
+           alt="MTN Mobile Money" class="logo-operateur logo-operateur--sm m-0">
+      <img src="{% static 'images/paiements/orange-money.jpg' %}"
+           alt="Orange Money" class="logo-operateur logo-operateur--sm m-0">
     </div>
   </div>
 

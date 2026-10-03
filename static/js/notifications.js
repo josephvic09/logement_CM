@@ -156,6 +156,8 @@
       jouerSon();
       notificationSysteme(d);
       if (menuOuvert() && typeof chargerNotifications === 'function') chargerNotifications();
+    } else {
+      document.dispatchEvent(new CustomEvent('lcm:ws', { detail: d }));  // présence, etc.
     }
   }
 

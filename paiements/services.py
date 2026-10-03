@@ -3,42 +3,31 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
-from . import campay
+from . import hrskills
 from .models import Abonnement, Paiement
 
 DUREE_ABONNEMENT = timedelta(days=30)
 
 
-def _methode_depuis_operateur(operateur, defaut):
-    operateur = (operateur or '').upper()
-    if 'MTN' in operateur:
-        return 'MTN_MOMO'
-    if 'ORANGE' in operateur:
-        return 'ORANGE_MONEY'
-    return defaut
-
-
 def demarrer_paiement(paiement, telephone):
     """Envoie la demande de paiement sur le téléphone du client."""
-    donnees = campay.collecter(paiement, telephone)
-    paiement.campay_reference = donnees.get('reference', '')
-    paiement.ussd_code = donnees.get('ussd_code', '')
-    paiement.methode = _methode_depuis_operateur(donnees.get('operator'), paiement.methode)
+    donnees = hrskills.collecter(paiement, telephone)
+    paiement.reference_externe = donnees['reference']
     paiement.statut = 'TRAITEMENT'
-    paiement.save(update_fields=['campay_reference', 'ussd_code', 'methode', 'statut'])
+    paiement.save(update_fields=['reference_externe', 'statut'])
 
 
 def synchroniser(paiement):
-    """Aligne le paiement sur l'état réel chez Campay (peut lever CampayErreur)."""
-    if paiement.est_reussi or not paiement.campay_reference:
+    """Aligne le paiement sur l'état réel chez HR-Skills Pay (peut lever HRSkillsErreur)."""
+    if paiement.est_reussi or not paiement.reference_externe:
         return paiement
 
-    donnees = campay.verifier(paiement.campay_reference)
+    donnees = hrskills.verifier(paiement.reference_externe)
     statut = donnees.get('status')
 
-    if statut == campay.STATUT_REUSSI:
-        _finaliser_succes(paiement.pk, donnees)
-    elif statut == campay.STATUT_ECHOUE and paiement.en_cours:
+    if statut == hrskills.STATUT_REUSSI:
+        _finaliser_succes(paiement.pk)
+    elif statut == hrskills.STATUT_ECHOUE and paiement.en_cours:
         paiement.statut = 'ECHOUE'
         paiement.message_operateur = 'Le paiement a été refusé ou a expiré.'
         paiement.traite_le = timezone.now()
@@ -47,7 +36,7 @@ def synchroniser(paiement):
     return paiement
 
 
-def _finaliser_succes(paiement_pk, donnees):
+def _finaliser_succes(paiement_pk):
     """Enregistre un paiement encaissé et applique ses effets, une seule fois."""
     with transaction.atomic():
         paiement = Paiement.objects.select_for_update().select_related(
@@ -57,8 +46,7 @@ def _finaliser_succes(paiement_pk, donnees):
             return
 
         paiement.statut = 'REUSSI'
-        paiement.transaction_id = donnees.get('operator_reference') or paiement.campay_reference
-        paiement.methode = _methode_depuis_operateur(donnees.get('operator'), paiement.methode)
+        paiement.transaction_id = paiement.reference_externe
         paiement.traite_le = timezone.now()
         paiement.message_operateur = f'Transaction effectuée. ID : {paiement.transaction_id}'
         paiement.save()

@@ -189,8 +189,17 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CLOUDINARY_URL = config('CLOUDINARY_URL', default='')
+CLOUDINARY_URL = config('CLOUDINARY_URL', default='').strip().strip('"\'')
+CLOUDINARY_URL = CLOUDINARY_URL.removeprefix('CLOUDINARY_URL=').strip().strip('"\'')  # copier-coller du tableau de bord
 if CLOUDINARY_URL:
+    if not CLOUDINARY_URL.startswith('cloudinary://'):
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "CLOUDINARY_URL doit avoir la forme cloudinary://CLÉ_API:SECRET_API@NOM_DU_COMPTE "
+            "(sans guillemets ni « CLOUDINARY_URL= » devant)."
+        )
+    import os
+    os.environ['CLOUDINARY_URL'] = CLOUDINARY_URL  # lue par la bibliothèque cloudinary à l'import
     INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
     MEDIA_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
@@ -245,11 +254,11 @@ if REDIS_URL:  # production : pip install channels-redis
 else:  # développement : un seul processus
     CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
-# Paiements Mobile Money (Campay) — démo par défaut, production : https://www.campay.net/api
-CAMPAY_BASE_URL  = config('CAMPAY_BASE_URL', default='https://demo.campay.net/api')
-CAMPAY_TOKEN     = config('CAMPAY_TOKEN', default='')      # jeton d'accès permanent (recommandé)
-CAMPAY_USERNAME  = config('CAMPAY_USERNAME', default='')   # sinon : identifiants de l'application
-CAMPAY_PASSWORD  = config('CAMPAY_PASSWORD', default='')
+# Paiements Mobile Money (HR-Skills Pay) — sandbox par défaut, production : https://api.hrskills-pay.com
+HRSKILLS_BASE_URL       = config('HRSKILLS_BASE_URL', default='https://api.hrskills-pay.com/sandbox')
+HRSKILLS_CLE_PUBLIQUE   = config('HRSKILLS_CLE_PUBLIQUE', default='')    # clé A (hrsk_pk_...)
+HRSKILLS_CLE_SECRETE    = config('HRSKILLS_CLE_SECRETE', default='')     # clé B (hrsk_sk_...)
+HRSKILLS_WEBHOOK_SECRET = config('HRSKILLS_WEBHOOK_SECRET', default='')  # secret de signature des webhooks
 
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 GROQ_MODEL   = "openai/gpt-oss-120b"

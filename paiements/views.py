@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,8 +11,8 @@ from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from . import campay
-from .campay import CampayErreur
+from . import hrskills
+from .hrskills import HRSkillsErreur
 from .models import Paiement, Abonnement
 from .services import demarrer_paiement, synchroniser
 from logements.models import Reservation
@@ -23,7 +25,7 @@ PRIX_PLANS = {'STARTER': 5000, 'PRO': 10000, 'BUSINESS': 25000}
 
 def _lancer_paiement(request, paiement, telephone_saisi):
     """Lance la demande Mobile Money ; renvoie True si le client doit valider."""
-    telephone = campay.normaliser_telephone(telephone_saisi)
+    telephone = hrskills.normaliser_telephone(telephone_saisi)
     if not telephone:
         paiement.delete()
         messages.error(request, "Numéro invalide : entrez un numéro Mobile Money camerounais (6XX XXX XXX).")
@@ -31,7 +33,7 @@ def _lancer_paiement(request, paiement, telephone_saisi):
     paiement.telephone = telephone
     try:
         demarrer_paiement(paiement, telephone)
-    except CampayErreur as exc:
+    except HRSkillsErreur as exc:
         paiement.statut = 'ECHOUE'
         paiement.message_operateur = str(exc)
         paiement.save(update_fields=['telephone', 'statut', 'message_operateur'])
@@ -96,7 +98,7 @@ def statut_paiement(request, paiement_uuid):
     if paiement.en_cours:
         try:
             synchroniser(paiement)
-        except CampayErreur as exc:
+        except HRSkillsErreur as exc:
             erreur = str(exc)
     reponse = {'statut': paiement.statut, 'message': paiement.message_operateur or erreur}
     if paiement.est_reussi:
@@ -105,15 +107,21 @@ def statut_paiement(request, paiement_uuid):
 
 
 @csrf_exempt
-def webhook_campay(request):
-    """Notification de Campay. On ne se fie pas aux paramètres reçus : on
-    revérifie l'état de la transaction directement auprès de Campay."""
-    reference = request.GET.get('reference') or request.POST.get('reference')
-    paiement = Paiement.objects.filter(campay_reference=reference).first() if reference else None
+@require_POST
+def webhook_hrskills(request):
+    """Notification signée de HR-Skills Pay. On ne se fie pas au contenu reçu : on
+    revérifie l'état de la transaction directement auprès de HR-Skills Pay."""
+    if not hrskills.signature_valide(request.body, request.headers.get('X-Hub-Signature')):
+        return HttpResponse(status=403)
+    try:
+        reference = json.loads(request.body)['data']['reference']
+    except (ValueError, KeyError, TypeError):
+        return HttpResponse(status=400)
+    paiement = Paiement.objects.filter(reference_externe=reference).first()
     if paiement:
         try:
             synchroniser(paiement)
-        except CampayErreur:
+        except HRSkillsErreur:
             return HttpResponse(status=502)
     return HttpResponse('ok')
 
@@ -124,7 +132,7 @@ def annuler_paiement(request, paiement_uuid):
     paiement = get_object_or_404(Paiement, uuid=paiement_uuid, utilisateur=request.user)
     try:
         synchroniser(paiement)
-    except CampayErreur:
+    except HRSkillsErreur:
         pass
     if paiement.est_reussi:
         messages.info(request, "Ce paiement vient d'être validé, il ne peut plus être annulé.")

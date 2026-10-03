@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -408,7 +408,7 @@
   })();
 </script>
 
-<body{% if user.is_authenticated %} data-authenticated="true"{% endif %}>
+<body{% if user.is_authenticated %} data-authenticated="true" data-role="{{ user.role }}"{% endif %}>
 
 <!-- ═══════════════════════════════════════════════
      NAVBAR DESKTOP
@@ -502,9 +502,9 @@
       <ul class="navbar-nav ms-auto align-items-center gap-1 nav-links-desktop">
 
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'logements:recherche' %}">
-            <svg data-lucide="search" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px"></svg>
-            Rechercher
+          <a class="nav-link{% if request.resolver_match.url_name == 'accueil' %} active fw-semibold{% endif %}" href="{% url 'logements:accueil' %}">
+            <svg data-lucide="home" style="width:16px;height:16px;margin-right:4px;vertical-align:-2px"></svg>
+            Accueil
           </a>
         </li>
         <li class="nav-item">
@@ -817,7 +817,8 @@
 {% load static %}
 <script src="{% static 'js/main.js' %}"></script>
 <script src="{% static 'js/icons.js' %}"></script>
-<script src="{% static 'js/notifications.js' %}"></script>
+<script src="{% static 'js/notifications.js' %}?v=3"></script>
+<script src="{% static 'js/presence.js' %}?v=3"></script>
 {% block extra_js %}{% endblock %}
 
 <script>
