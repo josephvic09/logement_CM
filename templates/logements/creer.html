@@ -1325,6 +1325,9 @@ input.addEventListener('change', function() {
 
 function handleFiles(files) {
   const newFiles = Array.from(files).filter(f => {
+    if (selectedFiles.some(s => s.name === f.name && s.size === f.size && s.lastModified === f.lastModified)) {
+      return false;  // déjà sélectionnée
+    }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) {
       toast(`${f.name} : format non supporté`, 'error');
       return false;
@@ -1359,23 +1362,30 @@ function updatePreview() {
   preview.innerHTML = '';
   countEl.textContent = `${selectedFiles.length} photo${selectedFiles.length > 1 ? 's' : ''} sélectionnée${selectedFiles.length > 1 ? 's' : ''}`;
 
+  // Aperçus construits dans l'ordre de la sélection (la 1re reste la principale)
   selectedFiles.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const item = document.createElement('div');
-      item.className = `photo-preview-item${index === 0 ? ' principale' : ''}`;
-      item.innerHTML = `
-        <img src="${e.target.result}" alt="Photo ${index + 1}">
-        ${index === 0 ? '<span class="photo-preview-badge">Principale</span>' : ''}
-        <button type="button"
-                class="photo-preview-remove"
-                onclick="removePhoto(${index})"
-                title="Supprimer">
-          ✕
-        </button>`;
-      preview.appendChild(item);
-    };
-    reader.readAsDataURL(file);
+    const item = document.createElement('div');
+    item.className = `photo-preview-item${index === 0 ? ' principale' : ''}`;
+    const img = document.createElement('img');
+    img.alt = `Photo ${index + 1}`;
+    img.src = URL.createObjectURL(file);
+    img.onload = () => URL.revokeObjectURL(img.src);
+    item.appendChild(img);
+    if (index === 0) {
+      const badge = document.createElement('span');
+      badge.className = 'photo-preview-badge';
+      badge.textContent = 'Principale';
+      item.appendChild(badge);
+    }
+    const retirer = document.createElement('button');
+    retirer.type = 'button';
+    retirer.className = 'photo-preview-remove';
+    retirer.title = 'Retirer cette photo';
+    retirer.setAttribute('aria-label', `Retirer ${file.name}`);
+    retirer.textContent = '✕';
+    retirer.addEventListener('click', () => removePhoto(index));
+    item.appendChild(retirer);
+    preview.appendChild(item);
   });
 }
 

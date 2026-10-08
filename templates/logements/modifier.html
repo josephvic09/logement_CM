@@ -70,6 +70,19 @@
   .mo-drop:hover, .mo-drop.over { border-color: var(--mo-violet); background: var(--mo-soft); }
   .mo-drop i { font-size: 1.6rem; color: var(--mo-violet); }
   .mo-drop b { font-size: .9rem; color: var(--text-primary); }
+  .mo-photo-retirer { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; margin: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(15,23,42,.7); color: #fff; font-size: .8rem; cursor: pointer; transition: background-color .15s; }
+  .mo-photo-retirer:hover { background: #dc2626; }
+  .mo-photo-retirer:focus-visible, .mo-photo-retirer:has(:focus-visible) { outline: 2px solid var(--mo-violet); outline-offset: 2px; }
+  .mo-photo-retirer svg { width: 15px; height: 15px; }
+  .mo-photo-retirer .lucide-rotate-ccw,
+  .mo-photo:has(:checked) .mo-photo-retirer .lucide-x { display: none; }
+  .mo-photo:has(:checked) .mo-photo-retirer .lucide-rotate-ccw { display: inline; }
+  .mo-photo:has(:checked) .mo-photo-retirer { background: var(--mo-violet); }
+  .mo-photo:has(:checked) { border-color: #dc2626; }
+  .mo-photo:has(:checked) img { opacity: .35; filter: grayscale(1); }
+  .mo-photo:has(:checked)::after { content: 'Sera retirée'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 2px 10px; border-radius: 50px; background: #dc2626; color: #fff; font-size: .68rem; font-weight: 700; white-space: nowrap; }
+  .mo-photos-info { margin-top: .5rem; font-size: .8rem; color: #b91c1c; }
+  .mo-photos-info:empty { display: none; }
   .mo-drop small { font-size: .74rem; color: var(--text-muted); }
   .mo-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
   .mo-drop:focus-within { outline: 2px solid var(--mo-violet); outline-offset: 2px; }
@@ -212,12 +225,19 @@
           {% with photos=logement.photos.all %}
           {% if photos %}
           <div class="mo-mb">
-            <div class="mo-label mb-2">Photos actuelles ({{ photos|length }})</div>
+            <div class="mo-label mb-1">Photos actuelles ({{ photos|length }})</div>
+            <p class="mo-help mb-2">Cliquez sur la croix d'une photo pour la retirer : elle sera supprimée à l'enregistrement.</p>
             <div class="mo-photos mb-3">
               {% for photo in photos %}
               <div class="mo-photo{% if photo.principale %} principale{% endif %}">
                 <img src="{{ photo.image.url }}" alt="Photo {{ forloop.counter }}" loading="lazy">
                 {% if photo.principale %}<span>Principale</span>{% endif %}
+                <label class="mo-photo-retirer" title="Retirer ou garder cette photo">
+                  <input type="checkbox" name="photos_supprimees" value="{{ photo.pk }}"
+                         class="visually-hidden" aria-label="Retirer la photo {{ forloop.counter }}">
+                  <svg data-lucide="x" aria-hidden="true"></svg>
+                  <svg data-lucide="rotate-ccw" aria-hidden="true"></svg>
+                </label>
               </div>
               {% endfor %}
             </div>
@@ -227,11 +247,12 @@
 
           <label class="mo-drop" id="zoneDepot" for="champPhotos">
             <i class="bi bi-cloud-arrow-up"></i>
-            <b>Ajouter de nouvelles photos</b>
-            <small>Glissez-les ici ou cliquez pour choisir · JPG, PNG, WebP · 5 Mo maximum chacune</small>
+            <b>Ajouter des photos</b>
+            <small>Glissez-les ici ou cliquez pour choisir, autant de fois que nécessaire · JPG, PNG, WebP · 5 Mo maximum chacune · 10 photos au total</small>
             <input type="file" name="photos" id="champPhotos" multiple accept="image/jpeg,image/png,image/webp">
           </label>
-          <div class="mo-photos" id="apercuPhotos" aria-live="polite"></div>
+          <p class="mo-photos-info" id="infoPhotos" aria-live="polite"></p>
+          <div class="mo-photos mt-2" id="apercuPhotos" aria-live="polite"></div>
         </section>
 
       </div>
@@ -278,27 +299,71 @@
   const champ = document.getElementById('champPhotos');
   const zone = document.getElementById('zoneDepot');
   const apercu = document.getElementById('apercuPhotos');
+  const info = document.getElementById('infoPhotos');
+  const FORMATS = ['image/jpeg', 'image/png', 'image/webp'];
   const TAILLE_MAX = 5 * 1024 * 1024;
+  const MAX_PHOTOS = 10;
+  let selection = [];
+
+  function photosGardees() {
+    return document.querySelectorAll('input[name="photos_supprimees"]:not(:checked)').length;
+  }
+
+  function memeFichier(a, b) {
+    return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+  }
+
+  /* Le champ fichier ne garde qu'un choix à la fois : on le reconstruit avec toute la sélection */
+  function synchroniser() {
+    const dt = new DataTransfer();
+    selection.forEach(function (f) { dt.items.add(f); });
+    champ.files = dt.files;
+  }
 
   function afficher() {
     apercu.replaceChildren();
-    Array.from(champ.files).forEach(function (fichier) {
-      const trop = fichier.size > TAILLE_MAX;
+    selection.forEach(function (fichier, index) {
       const cadre = document.createElement('div');
-      cadre.className = 'mo-photo' + (trop ? '' : ' principale');
+      cadre.className = 'mo-photo';
       const img = document.createElement('img');
       img.alt = fichier.name;
       img.src = URL.createObjectURL(fichier);
       img.onload = function () { URL.revokeObjectURL(img.src); };
       const badge = document.createElement('span');
-      badge.textContent = trop ? 'Trop lourde (> 5 Mo)' : 'Nouvelle';
-      if (trop) badge.style.background = '#ef4444';
-      cadre.append(img, badge);
+      badge.textContent = 'Nouvelle';
+      const retirer = document.createElement('button');
+      retirer.type = 'button';
+      retirer.className = 'mo-photo-retirer';
+      retirer.title = 'Retirer cette photo';
+      retirer.setAttribute('aria-label', 'Retirer ' + fichier.name);
+      retirer.innerHTML = '<svg data-lucide="x" aria-hidden="true"></svg>';
+      retirer.addEventListener('click', function () {
+        selection.splice(index, 1);
+        info.textContent = '';
+        synchroniser();
+        afficher();
+      });
+      cadre.append(img, badge, retirer);
       apercu.appendChild(cadre);
     });
+    if (window.lucide) lucide.createIcons();
   }
 
-  champ.addEventListener('change', afficher);
+  function ajouter(fichiers) {
+    const refus = [];
+    Array.from(fichiers).forEach(function (f) {
+      if (selection.some(function (s) { return memeFichier(s, f); })) return;
+      if (!FORMATS.includes(f.type)) refus.push(f.name + ' : format non accepté');
+      else if (f.size > TAILLE_MAX) refus.push(f.name + ' : plus de 5 Mo');
+      else if (photosGardees() + selection.length >= MAX_PHOTOS) refus.push(f.name + ' : limite de ' + MAX_PHOTOS + ' photos atteinte');
+      else selection.push(f);
+    });
+    info.textContent = refus.join(' · ');
+    synchroniser();
+    afficher();
+  }
+
+  champ.addEventListener('change', function () { ajouter(champ.files); });
   ['dragenter', 'dragover'].forEach(function (nom) {
     zone.addEventListener(nom, function (e) { e.preventDefault(); zone.classList.add('over'); });
   });
@@ -307,10 +372,7 @@
   });
   zone.addEventListener('drop', function (e) {
     e.preventDefault();
-    if (e.dataTransfer && e.dataTransfer.files.length) {
-      champ.files = e.dataTransfer.files;
-      afficher();
-    }
+    if (e.dataTransfer && e.dataTransfer.files.length) ajouter(e.dataTransfer.files);
   });
 })();
 </script>

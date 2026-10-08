@@ -273,6 +273,51 @@ def detail_logement(request, slug):
         'reservation_active': reservation_active,
         'peut_reserver':     peut_reserver,
     })
+# ─── Photos d'annonce ─────────────────────────────────
+
+FORMATS_PHOTO = ('image/jpeg', 'image/png', 'image/webp')
+TAILLE_MAX_PHOTO = 5 * 1024 * 1024
+MAX_PHOTOS = 10
+
+
+def _definir_photo_principale(logement):
+    """Garantit qu'il reste une photo principale (la première) s'il y a des photos."""
+    if not logement.photos.filter(principale=True).exists():
+        premiere = logement.photos.order_by('ordre', 'pk').first()
+        if premiere:
+            PhotoLogement.objects.filter(pk=premiere.pk).update(principale=True)
+
+
+def _ajouter_photos(logement, fichiers):
+    """Enregistre les photos valides dans la limite de MAX_PHOTOS ; renvoie le nombre refusé."""
+    deja = logement.photos.count()
+    valides = [
+        f for f in fichiers
+        if f.size <= TAILLE_MAX_PHOTO and f.content_type in FORMATS_PHOTO
+    ][:max(MAX_PHOTOS - deja, 0)]
+    for decalage, fichier in enumerate(valides):
+        PhotoLogement.objects.create(logement=logement, image=fichier, ordre=deja + decalage)
+    _definir_photo_principale(logement)
+    return len(fichiers) - len(valides)
+
+
+def _retirer_photos(logement, identifiants):
+    """Supprime les photos choisies, uniquement parmi celles de ce logement."""
+    for photo in logement.photos.filter(pk__in=[i for i in identifiants if i.isdigit()]):
+        photo.image.delete(save=False)
+        photo.delete()
+    _definir_photo_principale(logement)
+
+
+def _signaler_photos_refusees(request, nb_refusees):
+    if nb_refusees:
+        messages.warning(
+            request,
+            f"{nb_refusees} photo(s) ignorée(s) : format non accepté, plus de 5 Mo "
+            f"ou limite de {MAX_PHOTOS} photos atteinte."
+        )
+
+
 # ─── Créer logement ───────────────────────────────────
 
 @login_required
@@ -291,20 +336,7 @@ def creer_logement(request):
             logement.statut   = 'PUBLIE'          # ← publication directe, plus de validation admin
             logement.save()
 
-            # Sauvegarder les photos
-            for i, photo in enumerate(photos[:10]):
-                if photo.size > 5 * 1024 * 1024:
-                    continue
-                if photo.content_type not in [
-                    'image/jpeg', 'image/png', 'image/webp'
-                ]:
-                    continue
-                PhotoLogement.objects.create(
-                    logement=logement,
-                    image=photo,
-                    principale=(i == 0),
-                    ordre=i,
-                )
+            _signaler_photos_refusees(request, _ajouter_photos(logement, photos))
 
             messages.success(
                 request,
@@ -338,18 +370,8 @@ def modifier_logement(request, slug):
 
         if form.is_valid():
             logement = form.save()
-
-            # Ajouter nouvelles photos
-            nb_photos = logement.photos.count()
-            for i, photo in enumerate(photos[:10 - nb_photos]):
-                if photo.size > 5 * 1024 * 1024:
-                    continue
-                PhotoLogement.objects.create(
-                    logement=logement,
-                    image=photo,
-                    principale=False,
-                    ordre=nb_photos + i,
-                )
+            _retirer_photos(logement, request.POST.getlist('photos_supprimees'))
+            _signaler_photos_refusees(request, _ajouter_photos(logement, photos))
 
             messages.success(request, "✅ Annonce mise à jour avec succès.")
             return redirect('logements:detail', slug=logement.slug)
