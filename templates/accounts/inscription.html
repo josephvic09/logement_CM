@@ -121,6 +121,7 @@
 
           <p class="cx-legal">Vos informations servent uniquement à faire fonctionner votre compte LogementCM.</p>
         </form>
+        {% include 'accounts/_connexion_sociale.html' %}
       </div>
 
       <p class="cx-note">Déjà inscrit ? <a href="{% url 'accounts:connexion' %}">Se connecter</a></p>
@@ -147,6 +148,12 @@
     var choisir = function (valeur) {
       select.value = valeur;
       boutons.forEach(function (b) { b.setAttribute('aria-checked', b.dataset.valeur === valeur); });
+      /* Le profil choisi suit les boutons Google / Facebook */
+      document.querySelectorAll('[data-social]').forEach(function (a) {
+        var url = new URL(a.href, window.location.href);
+        url.searchParams.set('role', valeur);
+        a.href = url.pathname + url.search;
+      });
     };
     boutons.forEach(function (b) {
       b.addEventListener('click', function () { choisir(b.dataset.valeur); });

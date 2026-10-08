@@ -260,5 +260,12 @@ HRSKILLS_CLE_PUBLIQUE   = config('HRSKILLS_CLE_PUBLIQUE', default='')    # clé 
 HRSKILLS_CLE_SECRETE    = config('HRSKILLS_CLE_SECRETE', default='')     # clé B (hrsk_sk_...)
 HRSKILLS_WEBHOOK_SECRET = config('HRSKILLS_WEBHOOK_SECRET', default='')  # secret de signature des webhooks
 
+# Connexion sociale (OAuth 2.0) — laisser vide pour désactiver un fournisseur
+GOOGLE_CLIENT_ID     = config('GOOGLE_CLIENT_ID', default='')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+FACEBOOK_APP_ID      = config('FACEBOOK_APP_ID', default='')
+FACEBOOK_APP_SECRET  = config('FACEBOOK_APP_SECRET', default='')
+FACEBOOK_API_VERSION = config('FACEBOOK_API_VERSION', default='v25.0')
+
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 GROQ_MODEL   = "openai/gpt-oss-120b"

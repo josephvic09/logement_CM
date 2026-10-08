@@ -61,7 +61,8 @@
           </label>
 
           <a href="{% url 'accounts:reset_password_demande' %}" class="cx-forgot">Mot de passe oublié ?</a>
-          <hr class="cx-sep">
+          {% include 'accounts/_connexion_sociale.html' %}
+          <hr class="cx-sep mt-3">
           <a href="{% url 'accounts:inscription' %}" class="cx-create">Créer un nouveau compte</a>
         </form>
       </div>

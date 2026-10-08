@@ -116,6 +116,31 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     
 
 
+class CompteSocial(models.Model):
+    """Identité Google / Facebook rattachée à un utilisateur."""
+
+    FOURNISSEUR_CHOICES = [
+        ('google',   'Google'),
+        ('facebook', 'Facebook'),
+    ]
+
+    utilisateur = models.ForeignKey(
+                    Utilisateur, on_delete=models.CASCADE,
+                    related_name='comptes_sociaux'
+                  )
+    fournisseur = models.CharField(max_length=20, choices=FOURNISSEUR_CHOICES)
+    uid         = models.CharField(max_length=100)
+    cree_le     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Compte social'
+        verbose_name_plural = 'Comptes sociaux'
+        unique_together = [('fournisseur', 'uid')]
+
+    def __str__(self):
+        return f"{self.get_fournisseur_display()} — {self.utilisateur}"
+
+
 class LogActivite(models.Model):
 
     ACTION_CHOICES = [

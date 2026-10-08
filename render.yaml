@@ -17,11 +17,19 @@ services:
         generateValue: true
       - key: DATABASE_URL  # chaîne de connexion Neon (postgresql://...?sslmode=require)
         sync: false
-      - key: SEED_MOT_DE_PASSE  # mot de passe des comptes de démo (visible dans l'onglet Environment)
-        generateValue: true
+      - key: SEED_MOT_DE_PASSE  # mot de passe des comptes de test (admin, bailleur, locataire)
+        value: "12345678"
       - key: CLOUDINARY_URL
         sync: false
       - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
         sync: false
       - key: HRSKILLS_BASE_URL
         value: https://api.hrskills-pay.com

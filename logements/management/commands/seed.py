@@ -137,7 +137,7 @@ class Command(BaseCommand):
         mot_de_passe = config('SEED_MOT_DE_PASSE', default='')
         if not mot_de_passe:
             raise CommandError(
-                "Définissez SEED_MOT_DE_PASSE (mot de passe des comptes de démonstration)."
+                "12345678"
             )
 
         with transaction.atomic():
@@ -178,13 +178,16 @@ class Command(BaseCommand):
         return villes, quartiers
 
     def _creer_compte(self, email, mot_de_passe, superuser=False, **champs):
-        """Crée le compte s'il n'existe pas ; ne touche jamais à un compte existant."""
+        """Crée le compte de test s'il n'existe pas, sinon lui réapplique le mot de passe."""
         utilisateur = Utilisateur.objects.filter(email=email).first()
-        if utilisateur:
-            return utilisateur
-        gestionnaire = Utilisateur.objects
-        creer = gestionnaire.create_superuser if superuser else gestionnaire.create_user
-        return creer(email=email, password=mot_de_passe, **champs)
+        if utilisateur is None:
+            gestionnaire = Utilisateur.objects
+            creer = gestionnaire.create_superuser if superuser else gestionnaire.create_user
+            return creer(email=email, password=mot_de_passe, **champs)
+        if not utilisateur.check_password(mot_de_passe):
+            utilisateur.set_password(mot_de_passe)
+            utilisateur.save(update_fields=['password'])
+        return utilisateur
 
     def _creer_annonces(self, bailleur, locataire, villes, quartiers):
         """Crée les annonces et leurs avis uniquement si le site n'a encore aucune annonce."""

@@ -2,8 +2,10 @@ import secrets
 import hashlib
 from datetime import timedelta
 
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib import messages
@@ -13,6 +15,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
 
+from . import oauth
 from .models import Utilisateur, LogActivite
 from .forms import (
     InscriptionForm, ConnexionForm, ProfilForm,
@@ -132,6 +135,75 @@ def connexion(request):
         form = ConnexionForm()
 
     return render(request, 'accounts/connexion.html', {'form': form})
+
+
+# ─── Connexion sociale (Google / Facebook) ────────────────
+
+def _url_retour_oauth(request, code_fournisseur):
+    return request.build_absolute_uri(
+        reverse('accounts:oauth_retour', args=[code_fournisseur])
+    )
+
+
+def oauth_demarrer(request, fournisseur):
+    config = oauth.fournisseur(fournisseur)
+    if config is None:
+        raise Http404
+    if request.user.is_authenticated:
+        return redirect(get_redirect_url(request.user))
+    if not oauth.est_configure(config):
+        messages.error(request, f"La connexion avec {config['nom']} n'est pas encore disponible.")
+        return redirect('accounts:connexion')
+
+    etat = secrets.token_urlsafe(32)
+    suivant = request.GET.get('next', '')
+    if not url_has_allowed_host_and_scheme(suivant, {request.get_host()}, request.is_secure()):
+        suivant = ''
+    request.session['oauth_etat'] = etat
+    request.session['oauth_role'] = request.GET.get('role', '')
+    request.session['oauth_suivant'] = suivant
+    return redirect(oauth.url_autorisation(config, _url_retour_oauth(request, fournisseur), etat))
+
+
+def oauth_retour(request, fournisseur):
+    config = oauth.fournisseur(fournisseur)
+    if config is None:
+        raise Http404
+    etat_attendu = request.session.pop('oauth_etat', '')
+    role = request.session.pop('oauth_role', '')
+    suivant = request.session.pop('oauth_suivant', '')
+
+    etat = request.GET.get('state', '')
+    if not etat_attendu or not secrets.compare_digest(etat.encode(), etat_attendu.encode()):
+        messages.error(request, "Session expirée, veuillez réessayer.")
+        return redirect('accounts:connexion')
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, f"Connexion avec {config['nom']} annulée.")
+        return redirect('accounts:connexion')
+
+    try:
+        jeton = oauth.echanger_code(config, _url_retour_oauth(request, fournisseur), code)
+        profil = oauth.lire_profil(config, jeton)
+        user, cree = oauth.identifier_ou_creer(config, profil, role)
+    except oauth.OAuthErreur as exc:
+        messages.error(request, str(exc))
+        return redirect('accounts:connexion')
+
+    login(request, user)
+    Utilisateur.objects.filter(pk=user.pk).update(
+        nb_connexions=user.nb_connexions + 1,
+        derniere_connexion_ip=get_ip(request)
+    )
+    if cree:
+        from notifs.utils import notif_bienvenue
+        notif_bienvenue(user)
+        log_activite(user, 'INSCRIPTION', request, f"Via {config['nom']}")
+        messages.success(request, f"Bienvenue {user.prenom} ! Votre compte a été créé.")
+    else:
+        log_activite(user, 'CONNEXION', request, f"Via {config['nom']}")
+        messages.success(request, f"Bienvenue {user.prenom} !")
+    return redirect(suivant or get_redirect_url(user))
 
 
 # ─── Déconnexion ──────────────────────────────────────────
